@@ -1,4 +1,5 @@
-import type { Artifact, Catalog, Changelog, Release } from './types';
+import { TYPE_LABEL } from './icons';
+import type { Artifact, ArtifactRef, Catalog, Changelog, Release } from './types';
 import { artifactPath, url } from './url';
 
 // Small helpers for pages (build time).
@@ -29,6 +30,17 @@ export function releaseSummary(r: Release): string {
     removed.length ? `${removed.length} removed` : '',
   ].filter(Boolean);
   return parts.length ? parts.join(', ') : 'No changes to contents';
+}
+
+/** Plain-text list of changes for the RSS item description (spec 8.5). */
+export function releaseText(r: Release): string {
+  const line = (label: string, items: ArtifactRef[]) =>
+    items.length ? `${label} (${items.length}): ${items.map((i) => `${TYPE_LABEL[i.type]} ${i.name}`).join(', ')}.` : '';
+  const parts = [line('Added', r.changes.added), line('Updated', r.changes.updated), line('Removed', r.changes.removed)].filter(Boolean);
+  if (r.kind === 'plugin-removed') parts.unshift('Plugin removed.');
+  else if (r.kind === 'plugin-added') parts.unshift('Plugin added.');
+  else if (!parts.length) parts.push('No changes to contents.');
+  return parts.join(' ');
 }
 
 export const pendingFor = (cl: Changelog, plugin: string) => cl.pending.find((p) => p.plugin === plugin);

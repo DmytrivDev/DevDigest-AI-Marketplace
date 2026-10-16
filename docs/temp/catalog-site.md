@@ -92,7 +92,7 @@ site/                               # a separate Node project, not part of any p
 │   ├── build-catalog.ts            # indexer (section 5)
 │   ├── build-changelog.ts          # release feed (section 8)
 │   ├── build-stats.ts              # stats (section 9)
-│   └── check-budgets.ts            # size budgets (section 13)
+│   └── check-budgets.mjs           # size budgets (section 13)
 ├── src/
 │   ├── lib/types.ts                # data model (shared)
 │   ├── lib/catalog.ts              # reads catalog.json at build time
@@ -578,7 +578,7 @@ No state replaces the list with an empty screen: build-time data always stays vi
   "What's new · DevDigest Marketplace" and so on.
 - `<meta name="description">` from the artifact description (up to 160 characters), `canonical`.
 - Open Graph and Twitter Card with one static OG image (`public/og.png`).
-- `sitemap.xml` (`@astrojs/sitemap`), `robots.txt`.
+- `sitemap-index.xml` (`@astrojs/sitemap`), `robots.txt`.
 - `<link rel="alternate" type="application/rss+xml" href="…/feed.xml">` in `<head>`.
 - `<meta name="dd-commit" content="<SHA>">` for the "Page is stale" state (7.7).
 
@@ -866,6 +866,8 @@ Manual setup: Settings → Pages → Source = **GitHub Actions**.
 
 **Phase 1 build.** The workflow runs `npm ci`, `npm test` and `npm run build` in `site/`, and publishes `site/dist` with `.nojekyll`. Validation (5.4) runs `claude plugin validate` when the CLI is available and falls back to `unknown`. Playwright, the budget script and Lighthouse are phase 2 (see section 15).
 
+**Phase 2 build.** `npm run build` also writes the CSP `<meta>` (`scripts/csp.mjs`) and checks the size budgets (`scripts/check-budgets.mjs`, table in the job summary). After the link check the workflow builds the test fixture into `dist-e2e/` (`npm run build:e2e`, never deployed), installs Playwright's Chromium and runs the smoke tests on both `dist/` and `dist-e2e/`; on failure the Playwright report is uploaded as an artifact.
+
 ## 12. Security
 
 - Markdown from plugins (artifact bodies, `README.md`, `CHANGELOG.md`) is sanitized
@@ -969,6 +971,8 @@ Manual setup: Settings → Pages → Source = **GitHub Actions**.
 13. Pages pass a keyboard check and meet AA contrast in both themes.
 
 ### Deferred to phase 2
+
+Phase 2 delivered all of the items below except Lighthouse, which is still open. The smoke tests run on the real build and on a build of the test fixture (`dist-e2e/`), since the real marketplace has no components yet.
 
 Phase 1 (the first implementation, see `implementation-plan.md`) does not cover these criteria or parts of them:
 

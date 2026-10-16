@@ -32,6 +32,8 @@ const items = [
   { id: 'guide', label: 'Guide', href: url('guide/') },
 ] as const;
 const canonical = new URL(url(path), Astro.site).href;
+const metaDescription = stripCode(description ?? t.tagline).slice(0, 160);
+const ogImage = new URL(url('og.png'), Astro.site).href;
 ---
 <!doctype html>
 <html lang="en">
@@ -39,9 +41,20 @@ const canonical = new URL(url(path), Astro.site).href;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
-    {description && <meta name="description" content={stripCode(description).slice(0, 160)} />}
+    {description && <meta name="description" content={metaDescription} />}
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={`What's new · ${t.siteName}`} href={url('feed.xml')} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={t.siteName} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={metaDescription} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${t.siteName}: Claude Code plugins catalog`} />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="dd-commit" content={catalog.commit} />
     {noindex && <meta name="robots" content="noindex" />}
     <script is:inline>
@@ -119,6 +132,7 @@ const canonical = new URL(url(path), Astro.site).href;
           </span>
           <nav aria-label="Footer">
             <a href={repoUrl} target="_blank" rel="noopener">Repository</a>
+            <a href={url('feed.xml')}>RSS</a>
             <a class="mono" href={url('api/catalog.json')}>catalog.json</a>
           </nav>
           <span class="note">This site collects no visitor data.</span>

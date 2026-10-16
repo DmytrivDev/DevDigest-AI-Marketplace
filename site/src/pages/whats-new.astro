@@ -5,6 +5,7 @@ import { loadSiteData } from '../data/load';
 import { formatDate, formatMonth } from '../lib/format';
 import { artifactHref, pluginHref, releaseTitle, repoUrl } from '../lib/site';
 import type { ArtifactRef, Changes, Release } from '../lib/types';
+import { url } from '../lib/url';
 
 const { catalog, changelog } = await loadSiteData();
 const byId = new Map(catalog.artifacts.map((a) => [a.id, a]));
@@ -41,6 +42,7 @@ const key = (id: string) => id.replace(/[^A-Za-z0-9]+/g, '-');
         <div class="stack" style="flex:1;min-width:220px;gap:4px">
           <h1 class="h1">What's new</h1>
           <p class="muted">Plugin releases in this marketplace, newest first.</p>
+          <p class="muted small">Follow in a feed reader: <a href={url('feed.xml')}>RSS feed</a></p>
         </div>
         {changelog.releases.length > 0 && (
           <div class="head-tools js-only">

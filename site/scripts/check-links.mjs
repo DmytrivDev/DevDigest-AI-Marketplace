@@ -1,10 +1,10 @@
 // Crawls dist/: every internal href/src must resolve to a file, and #fragments must exist on the target page.
-// Usage: node scripts/check-links.mjs   (after `npm run build`)
+// Usage: node scripts/check-links.mjs [distDir]   (after `npm run build`; default: dist)
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const BASE = '/DevDigest-AI-Marketplace';
-const dist = resolve(process.cwd(), 'dist');
+const dist = resolve(process.cwd(), process.argv[2] ?? 'dist');
 const pages = [];
 (function walk(d) {
   for (const n of readdirSync(d)) {
