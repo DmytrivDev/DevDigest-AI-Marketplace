@@ -9,7 +9,7 @@ pipeline itself and depends on all three.
 
 This spec says **what** ships and **how we check it**. Rules for plugin layout, manifests and
 versions are in [`CONTRIBUTING.md`](../../CONTRIBUTING.md) and
-[`plugin-authoring-guide.md`](plugin-authoring-guide.md); they are not repeated here.
+[`PLUGIN-GUIDELINES.md`](../PLUGIN-GUIDELINES.md); they are not repeated here.
 
 Decisions marked **(OQ-n)** are proposed defaults that wait for the owner's answer in
 [Open questions](#11-open-questions).
@@ -285,7 +285,7 @@ They do not count as the plugin README.
 - cost notes: model per agent, run length.
 
 **Every plugin has a `CHANGELOG.md`** in Keep a Changelog format with `## [x.y.z] — YYYY-MM-DD`
-sections. The catalog site reads this as release notes (`catalog-site.md` §8.2). The first
+sections. The catalog site reads this as release notes (`docs/SITE-SPEC.md` §8.2). The first
 entry is `## [1.0.0]`, listing the components it ships.
 
 **Releases**
@@ -359,12 +359,15 @@ each plugin. DevDigest's vitest harness is not ported. Minimum set:
   is treated as our own skill.
 
 **Still open**
-- **OQ-3** Upstream repos for `react-best-practices`, `react-testing-library` and `security`
-  are not recorded in `dev-digest/skills-lock.json`. Each of the three is handled in one of
-  two ways:
-  - **Link given:** copy the upstream `LICENSE`, then name the repo and path in the README.
-  - **No upstream exists:** treat it as our own skill.
+- **OQ-3** Origins of the third-party skills were found on 2026-10-16:
+  - `react-best-practices`, `react-testing-library` and `security` come from
+    `burnjohn/quick-blog`, at `.claude/skills/<name>`. The source copies are byte-identical.
+  - `next-best-practices` comes from `vercel-labs/next-skills`. It has since been removed
+    upstream.
+  - Neither repository declares a license, so redistribution is not granted by default.
+  - `fastify-best-practices` (`mcollina/skills`) is MIT, and its `LICENSE` now ships next to
+    the skill.
 
-  If a link is given and the license forbids redistribution, the skill is not shipped.
-  Until this is answered, the three skills ship without attribution only on a local branch,
-  never in a release.
+  Before the `1.0.0` tag, each of the four unlicensed skills either gets written permission
+  from its author or is removed or replaced. Credits are in the `engineering-paved-path`
+  README.

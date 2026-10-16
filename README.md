@@ -41,9 +41,26 @@ All dependencies use the range `^1.0.0`.
 
 ```
 .claude-plugin/marketplace.json   # catalog: name, owner, plugins[]
-plugins/<name>/                   # one self-contained directory per plugin
-scripts/                          # repo maintenance tooling — not shipped with any plugin
+.github/workflows/validate.yml    # plugins: manifests, content rules, validate, install (every PR)
+.github/workflows/pages.yml       # catalog site: test, build, deploy to GitHub Pages
+plugins/<name>/                   # one self-contained directory per plugin (+ README, CHANGELOG, COMPATIBILITY)
+docs/                             # PLUGIN-GUIDELINES, SECURITY, RELEASES, SITE-SPEC, COST-BASELINE
+scripts/validate.mjs              # repo maintenance tooling — not shipped with any plugin
+site/                             # the catalog site (Astro); builds its index from plugins/ at build time
 ```
+
+The catalog is published at <https://dmytrivdev.github.io/DevDigest-AI-Marketplace/>: search
+plugins, skills and agents, read their READMEs, see versions and dependencies, and copy the
+install command.
+
+| Document | What it covers |
+|---|---|
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Plugin layout, manifest fields, dependency rules, checks, PR checklist |
+| [`docs/PLUGIN-GUIDELINES.md`](docs/PLUGIN-GUIDELINES.md) | The reasons behind the rules: anatomy, boundaries and owners, dependencies, porting |
+| [`docs/SECURITY.md`](docs/SECURITY.md) | No secrets, no absolute paths, least privilege, what to do after an unsafe release |
+| [`docs/RELEASES.md`](docs/RELEASES.md) | SemVer, tags, release order, `latest` / `stable` channels, update, rollback |
+| [`docs/SITE-SPEC.md`](docs/SITE-SPEC.md) | The catalog site |
+| [`docs/COST-BASELINE.md`](docs/COST-BASELINE.md) | Cost and quality baseline of the SDD workflow |
 
 ## Development
 
