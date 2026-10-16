@@ -28,10 +28,15 @@ Stop it with Ctrl+C.
 |---|---|
 | `npm run dev` | Dev server on port 4321, real repository data, live reload for `plugins/**` and `.claude-plugin/**` |
 | `npm test` | Unit tests (Vitest): indexer, slugs, search golden queries, changelog on a temporary git repo, stats, formatting, storage wrapper, token contrast, markdown sanitizing |
-| `npm run build` | Static build into `dist/`, then `scripts/check-dist.mjs` |
+| `npm run build` | Static build into `dist/`, then the CSP `<meta>` (`scripts/csp.mjs`), the fixture-leak check (`scripts/check-dist.mjs`) and the size budgets (`scripts/check-budgets.mjs`) |
 | `npm run preview` | Serves `dist/` on port 4321 under the Pages base path (run `build` first) |
 | `npm run typecheck` | `tsc --noEmit` over the TypeScript sources |
 | `npm run fixtures:update` | Regenerates the test fixture from `scripts/gen-test-fixtures.ts` |
+| `npm run check:links` | Every internal link and `#fragment` in `dist/` resolves (pass a directory to check another build) |
+| `npm run check:budgets` | Size budgets on `dist/` again, without rebuilding |
+| `npm run build:e2e` | Builds the test fixture into `dist-e2e/` for the browser tests (never deployed) |
+| `npm run test:e2e` | Playwright smoke tests with axe-core on `dist/` and `dist-e2e/` |
+| `npm run og:update` | Re-renders `public/og.png` from `scripts/og/og.html` |
 
 Environment variables (all optional): `DD_REPO_ROOT` (repository to read, default `..`),
 `DD_VALIDATE=0` (skip `claude plugin validate`), `DD_SKIP_GITHUB=1` (skip the GitHub API),
@@ -52,8 +57,36 @@ Real data only. Nothing on the site is sample data.
 4. **Validation** (`src/data/validation.ts`): `claude plugin validate --strict` per local plugin when
    the CLI is installed and works; otherwise the badge reads "Not verified".
 
-Build output also contains `api/catalog.json`, `api/changelog.json`, `api/releases-head.json` and
-`api/stats.json`.
+Build output also contains `api/catalog.json`, `api/changelog.json`, `api/releases-head.json`,
+`api/stats.json`, the release RSS `feed.xml` (last 50 releases), `sitemap-index.xml`, `robots.txt`
+and the Open Graph image `og.png`.
+
+## Checks on the build
+
+- **CSP.** `scripts/csp.mjs` writes a `Content-Security-Policy` `<meta>` into every page:
+  `default-src 'self'`, styles `'self' 'unsafe-inline'`, and scripts `'self'` plus the `sha256` hash of
+  each inline script on that page (the theme script, the island bootstrap). Astro's own
+  `security.csp` is not used because it hashes styles too, which would block `style=""` attributes.
+- **Size budgets** (spec 13). `scripts/check-budgets.mjs` sums the gzip size of everything a page
+  loads, including chunks imported from it: home ≤ 80 KB, other pages ≤ 5 KB, `catalog.json`
+  ≤ 200 KB (warning from 150 KB), `changelog.json` ≤ 100 KB, `stats.json` ≤ 30 KB.
+
+## Browser tests
+
+```bash
+npm run build && npm run build:e2e
+npm run test:e2e
+```
+
+Playwright drives the installed Chrome or Edge, so nothing is downloaded locally. Set
+`PW_CHANNEL=chrome|msedge` to pick one, or `PW_CHANNEL=chromium` for Playwright's own build
+(`npx playwright install chromium`); CI uses that. Two projects run:
+
+- `real` on `dist/`: every page type in light and dark with axe-core (WCAG 2.2 A/AA), no console
+  errors, no CSP violations, no horizontal scroll at 360 px.
+- `fixture` on `dist-e2e/`: the same, plus search, copy, URL state, onboarding, the What's new
+  counter, the catalog error state, no-JS list, RSS, sitemap, robots.txt and Open Graph tags.
+  The fixture is needed because the real marketplace has no components yet.
 
 ### Test fixtures
 
@@ -73,7 +106,8 @@ DD_REPO_ROOT=/tmp/sample-marketplace npm run dev
 
 `.github/workflows/pages.yml` builds on every push to `main` and every pull request that touches
 `plugins/**`, `.claude-plugin/**`, `site/**` or the workflow, and daily at 05:17 UTC. It runs
-`npm ci`, `npm test` and `npm run build`, uploads `site/dist` (with `.nojekyll`), and deploys it
+`npm ci`, the typecheck, `npm test`, `npm run build` (with CSP and size budgets), the link check and
+the browser tests, uploads `site/dist` (with `.nojekyll`), and deploys it
 with `actions/deploy-pages` on `main` only. Pull requests build and test without deploying.
 
 **One manual step for the repository owner:** Settings, Pages, Source = **GitHub Actions**.
@@ -84,8 +118,8 @@ with `actions/deploy-pages` on `main` only. Pull requests build and test without
 site/
   astro.config.mjs        base /DevDigest-AI-Marketplace, React island, dev watcher
   integrations/           dev-only watcher for plugins/** and .claude-plugin/**
-  scripts/                check-dist.mjs (build step), gen-test-fixtures.ts
-  public/                 favicon, .nojekyll
+  scripts/                build steps (csp, check-dist, check-budgets), check-links, build-e2e, OG image
+  public/                 favicon, og.png, .nojekyll
   src/data/               build-time only: indexer, changelog, stats, markdown, validation
   src/lib/                shared types, commands, formatting, urls, storage, chart geometry
   src/search/             normalization, stop words, type intent, UK synonyms, MiniSearch engine
@@ -94,7 +128,8 @@ site/
   src/pages/              routes and /api/*.json
   src/styles/             tokens, base, components, pages, markdown
   tests/                  Vitest tests, helpers and test-only fixtures
+  tests/e2e/              Playwright smoke tests, static server, browser channel pick
+  playwright.config.ts    projects `real` (dist/) and `fixture` (dist-e2e/)
 ```
 
-Phase 2 (not built yet): RSS `feed.xml`, Playwright smoke and axe, CSP `<meta>` with script hashes,
-size budgets, sitemap and OG image, Lighthouse.
+Not built yet: Lighthouse runs in CI (spec 13).

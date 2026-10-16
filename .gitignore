@@ -1,3 +1,6 @@
 site/node_modules/
 site/dist/
 site/.astro/
+site/dist-e2e/
+site/test-results/
+site/playwright-report/
