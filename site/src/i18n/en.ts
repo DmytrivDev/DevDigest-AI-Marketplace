@@ -26,6 +26,15 @@ const typePlural: Record<ArtifactType, string> = {
   hook: 'Hooks',
   mcp: 'MCP servers',
 };
+/** Each type inside a count ("1 plugin", "11 skills", "1 MCP server"): [singular, plural]. */
+const typeNouns: Record<ArtifactType, readonly [string, string]> = {
+  plugin: ['plugin', 'plugins'],
+  skill: ['skill', 'skills'],
+  agent: ['agent', 'agents'],
+  command: ['command', 'commands'],
+  hook: ['hook', 'hooks'],
+  mcp: ['MCP server', 'MCP servers'],
+};
 /** What "artifact" and "plugin" are called in counts on the home page: [singular, plural]. */
 const homeNouns = { artifact: ['artifact', 'artifacts'], plugin: ['plugin', 'plugins'] } as const;
 export type HomeNoun = keyof typeof homeNouns;
@@ -95,6 +104,7 @@ export const t = {
     plugin: (n: number) => pick(n, 'plugin', 'plugins'),
     artifact: (n: number) => pick(n, 'artifact', 'artifacts'),
     tag: (n: number) => pick(n, 'tag', 'tags'),
+    ofType: (type: ArtifactType, n: number) => pick(n, typeNouns[type][0], typeNouns[type][1]),
   },
 
   types: {

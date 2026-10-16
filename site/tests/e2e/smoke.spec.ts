@@ -52,10 +52,15 @@ test.describe('home', () => {
     await page.goto('');
     await hydrated(page);
     await expect(page.getByRole('alert')).toContainText("Couldn't load search");
-    await expect(page.locator(cards)).toHaveCount(9);
+    // 1 plugin card + 9 components.
+    await expect(page.locator(cards)).toHaveCount(10);
     await page.getByRole('checkbox', { name: /Agents/ }).check();
     await expect(page.locator(cards)).toHaveCount(3);
     await expect(page.locator(cards).locator('.card__badges')).toContainText(['Agent', 'Agent', 'Agent']);
+    await page.getByRole('checkbox', { name: /Agents/ }).uncheck();
+    await page.getByRole('checkbox', { name: /Plugins/ }).check();
+    await expect(page.locator(cards)).toHaveCount(1);
+    await expect(page.locator(cards).locator('.card__badges')).toContainText(['Plugin']);
   });
 });
 
@@ -63,8 +68,10 @@ test('without JavaScript the home page lists every artifact', async ({ browser, 
   const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
   const page = await context.newPage();
   await page.goto('');
-  await expect(page.locator(cards)).toHaveCount(9);
-  await expect(page.getByRole('heading', { name: /All 9 artifacts/ })).toBeVisible();
+  // 1 plugin card + 9 components, the plugin first.
+  await expect(page.locator(cards)).toHaveCount(10);
+  await expect(page.locator(cards).first().locator('.card__badges')).toContainText('Plugin');
+  await expect(page.getByRole('heading', { name: /All 10 artifacts/ })).toBeVisible();
   await context.close();
 });
 

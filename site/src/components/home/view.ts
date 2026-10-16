@@ -45,7 +45,9 @@ export interface View {
 const freshLabel = (f: Freshness): string => t.fresh[f];
 export { freshLabel };
 
-const byUpdated = (a: CardItem, b: CardItem): number => b.ts - a.ts || a.name.localeCompare(b.name);
+/** "Updated" order with plugin cards first, so a plugin always leads its components. */
+const byUpdated = (a: CardItem, b: CardItem): number =>
+  Number(b.type === 'plugin') - Number(a.type === 'plugin') || b.ts - a.ts || a.name.localeCompare(b.name);
 
 export function computeView(items: CardItem[], availableTypes: ArtifactType[], res: SearchResult | null, f: Filters, sortChoice: SortKey | ''): View {
   const byId = new Map(items.map((i) => [i.id, i]));
