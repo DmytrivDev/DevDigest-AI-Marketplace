@@ -452,8 +452,11 @@ export const t = {
       } as Record<ArtifactType, (arg: string) => string>,
     },
     update: {
-      pull: 'Pull the latest versions of every plugin in the marketplace:',
-      remove: 'Remove a plugin:',
+      refresh: 'Refresh the marketplace catalog. This opens the Marketplaces tab in `/plugin`; it does not upgrade plugins you already installed:',
+      upgrade: 'Upgrade an installed plugin to its latest version, from your shell (or choose Update now in `/plugin` → Installed):',
+      autoUpdate: 'To get new versions automatically, open `/plugin` → Marketplaces, select this marketplace and choose Enable auto-update. It is off by default for marketplaces outside Anthropic.',
+      disable: 'Turn a plugin off without removing it (`/plugin enable` turns it back on):',
+      remove: 'Remove a plugin. This opens the Installed tab in `/plugin`:',
       seeBefore: 'See ',
       whatsNew: "What's new",
       seeAfter: ' for what changed in each release.',

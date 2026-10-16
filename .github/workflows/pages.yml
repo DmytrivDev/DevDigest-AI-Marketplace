@@ -11,12 +11,9 @@ on:
       - '.claude-plugin/**'
       - 'site/**'
       - '.github/workflows/pages.yml'
+  # Every PR runs the checks, so they can be required on main (a path filter would leave
+  # required checks pending forever on PRs that don't touch the site).
   pull_request:
-    paths:
-      - 'plugins/**'
-      - '.claude-plugin/**'
-      - 'site/**'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
   schedule:
     # Daily: refreshes the "New"/"Updated" badges and the GitHub numbers on /stats/.
