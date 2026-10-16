@@ -987,9 +987,9 @@ Phase 1 (the first implementation, see `temp/implementation-plan.md`) does not c
 
 | Feature | What it is | Technical basis |
 |---|---|---|
-| Plugin security panel | Which hooks run which commands on which events; which processes MCP servers start; whether there are network calls; whether the plugin is self-contained | Indexer extension, static analysis of `hooks.json`, `.mcp.json`, `scripts/` |
-| Team settings builder | The user picks plugins and the site generates a `.claude/settings.json` snippet with `extraKnownMarketplaces` and `enabledPlugins` | Plain client code over the catalog data |
-| Per-plugin and per-tag RSS | Subscribe to just what matters | The same changelog data, separate `feed.xml` files at build time |
+| Plugin security panel (done) | Which hooks run which commands on which events; which processes MCP servers start; whether there are network calls; whether the plugin is self-contained | Indexer extension, static analysis of `hooks.json`, `.mcp.json`, `scripts/` |
+| Team settings builder (done) | The user picks plugins and the site generates a `.claude/settings.json` snippet with `extraKnownMarketplaces` and `enabledPlugins` | Plain client code over the catalog data |
+| Per-plugin RSS (done; per-tag RSS not built) | Subscribe to just what matters | The same changelog data, separate `feed.xml` files at build time |
 | "Suggest an artifact" / "Report a problem" | A form opens a prefilled issue from a template | GitHub issue forms + URL query parameters |
 | Favorites and search history | Saved in the browser | `localStorage` |
 | `llms.txt` and a stable `/api/catalog.json` | Machine-readable catalog for other tools and agents | Generated at build time, `schemaVersion` for compatibility |

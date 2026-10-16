@@ -57,7 +57,7 @@ document.addEventListener('click', async (e) => {
     await navigator.clipboard.writeText(cmd);
     box.dataset.state = 'ok';
     if (label) label.textContent = ui.copy.copied;
-    btn.setAttribute('aria-label', ui.copy.ariaCopied(cmd));
+    if (!btn.dataset.aria) btn.setAttribute('aria-label', ui.copy.ariaCopied(cmd));
     if (note) {
       if (readKey(KEYS.copyHint) == null) {
         writeKey(KEYS.copyHint, '1');
@@ -73,7 +73,7 @@ document.addEventListener('click', async (e) => {
         delete box.dataset.state;
         if (label) label.textContent = '';
         if (note) note.hidden = true;
-        btn.setAttribute('aria-label', ui.copy.ariaCopy(cmd));
+        if (!btn.dataset.aria) btn.setAttribute('aria-label', ui.copy.ariaCopy(cmd));
       }, 2000),
     );
   } catch {

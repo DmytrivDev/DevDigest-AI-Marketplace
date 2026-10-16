@@ -14,14 +14,16 @@ interface Props {
   title: string;
   description?: string;
   /** Header item marked aria-current="page". */
-  nav?: 'catalog' | 'whats-new' | 'stats' | 'guide';
+  nav?: 'catalog' | 'whats-new' | 'stats' | 'settings' | 'guide';
+  /** An extra RSS feed to advertise (a plugin's own feed). */
+  feed?: { href: string; title: string };
   /** Path under the base, used for the canonical link. */
   path?: string;
   home?: boolean;
   noindex?: boolean;
 }
 
-const { title, description, nav, path = '', home = false, noindex = false } = Astro.props;
+const { title, description, nav, feed, path = '', home = false, noindex = false } = Astro.props;
 const { catalog } = await loadSiteData();
 const repoUrl = `https://github.com/${catalog.marketplace.repo}`;
 const fullTitle = title === t.site.name ? title : t.site.htmlTitle(title, t.site.name);
@@ -29,6 +31,7 @@ const items = [
   { id: 'catalog', label: t.nav.catalog, href: url() },
   { id: 'whats-new', label: t.nav.whatsNew, href: url('whats-new/') },
   { id: 'stats', label: t.nav.stats, href: url('stats/') },
+  { id: 'settings', label: t.nav.settings, href: url('settings-builder/') },
   { id: 'guide', label: t.nav.guide, href: url('guide/') },
 ] as const;
 const canonical = new URL(url(path), Astro.site).href;
@@ -45,6 +48,7 @@ const ogImage = new URL(url('og.png'), Astro.site).href;
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
     <link rel="alternate" type="application/rss+xml" title={t.feed.title(t.site.name)} href={url('feed.xml')} />
+    {feed && <link rel="alternate" type="application/rss+xml" title={feed.title} href={feed.href} />}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={t.site.name} />
     <meta property="og:title" content={fullTitle} />
