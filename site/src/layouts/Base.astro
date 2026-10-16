@@ -1,0 +1,132 @@
+---
+import '../styles/tokens.css';
+import '../styles/base.css';
+import '../styles/components.css';
+import '../styles/pages.css';
+import '../styles/markdown.css';
+import { loadSiteData } from '../data/load';
+import { formatDate, shortSha } from '../lib/format';
+import { url } from '../lib/url';
+import { t } from '../i18n/en';
+import { stripCode } from '../lib/richtext';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Header item marked aria-current="page". */
+  nav?: 'catalog' | 'whats-new' | 'stats' | 'guide';
+  /** Path under the base, used for the canonical link. */
+  path?: string;
+  home?: boolean;
+  noindex?: boolean;
+}
+
+const { title, description, nav, path = '', home = false, noindex = false } = Astro.props;
+const { catalog } = await loadSiteData();
+const repoUrl = `https://github.com/${catalog.marketplace.repo}`;
+const fullTitle = title === t.siteName ? title : `${title} · ${t.siteName}`;
+const items = [
+  { id: 'catalog', label: 'Catalog', href: url() },
+  { id: 'whats-new', label: "What's new", href: url('whats-new/') },
+  { id: 'stats', label: 'Stats', href: url('stats/') },
+  { id: 'guide', label: 'Guide', href: url('guide/') },
+] as const;
+const canonical = new URL(url(path), Astro.site).href;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    {description && <meta name="description" content={stripCode(description).slice(0, 160)} />}
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
+    <meta name="dd-commit" content={catalog.commit} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <script is:inline>
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        try {
+          var th = localStorage.getItem('dd:theme');
+          if (th === 'light' || th === 'dark') d.setAttribute('data-theme', th);
+          if (localStorage.getItem('dd:onboarding') === 'dismissed') d.classList.add('ob-off');
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body data-releases-url={url('api/releases-head.json')} data-page={home ? 'home' : path.replace(/\/$/, '')}>
+    <div class="page">
+      <a class="skip" href={home ? '#results' : '#main'}>{home ? 'Skip to results' : 'Skip to content'}</a>
+      <header class="site-header">
+        <div class="wrap site-header__bar">
+          <a class="brand" href={url()}>{catalog.marketplace.name || t.brand}</a>
+          <nav class="nav" aria-label="Main">
+            {items.map((i) => (
+              <a href={i.href} aria-current={nav === i.id ? 'page' : undefined}>
+                <span>{i.label}</span>
+                {i.id === 'whats-new' && <span class="nav-badge" data-unseen hidden></span>}
+              </a>
+            ))}
+          </nav>
+          <div class="header-tools">
+            <a href={repoUrl} target="_blank" rel="noopener">GitHub</a>
+            <div class="theme-switch js-only" role="group" aria-label="Theme">
+              <button type="button" data-theme-set="system" aria-pressed="true">System</button>
+              <button type="button" data-theme-set="light" aria-pressed="false">Light</button>
+              <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
+            </div>
+          </div>
+          <details class="menu">
+            <summary><span class="menu__open">Menu</span><span class="menu__close">Close</span></summary>
+            <nav class="menu__panel" id="m-menu" aria-label="Main">
+              {items.map((i) => (
+                <a class="menu__link" href={i.href} aria-current={nav === i.id ? 'page' : undefined}>
+                  <span>{i.label}</span>
+                  {i.id === 'whats-new' && <span class="nav-badge" data-unseen hidden></span>}
+                </a>
+              ))}
+              <div class="menu__tools">
+                <a href={repoUrl} target="_blank" rel="noopener">GitHub</a>
+                <div class="theme-switch js-only" role="group" aria-label="Theme">
+                  <button type="button" data-theme-set="system" aria-pressed="true">System</button>
+                  <button type="button" data-theme-set="light" aria-pressed="false">Light</button>
+                  <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
+                </div>
+              </div>
+            </nav>
+          </details>
+        </div>
+      </header>
+
+      <div class="stale" id="dd-stale" role="status" hidden>
+        <div class="wrap stale__in">
+          <span>Catalog updated since this page was loaded.</span>
+          <button type="button" data-reload>Reload page</button>
+        </div>
+      </div>
+
+      <main id="main" class="main" tabindex="-1">
+        <slot />
+      </main>
+
+      <footer class="site-footer">
+        <div class="wrap site-footer__in">
+          <span>
+            Built {formatDate(catalog.generatedAt)} from commit
+            <a class="mono" href={`${repoUrl}/commit/${catalog.commit}`} target="_blank" rel="noopener">{shortSha(catalog.commit)}</a>
+          </span>
+          <nav aria-label="Footer">
+            <a href={repoUrl} target="_blank" rel="noopener">Repository</a>
+            <a class="mono" href={url('api/catalog.json')}>catalog.json</a>
+          </nav>
+          <span class="note">This site collects no visitor data.</span>
+        </div>
+      </footer>
+    </div>
+    <script>
+      import '../client/site.ts';
+    </script>
+  </body>
+</html>

@@ -1,0 +1,198 @@
+---
+import Base from '../layouts/Base.astro';
+import ValidationBadge from '../components/ValidationBadge.astro';
+import { loadSiteData } from '../data/load';
+import { buildChart } from '../lib/chart';
+import { formatDate, formatShortDate, shortSha } from '../lib/format';
+import { ICON, TYPE_PLURAL } from '../lib/icons';
+import { pluginHref, repoUrl } from '../lib/site';
+import { TYPE_ORDER } from '../lib/types';
+import { url } from '../lib/url';
+
+const { catalog, stats } = await loadSiteData();
+const gh = repoUrl(catalog);
+const summary = [
+  { n: stats.totals.plugins, l: stats.totals.plugins === 1 ? 'Plugin' : 'Plugins' },
+  { n: stats.totals.artifacts, l: stats.totals.artifacts === 1 ? 'Artifact' : 'Artifacts' },
+  { n: stats.totals.tags, l: stats.totals.tags === 1 ? 'Tag' : 'Tags' },
+  { n: stats.totals.authors, l: stats.totals.authors === 1 ? 'Author' : 'Authors' },
+];
+const typeTiles = TYPE_ORDER.map((t) => ({ t, n: stats.totals.byType[t] }));
+const wide = buildChart(stats.growth, catalog.generatedAt, false);
+const narrow = buildChart(stats.growth, catalog.generatedAt, true);
+const growthTypes = TYPE_ORDER.filter((t) => stats.growth.some((g) => g.byType[t] > 0));
+const growthCols = growthTypes.length ? growthTypes : TYPE_ORDER;
+const totalOf = (g: (typeof stats.growth)[number]) => TYPE_ORDER.reduce((n, t) => n + g.byType[t], 0);
+const v = stats.quality.validation;
+const validationRow = (() => {
+  const parts: string[] = [];
+  if (v.pass) parts.push(`${v.pass} pass`);
+  if (v.fail) parts.push(`${v.fail} fail`);
+  if (v.unknown) parts.push(`${v.unknown} not verified`);
+  const color = v.fail ? 'var(--danger)' : v.unknown ? 'var(--text-muted)' : 'var(--success)';
+  return { v: parts.join(', ') || '—', color };
+})();
+const comps = stats.totals.artifacts;
+const fresh = stats.freshness;
+const freshRows = [
+  { k: 'Last release', v: fresh.lastReleaseAt ? formatDate(fresh.lastReleaseAt) : '—', color: 'var(--text)' },
+  { k: 'Releases in 30 days', v: String(fresh.releases30d), color: 'var(--text)' },
+  { k: 'Releases in 90 days', v: String(fresh.releases90d), color: 'var(--text)' },
+  { k: 'Unreleased changes', v: String(fresh.unreleasedChanges), color: fresh.unreleasedChanges ? 'var(--warning)' : 'var(--text)' },
+];
+const qualityRows = [
+  { k: 'Validation', ...validationRow },
+  { k: 'Description present', v: `${stats.quality.withDescription} of ${comps}`, color: 'var(--text)' },
+  { k: 'README present', v: `${stats.quality.pluginsWithReadme} of ${stats.totals.plugins}`, color: 'var(--text)' },
+];
+const tagHref = (tag: string): string => {
+  const hasArtifacts = catalog.artifacts.some((a) => a.type !== 'plugin' && a.tags.includes(tag));
+  return hasArtifacts ? url(`?tag=${encodeURIComponent(tag)}`) : url(`?q=${encodeURIComponent(tag)}`);
+};
+const notHere = [
+  { k: 'Install and download counts', v: "Claude Code doesn't report installs to marketplaces, and this site collects no visitor data." },
+  { k: 'Page views and popular searches', v: 'Search runs in your browser. Queries are never sent anywhere.' },
+  { k: 'Ratings and reviews', v: 'The catalog is a static site with no accounts or backend. Use GitHub issues for feedback.' },
+];
+const gi = stats.github;
+const ghTiles = gi ? [{ n: gi.stars, l: 'Stars' }, { n: gi.forks, l: 'Forks' }, { n: gi.openIssues, l: 'Open issues' }, { n: gi.contributors, l: 'Contributors' }] : [];
+---
+<Base title="Stats" description="Plugins, artifacts, releases and quality of this marketplace." nav="stats" path="stats/">
+  <div class="page-body" style="gap:32px">
+    <header class="stack" style="gap:4px">
+      <h1 class="h1">Stats</h1>
+      <p class="muted">From the build on {formatDate(stats.generatedAt)}, commit {shortSha(stats.commit)}.</p>
+    </header>
+
+    <ul class="tiles tiles--4" aria-label="Summary">
+      {summary.map((s) => <li><span class="tile-n">{s.n}</span><span class="tile-l">{s.l}</span></li>)}
+    </ul>
+
+    <section class="stack gap12" aria-labelledby="s-types">
+      <h2 id="s-types" class="h2">Contents by type</h2>
+      <ul class="tiles tiles--5">
+        {typeTiles.map((x) => (
+          <li>
+            <span class="tile-n" style={`color:var(--t-${x.t})`}>{x.n}</span>
+            <span class="tile-t" style={`color:var(--t-${x.t})`}><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d={ICON[x.t]}></path></svg>{TYPE_PLURAL[x.t]}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="stack gap12" aria-labelledby="s-growth">
+      <h2 id="s-growth" class="h2">Growth</h2>
+      {wide && narrow ? (
+        <>
+          <figure class="chart">
+            {[{ c: wide, cls: 'chart__svg chart__svg--wide' }, { c: narrow, cls: 'chart__svg chart__svg--narrow' }].map(({ c, cls }) => (
+              <svg class={cls} viewBox={`0 0 ${c.w} ${c.h}`} width="100%" role="img" aria-label={c.aria}>
+                <title>Artifacts per type after each release</title>
+                <desc>{c.aria}</desc>
+                {c.grid.map((g) => (
+                  <>
+                    <line x1={c.l} x2={c.r} y1={g.y} y2={g.y} class="chart__grid"></line>
+                    <text x={g.tx} y={g.ty} class="chart__tick chart__tick--end">{g.label}</text>
+                  </>
+                ))}
+                {c.xt.map((x) => <text x={x.x} y={x.y} class="chart__tick chart__tick--mid">{x.label}</text>)}
+                {c.lines.map((l) => (
+                  <>
+                    <polyline points={l.points} class="chart__line" style={`stroke:var(--t-${l.type})`}></polyline>
+                    <text x={l.lx} y={l.ly} class="chart__label" style={`fill:var(--t-${l.type})`}>{l.label}</text>
+                  </>
+                ))}
+              </svg>
+            ))}
+            <figcaption class="muted small">{wide.caption}</figcaption>
+          </figure>
+        </>
+      ) : (
+        <p class="muted">Not enough releases yet to draw a chart. The chart appears after the second release.</p>
+      )}
+      <details class="growth-table" open={!wide}>
+        <summary>Show as table</summary>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col" style="text-align:left">Date</th>
+                {growthCols.map((t) => <th scope="col" style="text-align:right">{t === 'mcp' ? 'MCP' : TYPE_PLURAL[t]}</th>)}
+                <th scope="col" style="text-align:right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.growth.length ? stats.growth.map((g) => (
+                <tr>
+                  <td style="text-align:left">{formatShortDate(g.date)}</td>
+                  {growthCols.map((t) => <td style="text-align:right">{g.byType[t]}</td>)}
+                  <td style="text-align:right">{totalOf(g)}</td>
+                </tr>
+              )) : (
+                <tr><td colspan={growthCols.length + 2} class="muted">No releases yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <div class="half-grid">
+      <section class="stack gap8" aria-labelledby="s-fresh" style="min-width:0">
+        <h2 id="s-fresh" class="h2">Freshness</h2>
+        <dl class="rows">{freshRows.map((f) => <div><dt>{f.k}</dt><dd style={`color:${f.color}`}>{f.v}</dd></div>)}</dl>
+      </section>
+      <section class="stack gap8" aria-labelledby="s-quality" style="min-width:0">
+        <h2 id="s-quality" class="h2">Quality</h2>
+        <dl class="rows">{qualityRows.map((f) => <div><dt>{f.k}</dt><dd style={`color:${f.color}`}>{f.v}</dd></div>)}</dl>
+      </section>
+    </div>
+
+    <section class="stack gap8" aria-labelledby="s-plugins">
+      <h2 id="s-plugins" class="h2">Plugins</h2>
+      <div class="box ptable" role="table" aria-label="Plugins">
+        <div class="ptable__row ptable__head" role="row">
+          <span role="columnheader">Plugin</span><span role="columnheader">Version</span><span role="columnheader">Artifacts</span><span role="columnheader">Last release</span><span role="columnheader">Validation</span>
+        </div>
+        {stats.plugins.map((p) => (
+          <div class="ptable__row" role="row">
+            <span role="cell" class="stack" style="min-width:0">
+              <a class="mono strong" href={pluginHref(p.name)}>{p.name}</a>
+              {p.category && <span class="muted small">{p.category}</span>}
+            </span>
+            <span role="cell" class="mono">{p.version ?? '—'}</span>
+            <span role="cell">{p.components}<span class="only-narrow"> {p.components === 1 ? 'artifact' : 'artifacts'}</span></span>
+            <span role="cell">{p.updatedAt ? formatDate(p.updatedAt) : '—'}</span>
+            <span role="cell"><ValidationBadge status={p.validation} /></span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <div class="half-grid">
+      <section class="stack gap12" aria-labelledby="s-tags" style="min-width:0">
+        <h2 id="s-tags" class="h2">Tags <span class="muted" style="font-size:14px;font-weight:400">{stats.totals.tags}</span></h2>
+        {stats.topTags.length ? (
+          <ul class="tag-chips">
+            {stats.topTags.map((tg) => <li><a class="chip-btn" href={tagHref(tg.tag)} style="color:var(--text)"><span>{tg.tag}</span><span class="n">{tg.count}</span></a></li>)}
+          </ul>
+        ) : <p class="muted">No tags yet.</p>}
+      </section>
+      {gi && (
+        <section class="stack gap12" aria-labelledby="s-gh" style="min-width:0">
+          <div class="row-head">
+            <h2 id="s-gh" class="h2">GitHub</h2>
+            <a class="mono" style="font-size:13px;overflow-wrap:anywhere" href={gh} target="_blank" rel="noopener">{catalog.marketplace.repo}</a>
+          </div>
+          <ul class="tiles tiles--2">{ghTiles.map((s) => <li><span class="tile-n">{s.n}</span><span class="tile-l">{s.l}</span></li>)}</ul>
+          <p class="muted small">From the GitHub API at build time.</p>
+        </section>
+      )}
+    </div>
+
+    <section class="stack gap12" aria-labelledby="s-not" style="max-width:760px">
+      <h2 id="s-not" class="h2">What's not here and why</h2>
+      <dl class="stack gap12">{notHere.map((n) => <div><dt style="font-weight:600">{n.k}</dt><dd class="muted">{n.v}</dd></div>)}</dl>
+    </section>
+  </div>
+</Base>

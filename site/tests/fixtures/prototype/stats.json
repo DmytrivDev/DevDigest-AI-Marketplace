@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-16T12:00:00Z",
+  "commit": "45adf15e3b1c9d27a05f6b84c21d90e7f3a6b5c8",
+  "totals": {
+    "plugins": 1,
+    "externalPlugins": 0,
+    "artifacts": 9,
+    "byType": {
+      "plugin": 1,
+      "skill": 3,
+      "agent": 3,
+      "command": 1,
+      "hook": 1,
+      "mcp": 1
+    },
+    "tags": 14,
+    "categories": 1,
+    "authors": 1
+  },
+  "freshness": {
+    "lastReleaseAt": "2026-10-14T10:00:00Z",
+    "releases30d": 2,
+    "releases90d": 3,
+    "artifactsUpdated30d": 7,
+    "unreleasedChanges": 1
+  },
+  "quality": {
+    "validation": {
+      "pass": 1,
+      "fail": 0,
+      "unknown": 0
+    },
+    "withDescription": 9,
+    "pluginsWithReadme": 1
+  },
+  "growth": [
+    {
+      "date": "2026-09-16T08:00:00Z",
+      "byType": {
+        "plugin": 0,
+        "skill": 0,
+        "agent": 1,
+        "command": 1,
+        "hook": 1,
+        "mcp": 1
+      }
+    },
+    {
+      "date": "2026-10-02T09:00:00Z",
+      "byType": {
+        "plugin": 0,
+        "skill": 1,
+        "agent": 3,
+        "command": 2,
+        "hook": 1,
+        "mcp": 1
+      }
+    },
+    {
+      "date": "2026-10-14T10:00:00Z",
+      "byType": {
+        "plugin": 0,
+        "skill": 3,
+        "agent": 3,
+        "command": 1,
+        "hook": 1,
+        "mcp": 1
+      }
+    }
+  ],
+  "topTags": [
+    {
+      "tag": "review",
+      "count": 4
+    },
+    {
+      "tag": "security",
+      "count": 3
+    },
+    {
+      "tag": "pr",
+      "count": 2
+    },
+    {
+      "tag": "ci",
+      "count": 1
+    },
+    {
+      "tag": "code-review",
+      "count": 1
+    },
+    {
+      "tag": "dependencies",
+      "count": 1
+    },
+    {
+      "tag": "devdigest",
+      "count": 1
+    },
+    {
+      "tag": "git",
+      "count": 1
+    },
+    {
+      "tag": "github-actions",
+      "count": 1
+    },
+    {
+      "tag": "mcp",
+      "count": 1
+    },
+    {
+      "tag": "performance",
+      "count": 1
+    },
+    {
+      "tag": "pull-requests",
+      "count": 1
+    },
+    {
+      "tag": "summary",
+      "count": 1
+    },
+    {
+      "tag": "tests",
+      "count": 1
+    }
+  ],
+  "plugins": [
+    {
+      "name": "devdigest",
+      "category": "code-review",
+      "version": "0.3.0",
+      "components": 9,
+      "byType": {
+        "agent": 3,
+        "command": 1,
+        "hook": 1,
+        "mcp": 1,
+        "skill": 3
+      },
+      "updatedAt": "2026-10-14T10:00:00Z",
+      "validation": "pass"
+    }
+  ],
+  "github": {
+    "stars": 12,
+    "forks": 2,
+    "openIssues": 3,
+    "contributors": 2,
+    "fetchedAt": "2026-10-16T05:17:00Z"
+  }
+}

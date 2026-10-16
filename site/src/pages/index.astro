@@ -1,0 +1,166 @@
+---
+import Base from '../layouts/Base.astro';
+import CopyCommand from '../components/CopyCommand.astro';
+import HomeCatalog from '../components/home/HomeCatalog';
+import type { CardItem } from '../components/home/shared';
+import { loadSiteData } from '../data/load';
+import { addCommand, installCommand, isInvocable, marketplaceInfo, primaryCommand } from '../lib/commands';
+import { formatDate, pluralize } from '../lib/format';
+import { artifactHref, components, plugins, pluginHref, repoUrl } from '../lib/site';
+import { ALL_TYPES } from '../lib/types';
+import { url } from '../lib/url';
+import { FRESH_DAYS } from '../data/freshness';
+import { createEngine, toSearchDoc } from '../search/engine';
+import { typeOfWord } from '../search/intent';
+import type { ArtifactType } from '../lib/types';
+import { t } from '../i18n/en';
+
+const { catalog, stats } = await loadSiteData();
+const m = marketplaceInfo(catalog);
+// The hero line follows marketplace.json, so it stays true when the plugin line-up changes.
+const tagline = catalog.marketplace.description?.trim() || t.tagline;
+const comps = components(catalog);
+const plgs = plugins(catalog);
+// Components are listed as cards; a plugin gets its own card only while it has no components,
+// so every real plugin stays discoverable without duplicating the prototype's artifact grid.
+const withComponents = new Set(comps.map((a) => a.plugin));
+const listable = [...comps, ...plgs.filter((p) => !withComponents.has(p.name))];
+const items: CardItem[] = listable.map((a) => ({
+  id: a.id,
+  type: a.type,
+  name: a.name,
+  description: a.description,
+  tags: a.tags,
+  plugin: a.plugin,
+  href: artifactHref(a),
+  pluginHref: pluginHref(a.plugin),
+  date: a.updatedAt ? formatDate(a.updatedAt) : '',
+  ts: a.updatedAt ? Date.parse(a.updatedAt) : 0,
+  fresh: a.freshness,
+  cmd: primaryCommand(a, m),
+}));
+const availableTypes = ALL_TYPES.filter((ty) => listable.some((a) => a.type === ty));
+
+const empty = listable.length === 0;
+const lastRelease = stats.freshness.lastReleaseAt;
+const strip: { n: string; l: string }[] = empty
+  ? [{ n: '0', l: 'plugins' }, { n: '0', l: 'artifacts' }]
+  : comps.length
+    ? [
+        { n: String(plgs.length), l: plgs.length === 1 ? 'plugin' : 'plugins' },
+        { n: String(comps.length), l: comps.length === 1 ? 'artifact' : 'artifacts' },
+        { n: String(stats.totals.tags), l: stats.totals.tags === 1 ? 'tag' : 'tags' },
+        ...(lastRelease ? [{ n: formatDate(lastRelease), l: 'last release' }] : []),
+      ]
+    : [{ n: String(plgs.length), l: plgs.length === 1 ? 'plugin' : 'plugins' }];
+
+const byNewest = (a: { updatedAt: string | null; name: string }, b: { updatedAt: string | null; name: string }) =>
+  (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || a.name.localeCompare(b.name);
+const invocable = [...comps].sort(byNewest);
+const firstInvocable = invocable.find((a) => a.type === 'skill' && a.invoke) ?? invocable.find(isInvocable);
+// The install step points at the plugin of the example command, or the only plugin there is.
+const firstPlugin = firstInvocable?.plugin ?? plgs[0]?.name ?? '<plugin>';
+const manyPlugins = plgs.length > 1;
+const step3 = firstInvocable?.invoke ?? null;
+const steps = [
+  { n: '1', title: 'Add the marketplace', text: 'Run once in Claude Code.', cmd: addCommand(m) },
+  {
+    n: '2',
+    title: 'Install a plugin',
+    text: manyPlugins ? 'Pick a plugin in the catalog below, for example:' : 'Installs all of its skills, agents and hooks.',
+    cmd: installCommand(firstPlugin, m),
+  },
+  { n: '3', title: 'Find and invoke', text: 'Search below and copy the command.', cmd: step3 },
+];
+// Example chips come from the real catalog: one "<type> for <tag>" per plugin, using its most
+// frequent tag, and only queries that actually return something make it onto the page.
+const TYPE_WORD: Record<ArtifactType, string> = { plugin: 'plugin', skill: 'skill', agent: 'agent', command: 'command', hook: 'hook', mcp: 'MCP server' };
+const engine = createEngine(comps.map(toSearchDoc));
+const compById = new Map(comps.map((a) => [a.id, a]));
+const finds = (q: string): boolean => {
+  const r = engine.search(q);
+  return !!r.ranked?.some((x) => !r.qType || compById.get(x.id)?.type === r.qType);
+};
+const exampleFor = (plugin: string): string | null => {
+  const own = comps.filter((a) => a.plugin === plugin);
+  const counts = new Map<string, number>();
+  own.forEach((a) => a.tags.forEach((tag) => {
+    if (tag !== plugin && !typeOfWord(tag)) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  }));
+  const tag = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
+  if (!tag) return null;
+  const types = new Map<ArtifactType, number>();
+  own.filter((a) => a.tags.includes(tag)).forEach((a) => types.set(a.type, (types.get(a.type) ?? 0) + 1));
+  const type = [...types].sort((a, b) => b[1] - a[1])[0][0];
+  return `${TYPE_WORD[type]} for ${tag}`;
+};
+const pluginsBySize = [...new Set(comps.map((a) => a.plugin))]
+  .sort((a, b) => comps.filter((x) => x.plugin === b).length - comps.filter((x) => x.plugin === a).length || a.localeCompare(b));
+const examples = [...new Set([...pluginsBySize.map(exampleFor), 'skill for PR review', 'security agent', 'pre-commit hooks'])]
+  .filter((q): q is string => !!q && finds(q))
+  .slice(0, 3);
+---
+<Base title={t.siteName} description={tagline} nav="catalog" path="" home={!empty}>
+  <div class="page-body">
+    <section class="hero" aria-labelledby="h-title">
+      <h1 id="h-title" class="h1">DevDigest Marketplace</h1>
+      <p>{tagline}</p>
+      <div class="hero__cmd">
+        <span>Add this marketplace in Claude Code</span>
+        <CopyCommand cmd={addCommand(m)} />
+      </div>
+    </section>
+
+    {!empty && (
+      <section class="onboarding js-only" aria-labelledby="ob-h">
+        <div class="onboarding__head">
+          <h2 id="ob-h" class="h2 h2--sm">New to Claude Code marketplaces? Three steps.</h2>
+          <button type="button" class="icon-btn" aria-label="Dismiss getting started" data-ob-dismiss>×</button>
+        </div>
+        <ol class="steps">
+          {steps.map((s) => (
+            <li>
+              <div class="t"><span class="n">{s.n}</span><strong>{s.title}</strong></div>
+              <span class="d">{s.text}</span>
+              {s.cmd ? <CopyCommand cmd={s.cmd} /> : <span class="d">Commands for skills appear here once the plugin has any.</span>}
+            </li>
+          ))}
+        </ol>
+        <div class="onboarding__actions">
+          <button type="button" class="btn-primary" data-ob-dismiss>Got it</button>
+          <a href={url('guide/')}>Learn more →</a>
+        </div>
+      </section>
+    )}
+
+    <div class="summary-strip" aria-label="Catalog summary">
+      {strip.map((x) => <span><strong>{x.n}</strong> {x.l}</span>)}
+      {!empty && !comps.length && <span>no components yet</span>}
+      <a class="more" href={url('stats/')}>All stats →</a>
+    </div>
+
+    <noscript><p class="muted">Search needs JavaScript. The full list is below.</p></noscript>
+
+    {empty ? (
+      <section class="empty-box">
+        <h2 class="h2">No artifacts in this marketplace yet</h2>
+        <p>Plugins appear here after they're added to the repository and the site is rebuilt.</p>
+        <a href={url('guide/#g-authors')}>How to add a plugin →</a>
+      </section>
+    ) : (
+      <HomeCatalog
+        client:load
+        items={items}
+        availableTypes={availableTypes}
+        hasComponents={comps.length > 0}
+        commit={catalog.commit}
+        catalogUrl={url('api/catalog.json')}
+        whatsNewUrl={url('whats-new/')}
+        issueUrl={`${repoUrl(catalog)}/issues/new`}
+        examples={examples}
+        freshDays={FRESH_DAYS}
+        noComponentsNote={t.noComponents}
+      />
+    )}
+  </div>
+</Base>

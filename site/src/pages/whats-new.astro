@@ -1,0 +1,143 @@
+---
+import Base from '../layouts/Base.astro';
+import TypeBadge from '../components/TypeBadge.astro';
+import { loadSiteData } from '../data/load';
+import { formatDate, formatMonth } from '../lib/format';
+import { artifactHref, pluginHref, releaseTitle, repoUrl } from '../lib/site';
+import type { ArtifactRef, Changes, Release } from '../lib/types';
+
+const { catalog, changelog } = await loadSiteData();
+const byId = new Map(catalog.artifacts.map((a) => [a.id, a]));
+// A removed plugin keeps its history here, but has no page to link to.
+const livePlugins = new Set(catalog.artifacts.filter((a) => a.type === 'plugin').map((a) => a.plugin));
+const pluginNames = [...new Set(changelog.releases.map((r) => r.plugin))].sort();
+
+const hrefOf = (r: ArtifactRef): string | null => {
+  const a = r.exists ? byId.get(r.id) : undefined;
+  return a ? artifactHref(a) : null;
+};
+const rows = (c: Changes) =>
+  [
+    { key: 'added', label: '+ Added', color: 'var(--success)', items: c.added },
+    { key: 'updated', label: '~ Updated', color: 'var(--warning)', items: c.updated },
+    { key: 'removed', label: '− Removed', color: 'var(--danger)', items: c.removed },
+  ].filter((x) => x.items.length);
+
+const months: { month: string; items: Release[] }[] = [];
+for (const r of changelog.releases) {
+  const label = formatMonth(r.date);
+  let m = months.find((x) => x.month === label);
+  if (!m) months.push((m = { month: label, items: [] }));
+  m.items.push(r);
+}
+const pending = changelog.pending;
+const gh = repoUrl(catalog);
+const key = (id: string) => id.replace(/[^A-Za-z0-9]+/g, '-');
+---
+<Base title="What's new" description="Plugin releases in this marketplace, newest first." nav="whats-new" path="whats-new/">
+  <div class="page-body">
+    <div class="narrow stack" style="gap:24px">
+      <header class="page-head">
+        <div class="stack" style="flex:1;min-width:220px;gap:4px">
+          <h1 class="h1">What's new</h1>
+          <p class="muted">Plugin releases in this marketplace, newest first.</p>
+        </div>
+        {changelog.releases.length > 0 && (
+          <div class="head-tools js-only">
+            <label for="rel-plugin" class="muted small">Plugin</label>
+            <select id="rel-plugin">
+              <option value="all">All plugins</option>
+              {pluginNames.map((n) => <option value={n}>{n}</option>)}
+            </select>
+          </div>
+        )}
+      </header>
+
+      {pending.length > 0 && pending.map((p) => (
+        <section class="box box--surface pad16 stack gap8" aria-labelledby={`w-unrel-${p.plugin}`}>
+          <div class="row-head">
+            <h2 id={`w-unrel-${p.plugin}`} class="h2 h2--sm">Unreleased</h2>
+            <span class="muted small">{p.plugin}, since {p.since}</span>
+          </div>
+          <p>Changes in the repository not yet released in a new version:</p>
+          {rows(p.changes).map((row) => (
+            <div class="rel-row">
+              <span class="rel-label mono" style={`color:${row.color}`}>{row.label}</span>
+              <ul class="rel-items">
+                {row.items.map((it) => (
+                  <li>
+                    <TypeBadge type={it.type} />
+                    {row.key !== 'removed' && hrefOf(it) ? <a class="mono" href={hrefOf(it)!}>{it.name}</a> : <span class="mono removed">{it.name}</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+      ))}
+
+      {changelog.releases.length === 0 ? (
+        <section class="empty-box">
+          <h2 class="h2">No releases yet</h2>
+          <p>When a plugin publishes its first version, it appears here.</p>
+        </section>
+      ) : (
+        months.map((mo) => (
+          <section class="stack gap12" data-month>
+            <h2 class="month-h">{mo.month}</h2>
+            {mo.items.map((r) => {
+              const rs = rows(r.changes);
+              return (
+                <article id={r.id} class="box rel" aria-labelledby={`rel-${key(r.id)}`} data-release data-plugin={r.plugin} data-release-date={r.date}>
+                  <header class="rel__head">
+                    <h3 id={`rel-${key(r.id)}`} class="h3" style="flex:1;min-width:180px">
+                      {livePlugins.has(r.plugin) ? <a href={pluginHref(r.plugin)} style="color:var(--text)">{releaseTitle(r)}</a> : releaseTitle(r)}
+                      <span class="fresh fresh--new" style="margin-left:8px" data-new-for-you hidden>New for you</span>
+                    </h3>
+                    <span class="muted small">
+                      <time datetime={r.date}>{formatDate(r.date)}</time> ·
+                      <a class="mono" href={`${gh}/commit/${r.commit}`} target="_blank" rel="noopener">{r.commit.slice(0, 7)}</a>
+                    </span>
+                  </header>
+                  {rs.length ? (
+                    <div class="stack" style="gap:10px">
+                      {rs.map((row) => (
+                        <div class="rel-row rel-row--top">
+                          <span class="rel-label mono" style={`color:${row.color}`}>{row.label}</span>
+                          <ul class="rel-items">
+                            {row.items.map((it) => (
+                              <li>
+                                <TypeBadge type={it.type} />
+                                {row.key !== 'removed' && hrefOf(it) ? <a class="mono" href={hrefOf(it)!}>{it.name}</a> : <span class={`mono${row.key === 'removed' ? ' removed' : ''}`}>{it.name}</span>}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p class="muted">No changes to contents</p>
+                  )}
+                  {r.notes && (
+                    <details class="notes">
+                      <summary>Release notes</summary>
+                      {r.notes.source === 'changelog' ? (
+                        <div class="md" set:html={r.notes.html} />
+                      ) : (
+                        <ul class="plain-list">
+                          {r.notes.items.map((s) => <li>{s}</li>)}
+                          {r.notes.more > 0 && <li class="muted">and {r.notes.more} more</li>}
+                        </ul>
+                      )}
+                    </details>
+                  )}
+                </article>
+              );
+            })}
+          </section>
+        ))
+      )}
+      {changelog.truncated && <p class="muted small">History shown from {formatDate(changelog.historyStart)}</p>}
+    </div>
+  </div>
+</Base>

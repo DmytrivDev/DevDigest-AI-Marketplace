@@ -1,0 +1,438 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-16T12:00:00Z",
+  "commit": "45adf15e3b1c9d27a05f6b84c21d90e7f3a6b5c8",
+  "marketplace": {
+    "name": "devdigest-marketplace",
+    "description": "Claude Code plugins for DevDigest, the local-first AI PR reviewer",
+    "repo": "DmytrivDev/DevDigest-AI-Marketplace"
+  },
+  "artifacts": [
+    {
+      "id": "devdigest:agent:performance-reviewer",
+      "type": "agent",
+      "name": "performance-reviewer",
+      "slug": "performance-reviewer",
+      "plugin": "devdigest",
+      "description": "Finds N+1 queries, unbounded loops and needless re-renders introduced by a change.",
+      "tags": [
+        "performance",
+        "review"
+      ],
+      "category": "code-review",
+      "searchText": "What it does Finds N+1 queries, unbounded loops and needless re-renders introduced by a change. Install Claude delegates to this agent when a task matches its description. You can also ask for it by name: “Use the performance-reviewer agent on this diff.”",
+      "sourcePath": "plugins/devdigest/agents/performance-reviewer.md",
+      "updatedAt": "2026-10-02T09:00:00Z",
+      "details": {
+        "fieldsTitle": "Frontmatter",
+        "fields": [
+          [
+            "name",
+            "performance-reviewer"
+          ],
+          [
+            "description",
+            "Finds N+1 queries, unbounded loops and needless re-renders introduced by a change."
+          ],
+          [
+            "tools",
+            "Read, Grep, Glob"
+          ],
+          [
+            "model",
+            "inherit"
+          ]
+        ],
+        "files": [
+          {
+            "path": "agents/performance-reviewer.md",
+            "size": 1946,
+            "description": "Agent prompt and frontmatter"
+          }
+        ]
+      }
+    },
+    {
+      "id": "devdigest:agent:security-reviewer",
+      "type": "agent",
+      "name": "security-reviewer",
+      "slug": "security-reviewer",
+      "plugin": "devdigest",
+      "description": "Audits a diff for injection, broken auth, unsafe deserialization and leaked secrets.",
+      "tags": [
+        "security",
+        "review"
+      ],
+      "category": "code-review",
+      "searchText": "What it does Audits a diff for injection, broken auth, unsafe deserialization and leaked secrets. Install Claude delegates to this agent when a task matches its description. You can also ask for it by name: “Use the security-reviewer agent on this diff.”",
+      "sourcePath": "plugins/devdigest/agents/security-reviewer.md",
+      "updatedAt": "2026-10-14T10:00:00Z",
+      "details": {
+        "fieldsTitle": "Frontmatter",
+        "fields": [
+          [
+            "name",
+            "security-reviewer"
+          ],
+          [
+            "description",
+            "Audits a diff for injection, broken auth, unsafe deserialization and leaked secrets."
+          ],
+          [
+            "tools",
+            "Read, Grep, Glob"
+          ],
+          [
+            "model",
+            "inherit"
+          ]
+        ],
+        "files": [
+          {
+            "path": "agents/security-reviewer.md",
+            "size": 1946,
+            "description": "Agent prompt and frontmatter"
+          }
+        ]
+      }
+    },
+    {
+      "id": "devdigest:agent:test-quality-reviewer",
+      "type": "agent",
+      "name": "test-quality-reviewer",
+      "slug": "test-quality-reviewer",
+      "plugin": "devdigest",
+      "description": "Flags weak assertions, missing edge cases and flaky test patterns in changed tests.",
+      "tags": [
+        "tests",
+        "review"
+      ],
+      "category": "code-review",
+      "searchText": "What it does Flags weak assertions, missing edge cases and flaky test patterns in changed tests. Install Claude delegates to this agent when a task matches its description. You can also ask for it by name: “Use the test-quality-reviewer agent on this diff.”",
+      "sourcePath": "plugins/devdigest/agents/test-quality-reviewer.md",
+      "updatedAt": "2026-10-02T09:00:00Z",
+      "details": {
+        "fieldsTitle": "Frontmatter",
+        "fields": [
+          [
+            "name",
+            "test-quality-reviewer"
+          ],
+          [
+            "description",
+            "Flags weak assertions, missing edge cases and flaky test patterns in changed tests."
+          ],
+          [
+            "tools",
+            "Read, Grep, Glob"
+          ],
+          [
+            "model",
+            "inherit"
+          ]
+        ],
+        "files": [
+          {
+            "path": "agents/test-quality-reviewer.md",
+            "size": 1946,
+            "description": "Agent prompt and frontmatter"
+          }
+        ]
+      }
+    },
+    {
+      "id": "devdigest:command:export-ci",
+      "type": "command",
+      "name": "export-ci",
+      "slug": "export-ci",
+      "plugin": "devdigest",
+      "description": "Exports a review agent as a ready-to-commit GitHub Actions workflow. Argument: `<agent-name>`",
+      "tags": [
+        "ci",
+        "github-actions"
+      ],
+      "category": "code-review",
+      "searchText": "What it does Exports a review agent as a ready-to-commit GitHub Actions workflow. Argument: Usage Replace with one of the plugin's agents, for example security-reviewer.",
+      "sourcePath": "plugins/devdigest/commands/export-ci.md",
+      "updatedAt": "2026-10-02T09:00:00Z",
+      "details": {
+        "fieldsTitle": "Frontmatter",
+        "fields": [
+          [
+            "name",
+            "export-ci"
+          ],
+          [
+            "description",
+            "Exports a review agent as a ready-to-commit GitHub Actions workflow. Argument: <agent-name>"
+          ],
+          [
+            "argument-hint",
+            "<agent-name>"
+          ],
+          [
+            "allowed-tools",
+            "Read, Write"
+          ]
+        ],
+        "files": [
+          {
+            "path": "commands/export-ci.md",
+            "size": 1229,
+            "description": "Command prompt"
+          }
+        ]
+      },
+      "invoke": "/devdigest:export-ci <agent-name>"
+    },
+    {
+      "id": "devdigest:hook:pre-tool-use-bash",
+      "type": "hook",
+      "name": "pre-tool-use-bash",
+      "slug": "pre-tool-use-bash",
+      "plugin": "devdigest",
+      "description": "Blocks `git commit` when staged files contain secrets or private keys.",
+      "tags": [
+        "git",
+        "security"
+      ],
+      "category": "code-review",
+      "searchText": "What it does Blocks git commit when staged files contain secrets or private keys. Install Runs before every Bash tool call and stops a git commit that would include a secret. It runs automatically once the plugin is installed.",
+      "sourcePath": "plugins/devdigest/hooks/hooks.json",
+      "updatedAt": "2026-09-16T08:00:00Z",
+      "details": {
+        "fieldsTitle": "Configuration",
+        "fields": [
+          [
+            "event",
+            "PreToolUse"
+          ],
+          [
+            "matcher",
+            "Bash"
+          ],
+          [
+            "command",
+            "scripts/pre-tool-use-bash.sh"
+          ]
+        ],
+        "files": [
+          {
+            "path": "hooks/hooks.json",
+            "size": 307,
+            "description": "Hook registration"
+          },
+          {
+            "path": "scripts/pre-tool-use-bash.sh",
+            "size": 1126,
+            "description": "Secret scanner"
+          }
+        ]
+      }
+    },
+    {
+      "id": "devdigest:mcp:devdigest",
+      "type": "mcp",
+      "name": "devdigest",
+      "slug": "devdigest",
+      "plugin": "devdigest",
+      "description": "Exposes reviews, findings and agents to Claude through an MCP server. Env vars: `DEVDIGEST_URL`",
+      "tags": [
+        "mcp"
+      ],
+      "category": "code-review",
+      "searchText": "What it does Exposes reviews, findings and agents to Claude through an MCP server. Env vars: DEVDIGESTURL Install Set DEVDIGESTURL to the address of your local DevDigest instance before starting Claude Code.",
+      "sourcePath": "plugins/devdigest/.mcp.json",
+      "updatedAt": "2026-09-16T08:00:00Z",
+      "details": {
+        "fieldsTitle": "Configuration",
+        "fields": [
+          [
+            "server",
+            "devdigest"
+          ],
+          [
+            "command",
+            "npx devdigest-mcp"
+          ],
+          [
+            "env",
+            "DEVDIGEST_URL"
+          ]
+        ],
+        "files": [
+          {
+            "path": ".mcp.json",
+            "size": 205,
+            "description": "Server definition"
+          }
+        ]
+      }
+    },
+    {
+      "id": "devdigest:plugin:devdigest",
+      "type": "plugin",
+      "name": "devdigest",
+      "slug": "devdigest",
+      "plugin": "devdigest",
+      "description": "DevDigest review workflow for Claude Code: skills, agents, hooks and MCP server",
+      "tags": [
+        "code-review",
+        "pull-requests",
+        "devdigest"
+      ],
+      "category": "code-review",
+      "version": "0.3.0",
+      "searchText": "DevDigest review workflow for Claude Code. It connects Claude to a local DevDigest instance and adds skills, agents and hooks for reviewing pull requests. What's inside 3 skills: review, pr-brief, dependency-checker 3 review agents: security, test quality and performance export-ci command that turns an agent into a GitHub Actions workflow pre-tool-use-bash hook that blocks commits containing secrets MCP server that exposes reviews and findings to Claude Requirements Claude Code with plugin support DevDigest running locally, with DEVDIGESTURL pointing to it Quick start",
+      "sourcePath": "plugins/devdigest",
+      "updatedAt": "2026-10-14T10:00:00Z",
+      "details": {
+        "author": "DevDigest",
+        "homepage": "https://github.com/DmytrivDev/DevDigest-AI-Marketplace",
+        "repository": "https://github.com/DmytrivDev/DevDigest-AI-Marketplace",
+        "hasReadme": true
+      },
+      "validation": {
+        "status": "pass",
+        "messages": []
+      }
+    },
+    {
+      "id": "devdigest:skill:dependency-checker",
+      "type": "skill",
+      "name": "dependency-checker",
+      "slug": "dependency-checker",
+      "plugin": "devdigest",
+      "description": "Checks new or updated dependencies for license issues, known vulnerabilities and bundle size impact.",
+      "tags": [
+        "dependencies",
+        "security"
+      ],
+      "category": "code-review",
+      "searchText": "What it does Checks new or updated dependencies for license issues, known vulnerabilities and bundle size impact. Usage Claude can also load this skill on its own when your request matches its description.",
+      "sourcePath": "plugins/devdigest/skills/dependency-checker",
+      "updatedAt": "2026-10-02T09:00:00Z",
+      "details": {
+        "fieldsTitle": "Frontmatter",
+        "fields": [
+          [
+            "name",
+            "dependency-checker"
+          ],
+          [
+            "description",
+            "Checks new or updated dependencies for license issues, known vulnerabilities and bundle size impact."
+          ],
+          [
+            "allowed-tools",
+            "Read, Grep, Glob"
+          ]
+        ],
+        "files": [
+          {
+            "path": "SKILL.md",
+            "size": 2458,
+            "description": "Instructions and frontmatter"
+          }
+        ]
+      },
+      "invoke": "/devdigest:dependency-checker"
+    },
+    {
+      "id": "devdigest:skill:pr-brief",
+      "type": "skill",
+      "name": "pr-brief",
+      "slug": "pr-brief",
+      "plugin": "devdigest",
+      "description": "Summarizes a pull request into a short brief: intent, risky areas and the files to read first.",
+      "tags": [
+        "pr",
+        "summary"
+      ],
+      "category": "code-review",
+      "searchText": "What it does Summarizes a pull request into a short brief: intent, risky areas and the files to read first. Usage Claude can also load this skill on its own when your request matches its description.",
+      "sourcePath": "plugins/devdigest/skills/pr-brief",
+      "updatedAt": "2026-10-14T10:00:00Z",
+      "details": {
+        "fieldsTitle": "Frontmatter",
+        "fields": [
+          [
+            "name",
+            "pr-brief"
+          ],
+          [
+            "description",
+            "Summarizes a pull request into a short brief: intent, risky areas and the files to read first."
+          ],
+          [
+            "allowed-tools",
+            "Read, Grep, Glob"
+          ]
+        ],
+        "files": [
+          {
+            "path": "SKILL.md",
+            "size": 2458,
+            "description": "Instructions and frontmatter"
+          }
+        ]
+      },
+      "invoke": "/devdigest:pr-brief"
+    },
+    {
+      "id": "devdigest:skill:review",
+      "type": "skill",
+      "name": "review",
+      "slug": "review",
+      "plugin": "devdigest",
+      "description": "Reviews a pull request diff and reports findings grouped by severity, with file and line references.",
+      "tags": [
+        "review",
+        "pr"
+      ],
+      "category": "code-review",
+      "searchText": "What it does Reads the diff of the current branch against its base and reports findings grouped by severity: blocker, major, minor and nit. Every finding points to a file and line, so you can jump straight to it. When to use Before you request a review on a pull request. After a large refactor, to catch regressions the tests miss. When you inherit a pull request and need to know where the risk is. Usage Without arguments the skill compares HEAD with the merge base of the default branch. Output Severity rules live in references/severity.md. Edit that file to tune what counts as a blocker for your team.",
+      "sourcePath": "plugins/devdigest/skills/review",
+      "updatedAt": "2026-10-14T10:00:00Z",
+      "details": {
+        "fieldsTitle": "Frontmatter",
+        "fields": [
+          [
+            "name",
+            "review"
+          ],
+          [
+            "description",
+            "Reviews a pull request diff and reports findings grouped by severity, with file and line references."
+          ],
+          [
+            "allowed-tools",
+            "Read, Grep, Glob, Bash(git diff:*)"
+          ],
+          [
+            "argument-hint",
+            "[--base <branch>] [--focus <area>]"
+          ]
+        ],
+        "files": [
+          {
+            "path": "SKILL.md",
+            "size": 3277,
+            "description": "Instructions and frontmatter"
+          },
+          {
+            "path": "references/severity.md",
+            "size": 1434,
+            "description": "Severity rules"
+          },
+          {
+            "path": "scripts/collect-diff.sh",
+            "size": 614,
+            "description": "Collects the diff and file list"
+          }
+        ]
+      },
+      "invoke": "/devdigest:review"
+    }
+  ]
+}

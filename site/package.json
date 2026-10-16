@@ -1,0 +1,44 @@
+{
+  "name": "devdigest-marketplace-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev --port 4321",
+    "build": "astro build && node scripts/check-dist.mjs",
+    "preview": "astro preview --port 4321",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "fixtures:update": "tsx scripts/gen-test-fixtures.ts",
+    "check:links": "node scripts/check-links.mjs"
+  },
+  "dependencies": {
+    "@astrojs/react": "5.0.7",
+    "astro": "6.4.8",
+    "github-slugger": "2.0.0",
+    "minisearch": "7.2.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "rehype-sanitize": "6.0.0",
+    "rehype-stringify": "10.0.1",
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
+    "remark-rehype": "11.1.2",
+    "shiki": "4.5.0",
+    "unified": "11.0.5",
+    "unist-util-visit": "5.1.0",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "@types/hast": "3.0.5",
+    "@types/node": "22.20.5",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

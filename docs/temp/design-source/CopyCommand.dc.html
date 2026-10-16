@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0;width:100%">
+<button type="button" onClick="{{ onCopy }}" aria-label="{{ aria }}" style="display:flex;align-items:center;gap:8px;width:100%;min-width:0;min-height:{{ h }};box-sizing:border-box;padding:4px 8px 4px 12px;background:var(--surface);border:1px solid {{ borderColor }};border-radius:6px;color:var(--text);cursor:pointer;text-align:left;font:inherit;transition:background-color 120ms, border-color 120ms" style-hover="background:var(--surface-hover)">
+<code ref="{{ codeRef }}" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:{{ ws }};word-break:{{ wb }};font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;line-height:1.5;color:var(--text);background:{{ selBg }}">{{ cmd }}</code>
+<span aria-live="polite" style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0;font-size:13px;font-weight:500;color:{{ stColor }}">
+<sc-if value="{{ idle }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.4;stroke-linejoin:round"><path d="M5.5 5.5h8v8h-8z"></path><path d="M10.5 5.5v-3h-8v8h3"></path></svg></sc-if>
+<sc-if value="{{ ok }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"><path d="M3 8.5 6.5 12 13 4.5"></path></svg></sc-if>
+<span>{{ label }}</span>
+</span>
+</button>
+<sc-if value="{{ failed }}" hint-placeholder-val="{{ false }}"><span role="status" style="font-size:13px;line-height:1.5;color:var(--text-muted)">Couldn't copy automatically. The command is selected: press Ctrl+C.</span></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:360,&quot;height&quot;:80},&quot;c&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{cmd:string,status:'idle'|'ok'|'fail',onCopy:()=&gt;void,h?:string}&quot;}}">
+class Component extends DCLogic {
+  codeRef = React.createRef();
+  componentDidMount() { this.sel(); }
+  componentDidUpdate() { this.sel(); }
+  sel() {
+    const c = this.props.c || {};
+    if (c.status === 'fail' && this.codeRef.current && this._last !== c.cmd) {
+      this._last = c.cmd;
+      try { const r = document.createRange(); r.selectNodeContents(this.codeRef.current); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
+    }
+    if (c.status !== 'fail') this._last = null;
+  }
+  renderVals() {
+    const c = this.props.c || { cmd: '/plugin install devdigest@devdigest-marketplace', status: 'idle' };
+    const st = c.status || 'idle';
+    return {
+      cmd: c.cmd, onCopy: c.onCopy, h: c.h || '36px', codeRef: this.codeRef,
+      ok: st === 'ok', idle: st === 'idle', failed: st === 'fail',
+      label: st === 'ok' ? 'Copied' : '',
+      stColor: st === 'ok' ? 'var(--success)' : 'var(--text-muted)',
+      borderColor: st === 'ok' ? 'var(--success)' : 'var(--border)',
+      ws: st === 'fail' ? 'normal' : 'nowrap', wb: st === 'fail' ? 'break-all' : 'normal',
+      selBg: st === 'fail' ? 'color-mix(in srgb, var(--accent) 22%, transparent)' : 'transparent',
+      aria: st === 'ok' ? 'Copied: ' + c.cmd : 'Copy command: ' + c.cmd
+    };
+  }
+}
+</script>
+</body>
+</html>

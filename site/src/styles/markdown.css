@@ -1,0 +1,28 @@
+/* Rendered markdown (README, artifact bodies, release notes). Sizes follow the design prototype. */
+.md { min-width: 0; display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 1.5; }
+.md > * { margin: 0; }
+.md p { max-width: 72ch; }
+.md h2 { margin-top: 12px; font-size: 20px; line-height: 1.25; font-weight: 600; }
+.md h3 { margin-top: 8px; font-size: 16px; line-height: 1.25; font-weight: 600; }
+.md h4, .md h5, .md h6 { margin-top: 8px; font-size: 14px; line-height: 1.25; font-weight: 600; }
+.md ul, .md ol { padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.md li > ul, .md li > ol { margin-top: 4px; }
+.md :not(pre) > code { font-family: var(--mono); font-size: 0.92em; background: var(--surface); border-radius: 4px; }
+.md pre {
+  padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow-x: auto;
+  font-family: var(--mono); font-size: 13px; line-height: 1.5;
+}
+.md pre code { background: transparent; font-size: inherit; }
+.md table { border-collapse: collapse; display: block; overflow-x: auto; max-width: 100%; }
+.md th, .md td { padding: 6px 10px; border: 1px solid var(--border); text-align: left; }
+.md th { background: var(--surface); }
+.md blockquote { margin: 0; padding-left: 12px; border-left: 3px solid var(--border); color: var(--text-muted); }
+.md img { max-width: 100%; }
+.md hr { border: 0; border-top: 1px solid var(--border); width: 100%; }
+
+/* Shiki: both themes are emitted as CSS variables, the page theme picks one. */
+.md .shiki, .md .shiki span { color: var(--shiki-light); background-color: transparent; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .md .shiki, :root:not([data-theme="light"]) .md .shiki span { color: var(--shiki-dark); }
+}
+:root[data-theme="dark"] .md .shiki, :root[data-theme="dark"] .md .shiki span { color: var(--shiki-dark); }
