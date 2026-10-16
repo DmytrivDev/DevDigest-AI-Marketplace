@@ -59,6 +59,8 @@ claude plugin install devdigest@devdigest-marketplace
 
 ## Rules
 
+Full contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md).
+
 - Plugin `name` in `marketplace.json` must equal `name` in its `plugin.json`.
 - Set `version` only in `plugin.json`, and bump it on every release.
 - Relative sources start with `./` and never contain `..`.
