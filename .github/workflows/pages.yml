@@ -1,4 +1,7 @@
-name: Pages
+# Catalog site (site/): checks, build, browser tests and deploy to GitHub Pages.
+# Kept apart from any marketplace or harness checks: every job here is
+# shown as "Site / <job>", so its result shows up on its own line in the PR checks and the Actions UI.
+name: Site
 
 on:
   push:
@@ -22,13 +25,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  # One run per branch; a newer push to a PR cancels the older run. main always finishes.
+  group: site-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  build:
+  checks:
+    name: Typecheck & tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0 # git history feeds updatedAt and the What's new feed
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -48,6 +55,24 @@ jobs:
         working-directory: site
         run: npm test
 
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # git history feeds updatedAt and the What's new feed
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install
+        working-directory: site
+        run: npm ci
+
       # `claude plugin validate` needs no login; it feeds the validation badges (spec 5.4).
       # If the install fails, the build still runs and the badges read "Not verified".
       - name: Install Claude Code CLI
@@ -66,11 +91,51 @@ jobs:
         working-directory: site
         run: npm run check:links
 
-      # Browser smoke tests (spec 14) on dist/ and on dist-e2e/, a build of the test fixture
-      # with artifacts and releases. dist-e2e/ is never uploaded.
-      - name: Build browser-test site
+      - name: Summary
         working-directory: site
-        run: npm run build:e2e && node scripts/check-links.mjs dist-e2e
+        run: |
+          {
+            echo "### Site build"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Pages | $(find dist -name index.html | wc -l) |"
+            echo "| Plugins | $(node -e "console.log(require('./dist/api/catalog.json').artifacts.filter(a=>a.type==='plugin').length)") |"
+            echo "| Components | $(node -e "console.log(require('./dist/api/catalog.json').artifacts.filter(a=>a.type!=='plugin').length)") |"
+            echo "| Size | $(du -sh dist | cut -f1) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site/dist
+          include-hidden-files: true # keeps .nojekyll
+
+  browser-tests:
+    name: Browser tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # the real build below reads git history too
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install
+        working-directory: site
+        run: npm ci
+
+      # Browser smoke tests (spec 14) run on dist/ and on dist-e2e/, a build of the test fixture
+      # with artifacts and releases. Nothing is uploaded from this job; the "Build" job publishes.
+      - name: Build sites under test
+        working-directory: site
+        env:
+          DD_VALIDATE: '0' # validation badges are not under test here
+          DD_SKIP_GITHUB: '1'
+        run: npm run build && npm run build:e2e && node scripts/check-links.mjs dist-e2e
 
       - name: Install Chromium for Playwright
         working-directory: site
@@ -90,14 +155,10 @@ jobs:
             site/test-results
           retention-days: 7
 
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: site/dist
-          include-hidden-files: true # keeps .nojekyll
-
   deploy:
+    name: Deploy to Pages
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    needs: build
+    needs: [checks, build, browser-tests]
     runs-on: ubuntu-latest
     permissions:
       pages: write
