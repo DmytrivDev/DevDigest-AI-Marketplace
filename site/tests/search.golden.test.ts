@@ -152,4 +152,19 @@ describe('facets and URL state', () => {
     expect(toSearch(s)).toBe('?q=hello&type=skill%2Cagent&tag=review&fresh=new&sort=name');
     expect(toSearch(parseUrl('', types, []))).toBe('');
   });
+  it('shows a plugin facet only with more than one plugin', () => {
+    expect(computeView(items, types, null, emptyFilters(), '').pluginFacets).toEqual([]);
+    const other: CardItem = { ...items[0], id: 'other:plugin:other', type: 'plugin', name: 'other', plugin: 'other', tags: [] };
+    const all = [...items, other];
+    const allTypes = ALL_TYPES.filter((t) => all.some((i) => i.type === t));
+    const view = computeView(all, allTypes, null, { ...emptyFilters(), plugF: ['other'] }, '');
+    expect(view.pluginFacets.map((f) => [f.plugin, f.count])).toEqual([['devdigest', items.length], ['other', 1]]);
+    expect(view.results.map((r) => r.id)).toEqual(['other:plugin:other']);
+    expect(view.chips.map((c) => c.label)).toContain('Plugin: other');
+  });
+  it('round-trips the plugin filter and drops unknown plugins', () => {
+    const s = parseUrl('?plugin=other,ghost', types, [], ['devdigest', 'other']);
+    expect(s.filters.plugF).toEqual(['other']);
+    expect(toSearch(s)).toBe('?plugin=other');
+  });
 });

@@ -12,7 +12,7 @@ import type { ArtifactType } from '../lib/types';
 const { catalog } = await loadSiteData();
 const m = marketplaceInfo(catalog);
 const gh = repoUrl(catalog);
-const plugin = plugins(catalog)[0]?.name ?? 'devdigest';
+const plugin = plugins(catalog)[0]?.name ?? '<plugin>';
 const comps = components(catalog);
 const skill = comps.find((a) => a.type === 'skill');
 const command = comps.find((a) => a.type === 'command');

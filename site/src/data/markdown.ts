@@ -3,6 +3,7 @@ import rehypeStringify from 'rehype-stringify';
 import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
+import GithubSlugger from 'github-slugger';
 import { createHighlighter, type Highlighter } from 'shiki';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
@@ -26,15 +27,37 @@ export interface RenderOptions {
   linkBase?: string;
 }
 
+/** Prefix for heading ids, so markdown headings never collide with the page's own ids. */
+export const HEADING_ID_PREFIX = 'md-';
+
+const textOf = (node: Element | Root): string =>
+  node.children.map((c) => (c.type === 'text' ? c.value : c.type === 'element' ? textOf(c) : '')).join('');
+
+/** GitHub-style heading ids (`## Evals` -> `md-evals`), added after sanitizing. */
+function headingIds() {
+  return (tree: Root) => {
+    const slugger = new GithubSlugger();
+    visit(tree, 'element', (node: Element) => {
+      if (!/^h[1-6]$/.test(node.tagName)) return;
+      node.properties = { ...node.properties, id: HEADING_ID_PREFIX + slugger.slug(textOf(node)) };
+    });
+  };
+}
+
 function rewriteLinks(linkBase?: string) {
   return (tree: Root) => {
     visit(tree, 'element', (node: Element) => {
       if (node.tagName !== 'a') return;
       const href = String(node.properties?.href ?? '');
+      // In-document anchors follow the prefixed heading ids; footnote links are already prefixed.
+      if (href.startsWith('#') && href.length > 1 && !href.startsWith('#user-content-')) {
+        node.properties = { ...node.properties, href: `#${HEADING_ID_PREFIX}${decodeURIComponent(href.slice(1)).toLowerCase()}` };
+        return;
+      }
       if (/^(https?:|mailto:)/i.test(href)) {
-        node.properties = { ...node.properties, rel: 'noopener noreferrer', target: '_blank' };
+        node.properties = { ...node.properties, rel: ['noopener', 'noreferrer'], target: '_blank' };
       } else if (href && !href.startsWith('#')) {
-        if (linkBase) node.properties = { ...node.properties, href: new URL(href, linkBase).href, rel: 'noopener noreferrer', target: '_blank' };
+        if (linkBase) node.properties = { ...node.properties, href: new URL(href, linkBase).href, rel: ['noopener', 'noreferrer'], target: '_blank' };
         else delete node.properties!.href;
       }
     });
@@ -107,6 +130,7 @@ export async function renderMarkdown(md: string, opts: RenderOptions = {}): Prom
     .use(remarkRehype)
     .use(rehypeSanitize, schema)
     .use(() => shiftHeadings(opts.headingOffset ?? 0, opts.dropFirstH1 ?? false))
+    .use(headingIds)
     .use(() => rewriteLinks(opts.linkBase))
     .use(highlight)
     .use(rehypeStringify)

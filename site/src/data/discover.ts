@@ -105,7 +105,7 @@ export function discoverComponents(src: FileSource, pluginDir: string, manifest:
     ['command', manifest.commands, ['commands']],
   ] as const) {
     const files = new Set<string>();
-    for (const p of paths(field, pluginDir, def)) {
+    for (const p of paths(field, pluginDir, [...def])) {
       if (p.endsWith('.md')) {
         if (src.read(p) != null) files.add(p);
       } else

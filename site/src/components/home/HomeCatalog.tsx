@@ -41,17 +41,18 @@ export default function HomeCatalog(props: HomeProps) {
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const knownTags = useMemo(() => [...new Set(items.flatMap((i) => i.tags))], [items]);
+  const knownPlugins = useMemo(() => [...new Set(items.map((i) => i.plugin))], [items]);
   const noun = hasComponents ? 'artifact' : 'plugin';
 
   // Restore state from the URL after hydration (keeps the server markup and first client render identical).
   useEffect(() => {
-    const s = parseUrl(location.search, availableTypes, knownTags);
+    const s = parseUrl(location.search, availableTypes, knownTags, knownPlugins);
     setInput(s.q);
     setQuery(s.q);
     setFilters(s.filters);
     setSortChoice(s.sort);
     setSynced(true);
-  }, [availableTypes, knownTags]);
+  }, [availableTypes, knownTags, knownPlugins]);
 
   // Debounce 150 ms.
   useEffect(() => {
@@ -129,7 +130,7 @@ export default function HomeCatalog(props: HomeProps) {
   const nActive = view.chips.length;
   const showSearchResultsLabel = !!q && !!engine;
 
-  const toggle = <K extends 'typeF' | 'tagF' | 'freshF'>(key: K, value: Filters[K][number]) =>
+  const toggle = <K extends 'typeF' | 'tagF' | 'freshF' | 'plugF'>(key: K, value: Filters[K][number]) =>
     setFilters((f) => {
       const cur = f[key] as string[];
       const next = cur.includes(value as string) ? cur.filter((x) => x !== value) : [...cur, value as string];
@@ -159,6 +160,7 @@ export default function HomeCatalog(props: HomeProps) {
       if (kind === 'qtype') setFilters((f) => ({ ...f, qTypeOff: value as ArtifactType }));
       else if (kind === 'type') toggle('typeF', value as ArtifactType);
       else if (kind === 'fresh') toggle('freshF', value as 'new' | 'updated');
+      else if (kind === 'plugin') toggle('plugF', value);
       else toggle('tagF', value);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -284,6 +286,18 @@ export default function HomeCatalog(props: HomeProps) {
                       <path d={ICON[f.type]} />
                     </svg>
                     <span className="lbl-text">{TYPE_PLURAL[f.type]}</span>
+                    <span className="count">{f.count}</span>
+                  </label>
+                ))}
+              </fieldset>
+            )}
+            {view.pluginFacets.length > 0 && (
+              <fieldset className="facet">
+                <legend>Plugin</legend>
+                {view.pluginFacets.map((f) => (
+                  <label key={f.plugin}>
+                    <input type="checkbox" checked={f.checked} onChange={() => toggle('plugF', f.plugin)} />
+                    <span className="lbl-text">{f.plugin}</span>
                     <span className="count">{f.count}</span>
                   </label>
                 ))}

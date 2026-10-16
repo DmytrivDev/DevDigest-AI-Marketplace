@@ -19,7 +19,7 @@ describe('markdown pipeline (spec 12)', () => {
   it('shifts headings and drops a leading h1', async () => {
     const html = await renderMarkdown('# Title\n\n## Section\n\ntext', { headingOffset: 1, dropFirstH1: true });
     expect(html).not.toContain('Title');
-    expect(html).toContain('<h3>Section</h3>');
+    expect(html).toContain('<h3 id="md-section">Section</h3>');
   });
   it('highlights fenced code with a known language and leaves plain blocks alone', async () => {
     const hl = await renderMarkdown('```json\n{"a": 1}\n```');
@@ -28,6 +28,12 @@ describe('markdown pipeline (spec 12)', () => {
     const plain = await renderMarkdown('```\n/plugin install x\n```');
     expect(plain).not.toContain('shiki');
     expect(plain).toContain('<pre><code>');
+  });
+  it('gives headings prefixed ids and points in-document anchors at them', async () => {
+    const html = await renderMarkdown('- [Evals](#evals)\n\n## Evals\n\n## Evals');
+    expect(html).toContain('<h2 id="md-evals">Evals</h2>');
+    expect(html).toContain('<h2 id="md-evals-1">Evals</h2>');
+    expect(html).toContain('href="#md-evals"');
   });
   it('renders GFM tables', async () => {
     expect(await renderMarkdown('| a | b |\n|---|---|\n| 1 | 2 |')).toContain('<table>');

@@ -233,9 +233,9 @@ for every local plugin. The exit code and output are saved to `validation.json`,
 indexer copies them into the `validation` field. If the CLI is unavailable in CI, the status
 is `unknown` and the build does not fail.
 
-> **Check at kickoff:** whether `claude plugin validate` works in CI without authentication.
-> If not, the indexer checks the rules from the Rules section of the root README itself, and
-> the status is labelled "basic checks".
+> **Checked on 2026-10-16:** `claude plugin validate` works without authentication (tested with
+> an empty `CLAUDE_CONFIG_DIR`, Claude Code 2.1.301). CI installs that pinned CLI version before
+> the build; if the install fails, the badges read "Not verified" and the build continues.
 
 ## 6. Search
 

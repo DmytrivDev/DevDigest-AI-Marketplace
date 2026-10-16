@@ -8,6 +8,8 @@ import type { ArtifactRef, Changes, Release } from '../lib/types';
 
 const { catalog, changelog } = await loadSiteData();
 const byId = new Map(catalog.artifacts.map((a) => [a.id, a]));
+// A removed plugin keeps its history here, but has no page to link to.
+const livePlugins = new Set(catalog.artifacts.filter((a) => a.type === 'plugin').map((a) => a.plugin));
 const pluginNames = [...new Set(changelog.releases.map((r) => r.plugin))].sort();
 
 const hrefOf = (r: ArtifactRef): string | null => {
@@ -89,7 +91,7 @@ const key = (id: string) => id.replace(/[^A-Za-z0-9]+/g, '-');
                 <article id={r.id} class="box rel" aria-labelledby={`rel-${key(r.id)}`} data-release data-plugin={r.plugin} data-release-date={r.date}>
                   <header class="rel__head">
                     <h3 id={`rel-${key(r.id)}`} class="h3" style="flex:1;min-width:180px">
-                      <a href={pluginHref(r.plugin)} style="color:var(--text)">{releaseTitle(r)}</a>
+                      {livePlugins.has(r.plugin) ? <a href={pluginHref(r.plugin)} style="color:var(--text)">{releaseTitle(r)}</a> : releaseTitle(r)}
                       <span class="fresh fresh--new" style="margin-left:8px" data-new-for-you hidden>New for you</span>
                     </h3>
                     <span class="muted small">
