@@ -209,7 +209,9 @@ Skip only if nothing changed since verify #1. Otherwise:
 
 Next: review the diff → follow the project's branching rules → commit and open a PR →
 re-dispatch `sdd-engineering:spec-creator` with the per-requirement table to mark the spec
-`implemented` → optionally `/sdd-engineering:workflow-retro` for a retrospective of this run.
+`implemented` → optionally `/sdd-engineering:workflow-retro` for a retrospective of this run
+→ optionally `/sdd-engineering:engineering-insights` to keep lasting learnings (your call;
+never run automatically).
 ```
 
 ## Rules for the whole run

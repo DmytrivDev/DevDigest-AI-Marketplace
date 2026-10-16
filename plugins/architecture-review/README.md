@@ -26,6 +26,11 @@ claude plugin install architecture-review@devdigest-marketplace
 
 Its dependency, `engineering-paved-path`, is installed automatically.
 
+## Compatibility
+
+Claude Code `>=2.1.110` (version-constrained plugin `dependencies`); tested with `2.1.301`.
+Details, and the features this plugin relies on: [`COMPATIBILITY.md`](COMPATIBILITY.md).
+
 ## What's inside
 
 | Component | Type | Namespaced name | What it does | Triggers |

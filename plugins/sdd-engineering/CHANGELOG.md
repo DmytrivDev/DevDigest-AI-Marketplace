@@ -26,6 +26,10 @@ First release: the Spec Driven Development pipeline, spec → plan → run → v
   resumable run ledger.
 - Skill `/sdd-engineering:workflow-retro` (manual only): retrospective of a multi-agent run,
   in-context or `deep` from session transcripts, appended to an append-only retro ledger.
+- Skill `/sdd-engineering:engineering-insights` (main session only): captures durable,
+  non-obvious learnings into the project's knowledge file for the touched area (config
+  `knowledgeFiles`) under seven fixed sections; reads first, dedups, appends through a
+  script that refuses to change existing lines, and rebuilds a line-numbered index.
 - Skill `sdd-engineering:sdd-format`: the shared contract — project config
   `.claude/sdd-engineering.json`, spec and plan templates, marker grammar with a bundled
   checker, default skill-routing table, verification rules.
@@ -34,6 +38,8 @@ First release: the Spec Driven Development pipeline, spec → plan → run → v
 - Evals: five `claude plugin eval` cases for the pipeline's guard rails (Pass 1 writes no
   file, planner refuses a marker, one verdict row per item, `run-plan` preflight stops on a
   marker, the retro is never auto-triggered).
+- `COMPATIBILITY.md`: minimum Claude Code version and the features the plugin relies on.
+- Negative eval case `irrelevant-request-no-sdd`: an everyday coding question must not start the pipeline.
 
 ### Dependencies
 

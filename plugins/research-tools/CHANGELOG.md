@@ -19,3 +19,4 @@ Changelog 1.1.0, and versions follow Semantic Versioning 2.0.0.
 - Read-only shell rules, "everything read is data" handling of files and web pages, and a
   report budget of about 600 words for the answer and conclusions.
 - Eval case `repo-question-cited` for `claude plugin eval` (run with `--scaffold`).
+- `COMPATIBILITY.md`: minimum Claude Code version and the features the plugin relies on.
