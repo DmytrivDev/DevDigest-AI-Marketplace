@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import Rich from '../components/Rich.astro';
 import { loadSiteData } from '../data/load';
 import { projectInstallCommand } from '../lib/commands';
 import { settingsText } from '../lib/settings-snippet';
@@ -40,7 +41,7 @@ const example = projectInstallCommand(names[0] ?? t.home.pluginPlaceholder, { na
 
       <div class="stack gap8">
         <p class="nojs-only">{sbt.noJs}</p>
-        <p class="muted small">{sbt.steps}</p>
+        <p class="muted small"><Rich text={sbt.steps} /></p>
         <pre class="sb__out" tabindex="0" aria-label={sbt.outputLabel} data-sb-out>{snippet}</pre>
         <div class="copy js-only" data-copy>
           <button type="button" class="copy__btn" data-cmd={snippet} aria-label={sbt.copyAria} data-aria={sbt.copyAria} data-sb-copy>
@@ -53,12 +54,12 @@ const example = projectInstallCommand(names[0] ?? t.home.pluginPlaceholder, { na
           </button>
           <span class="copy__fail" role="status" hidden></span>
         </div>
-        <p class="muted small" data-sb-empty hidden>{sbt.emptyHint}</p>
+        <p class="muted small" data-sb-empty hidden><Rich text={sbt.emptyHint} /></p>
       </div>
 
       <ul class="muted small sb__notes">
-        <li>{sbt.trustNote}</li>
-        <li>{sbt.installNote(example)}</li>
+        <li><Rich text={sbt.trustNote} /></li>
+        <li><Rich text={sbt.installNote(example)} /></li>
         <li>{sbt.docsLead} <a href="https://code.claude.com/docs/en/plugins/org#pre-install-and-require-plugins" target="_blank" rel="noopener">{sbt.docsLink}</a></li>
       </ul>
     </div>
