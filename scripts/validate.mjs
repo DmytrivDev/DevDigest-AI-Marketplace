@@ -7,13 +7,14 @@
 //
 // Covers what `claude plugin validate` misses: a relative `source` that does not exist,
 // an entry name that differs from plugin.json, `version` set in the marketplace entry,
-// and external sources not pinned to a commit sha.
+// external sources not pinned to a commit sha, and (docs/SECURITY.md) absolute paths,
+// secret-looking strings and bundled scripts that fail `node --check`.
 // Exit code: 0 when everything passes, 1 otherwise.
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -82,6 +83,37 @@ function checkEntry(entry) {
   return entry.source;
 }
 
+// docs/SECURITY.md: no secrets and no absolute paths ship in a plugin; bundled scripts must parse.
+const TEXT_EXT = /\.(md|json|mjs|js|cjs|ts|ya?ml|sh|txt|toml)$/i;
+const ABSOLUTE_PATH = /(?:^|[\s"'`(=])(?:[A-Za-z]:[\\/]|\/Users\/[^\s/]+|\/home\/[^\s/]+)/;
+const SECRET = /sk-ant-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----/;
+
+function listFiles(dir) {
+  return readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((e) => e.isFile())
+    .map((e) => join(e.parentPath ?? e.path, e.name));
+}
+
+function checkContent(source) {
+  const dir = join(ROOT, source);
+  const failuresBefore = failures.length;
+  let scripts = 0;
+  for (const file of listFiles(dir)) {
+    const shown = relative(ROOT, file).replaceAll('\\', '/');
+    if (!TEXT_EXT.test(file)) continue;
+    readFileSync(file, 'utf8').split(/\r?\n/).forEach((line, i) => {
+      if (ABSOLUTE_PATH.test(line)) fail(`${shown}:${i + 1}: absolute path — use \${CLAUDE_PLUGIN_ROOT}, \${CLAUDE_SKILL_DIR} or a relative path`);
+      if (SECRET.test(line)) fail(`${shown}:${i + 1}: looks like a secret — remove it and rotate the key`);
+    });
+    if (/\.(mjs|cjs|js)$/.test(file)) {
+      scripts += 1;
+      const res = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+      if (res.status !== 0) fail(`${shown}: node --check failed\n${res.stderr.trim()}`);
+    }
+  }
+  if (failures.length === failuresBefore) ok(`${source}: no absolute paths or secrets; ${scripts} script(s) parse`);
+}
+
 function runValidate(target) {
   const { status, output } = claude(['plugin', 'validate', target, '--strict']);
   if (status === 0) ok(`claude plugin validate ${target} --strict`);
@@ -114,6 +146,9 @@ if (marketplace) {
   console.log(`Marketplace "${marketplace.name}"`);
   const plugins = marketplace.plugins ?? [];
   const localSources = plugins.map(checkEntry).filter(Boolean);
+
+  console.log('Content (docs/SECURITY.md)');
+  for (const source of localSources) checkContent(source);
 
   console.log('claude plugin validate');
   runValidate('.');
