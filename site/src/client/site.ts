@@ -1,5 +1,6 @@
 // Small vanilla enhancements shared by all pages: theme switch, copy buttons, onboarding banner,
 // What's new counter, release filter, guide table of contents. No framework, no innerHTML.
+import { clientStrings as ui } from '../i18n/en';
 import { KEYS, readKey, writeKey } from '../lib/storage';
 
 const root = document.documentElement;
@@ -7,23 +8,23 @@ const root = document.documentElement;
 /* ---------- Theme (System / Light / Dark) ---------- */
 type Theme = 'system' | 'light' | 'dark';
 function currentTheme(): Theme {
-  const t = readKey(KEYS.theme);
-  return t === 'light' || t === 'dark' ? t : 'system';
+  const th = readKey(KEYS.theme);
+  return th === 'light' || th === 'dark' ? th : 'system';
 }
-function applyTheme(t: Theme): void {
-  if (t === 'system') root.removeAttribute('data-theme');
-  else root.setAttribute('data-theme', t);
+function applyTheme(th: Theme): void {
+  if (th === 'system') root.removeAttribute('data-theme');
+  else root.setAttribute('data-theme', th);
   document.querySelectorAll<HTMLButtonElement>('[data-theme-set]').forEach((b) => {
-    b.setAttribute('aria-pressed', String(b.dataset.themeSet === t));
+    b.setAttribute('aria-pressed', String(b.dataset.themeSet === th));
   });
 }
 applyTheme(currentTheme());
 document.addEventListener('click', (e) => {
   const b = (e.target as Element).closest<HTMLButtonElement>('[data-theme-set]');
   if (!b) return;
-  const t = b.dataset.themeSet as Theme;
-  writeKey(KEYS.theme, t);
-  applyTheme(t);
+  const th = b.dataset.themeSet as Theme;
+  writeKey(KEYS.theme, th);
+  applyTheme(th);
 });
 
 /* ---------- Copy buttons (also used by the React island's cards) ---------- */
@@ -55,12 +56,12 @@ document.addEventListener('click', async (e) => {
     if (!navigator.clipboard?.writeText) throw new Error('clipboard unavailable');
     await navigator.clipboard.writeText(cmd);
     box.dataset.state = 'ok';
-    if (label) label.textContent = 'Copied';
-    btn.setAttribute('aria-label', `Copied: ${cmd}`);
+    if (label) label.textContent = ui.copy.copied;
+    btn.setAttribute('aria-label', ui.copy.ariaCopied(cmd));
     if (note) {
       if (readKey(KEYS.copyHint) == null) {
         writeKey(KEYS.copyHint, '1');
-        note.textContent = 'Paste the command into a Claude Code session.';
+        note.textContent = ui.copy.hint;
         note.hidden = false;
       } else {
         note.hidden = true;
@@ -72,7 +73,7 @@ document.addEventListener('click', async (e) => {
         delete box.dataset.state;
         if (label) label.textContent = '';
         if (note) note.hidden = true;
-        btn.setAttribute('aria-label', `Copy command: ${cmd}`);
+        btn.setAttribute('aria-label', ui.copy.ariaCopy(cmd));
       }, 2000),
     );
   } catch {
@@ -81,7 +82,7 @@ document.addEventListener('click', async (e) => {
     const code = box.querySelector('.copy__code');
     if (code) selectText(code);
     if (note) {
-      note.textContent = `Couldn't copy automatically. The command is selected: press ${isMac ? '⌘C' : 'Ctrl+C'}.`;
+      note.textContent = ui.copy.fail(isMac ? ui.copy.keyMac : ui.copy.keyOther);
       note.hidden = false;
     }
   }
@@ -135,7 +136,7 @@ async function unseen(): Promise<void> {
     if (n > 0 && readKey(KEYS.lastSeenRelease) != null) {
       badges.forEach((b) => {
         b.textContent = `●${n > 9 ? '9+' : n}`;
-        b.setAttribute('aria-label', `${n} unseen release${n === 1 ? '' : 's'}`);
+        b.setAttribute('aria-label', ui.unseen(n));
         b.hidden = false;
       });
     }

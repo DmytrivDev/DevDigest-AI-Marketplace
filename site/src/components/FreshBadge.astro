@@ -1,6 +1,7 @@
 ---
+import { t } from '../i18n/en';
 import type { Freshness } from '../lib/types';
 interface Props { value?: Freshness }
 const { value } = Astro.props;
 ---
-{value && <span class={`fresh fresh--${value}`}>{value === 'new' ? 'New' : 'Updated'}</span>}
+{value && <span class={`fresh fresh--${value}`}>{t.fresh[value]}</span>}

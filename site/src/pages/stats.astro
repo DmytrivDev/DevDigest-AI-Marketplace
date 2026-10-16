@@ -8,86 +8,82 @@ import { ICON, TYPE_PLURAL } from '../lib/icons';
 import { pluginHref, repoUrl } from '../lib/site';
 import { TYPE_ORDER } from '../lib/types';
 import { url } from '../lib/url';
+import { t } from '../i18n/en';
 
 const { catalog, stats } = await loadSiteData();
 const gh = repoUrl(catalog);
 const summary = [
-  { n: stats.totals.plugins, l: stats.totals.plugins === 1 ? 'Plugin' : 'Plugins' },
-  { n: stats.totals.artifacts, l: stats.totals.artifacts === 1 ? 'Artifact' : 'Artifacts' },
-  { n: stats.totals.tags, l: stats.totals.tags === 1 ? 'Tag' : 'Tags' },
-  { n: stats.totals.authors, l: stats.totals.authors === 1 ? 'Author' : 'Authors' },
+  { n: stats.totals.plugins, l: t.stats.plugin(stats.totals.plugins) },
+  { n: stats.totals.artifacts, l: t.stats.artifact(stats.totals.artifacts) },
+  { n: stats.totals.tags, l: t.stats.tag(stats.totals.tags) },
+  { n: stats.totals.authors, l: t.stats.author(stats.totals.authors) },
 ];
-const typeTiles = TYPE_ORDER.map((t) => ({ t, n: stats.totals.byType[t] }));
+const typeTiles = TYPE_ORDER.map((ty) => ({ ty, n: stats.totals.byType[ty] }));
 const wide = buildChart(stats.growth, catalog.generatedAt, false);
 const narrow = buildChart(stats.growth, catalog.generatedAt, true);
-const growthTypes = TYPE_ORDER.filter((t) => stats.growth.some((g) => g.byType[t] > 0));
+const growthTypes = TYPE_ORDER.filter((ty) => stats.growth.some((g) => g.byType[ty] > 0));
 const growthCols = growthTypes.length ? growthTypes : TYPE_ORDER;
-const totalOf = (g: (typeof stats.growth)[number]) => TYPE_ORDER.reduce((n, t) => n + g.byType[t], 0);
+const totalOf = (g: (typeof stats.growth)[number]) => TYPE_ORDER.reduce((n, ty) => n + g.byType[ty], 0);
 const v = stats.quality.validation;
 const validationRow = (() => {
   const parts: string[] = [];
-  if (v.pass) parts.push(`${v.pass} pass`);
-  if (v.fail) parts.push(`${v.fail} fail`);
-  if (v.unknown) parts.push(`${v.unknown} not verified`);
+  if (v.pass) parts.push(t.stats.validationPass(v.pass));
+  if (v.fail) parts.push(t.stats.validationFail(v.fail));
+  if (v.unknown) parts.push(t.stats.validationUnknown(v.unknown));
   const color = v.fail ? 'var(--danger)' : v.unknown ? 'var(--text-muted)' : 'var(--success)';
   return { v: parts.join(', ') || '—', color };
 })();
 const comps = stats.totals.artifacts;
 const fresh = stats.freshness;
 const freshRows = [
-  { k: 'Last release', v: fresh.lastReleaseAt ? formatDate(fresh.lastReleaseAt) : '—', color: 'var(--text)' },
-  { k: 'Releases in 30 days', v: String(fresh.releases30d), color: 'var(--text)' },
-  { k: 'Releases in 90 days', v: String(fresh.releases90d), color: 'var(--text)' },
-  { k: 'Unreleased changes', v: String(fresh.unreleasedChanges), color: fresh.unreleasedChanges ? 'var(--warning)' : 'var(--text)' },
+  { k: t.stats.lastRelease, v: fresh.lastReleaseAt ? formatDate(fresh.lastReleaseAt) : '—', color: 'var(--text)' },
+  { k: t.stats.releases30, v: String(fresh.releases30d), color: 'var(--text)' },
+  { k: t.stats.releases90, v: String(fresh.releases90d), color: 'var(--text)' },
+  { k: t.stats.unreleasedChanges, v: String(fresh.unreleasedChanges), color: fresh.unreleasedChanges ? 'var(--warning)' : 'var(--text)' },
 ];
 const qualityRows = [
-  { k: 'Validation', ...validationRow },
-  { k: 'Description present', v: `${stats.quality.withDescription} of ${comps}`, color: 'var(--text)' },
-  { k: 'README present', v: `${stats.quality.pluginsWithReadme} of ${stats.totals.plugins}`, color: 'var(--text)' },
+  { k: t.stats.validation, ...validationRow },
+  { k: t.stats.descriptionPresent, v: t.stats.ofTotal(stats.quality.withDescription, comps), color: 'var(--text)' },
+  { k: t.stats.readmePresent, v: t.stats.ofTotal(stats.quality.pluginsWithReadme, stats.totals.plugins), color: 'var(--text)' },
 ];
 const tagHref = (tag: string): string => {
   const hasArtifacts = catalog.artifacts.some((a) => a.type !== 'plugin' && a.tags.includes(tag));
   return hasArtifacts ? url(`?tag=${encodeURIComponent(tag)}`) : url(`?q=${encodeURIComponent(tag)}`);
 };
-const notHere = [
-  { k: 'Install and download counts', v: "Claude Code doesn't report installs to marketplaces, and this site collects no visitor data." },
-  { k: 'Page views and popular searches', v: 'Search runs in your browser. Queries are never sent anywhere.' },
-  { k: 'Ratings and reviews', v: 'The catalog is a static site with no accounts or backend. Use GitHub issues for feedback.' },
-];
 const gi = stats.github;
-const ghTiles = gi ? [{ n: gi.stars, l: 'Stars' }, { n: gi.forks, l: 'Forks' }, { n: gi.openIssues, l: 'Open issues' }, { n: gi.contributors, l: 'Contributors' }] : [];
+const ghTiles = gi ? [{ n: gi.stars, l: t.stats.stars }, { n: gi.forks, l: t.stats.forks }, { n: gi.openIssues, l: t.stats.openIssues }, { n: gi.contributors, l: t.stats.contributors }] : [];
 ---
-<Base title="Stats" description="Plugins, artifacts, releases and quality of this marketplace." nav="stats" path="stats/">
+<Base title={t.stats.title} description={t.stats.description} nav="stats" path="stats/">
   <div class="page-body" style="gap:32px">
     <header class="stack" style="gap:4px">
-      <h1 class="h1">Stats</h1>
-      <p class="muted">From the build on {formatDate(stats.generatedAt)}, commit {shortSha(stats.commit)}.</p>
+      <h1 class="h1">{t.stats.title}</h1>
+      <p class="muted">{t.stats.fromBuild(formatDate(stats.generatedAt), shortSha(stats.commit))}</p>
     </header>
 
-    <ul class="tiles tiles--4" aria-label="Summary">
+    <ul class="tiles tiles--4" aria-label={t.stats.summaryAria}>
       {summary.map((s) => <li><span class="tile-n">{s.n}</span><span class="tile-l">{s.l}</span></li>)}
     </ul>
 
     <section class="stack gap12" aria-labelledby="s-types">
-      <h2 id="s-types" class="h2">Contents by type</h2>
+      <h2 id="s-types" class="h2">{t.stats.byType}</h2>
       <ul class="tiles tiles--5">
         {typeTiles.map((x) => (
           <li>
-            <span class="tile-n" style={`color:var(--t-${x.t})`}>{x.n}</span>
-            <span class="tile-t" style={`color:var(--t-${x.t})`}><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d={ICON[x.t]}></path></svg>{TYPE_PLURAL[x.t]}</span>
+            <span class="tile-n" style={`color:var(--t-${x.ty})`}>{x.n}</span>
+            <span class="tile-t" style={`color:var(--t-${x.ty})`}><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d={ICON[x.ty]}></path></svg>{TYPE_PLURAL[x.ty]}</span>
           </li>
         ))}
       </ul>
     </section>
 
     <section class="stack gap12" aria-labelledby="s-growth">
-      <h2 id="s-growth" class="h2">Growth</h2>
+      <h2 id="s-growth" class="h2">{t.stats.growth}</h2>
       {wide && narrow ? (
         <>
           <figure class="chart">
             {[{ c: wide, cls: 'chart__svg chart__svg--wide' }, { c: narrow, cls: 'chart__svg chart__svg--narrow' }].map(({ c, cls }) => (
               <svg class={cls} viewBox={`0 0 ${c.w} ${c.h}`} width="100%" role="img" aria-label={c.aria}>
-                <title>Artifacts per type after each release</title>
+                <title>{t.stats.chartTitle}</title>
                 <desc>{c.aria}</desc>
                 {c.grid.map((g) => (
                   <>
@@ -108,28 +104,28 @@ const ghTiles = gi ? [{ n: gi.stars, l: 'Stars' }, { n: gi.forks, l: 'Forks' }, 
           </figure>
         </>
       ) : (
-        <p class="muted">Not enough releases yet to draw a chart. The chart appears after the second release.</p>
+        <p class="muted">{t.stats.chartEmpty}</p>
       )}
       <details class="growth-table" open={!wide}>
-        <summary>Show as table</summary>
+        <summary>{t.stats.showTable}</summary>
         <div class="table-scroll">
           <table>
             <thead>
               <tr>
-                <th scope="col" style="text-align:left">Date</th>
-                {growthCols.map((t) => <th scope="col" style="text-align:right">{t === 'mcp' ? 'MCP' : TYPE_PLURAL[t]}</th>)}
-                <th scope="col" style="text-align:right">Total</th>
+                <th scope="col" style="text-align:left">{t.stats.colDate}</th>
+                {growthCols.map((ty) => <th scope="col" style="text-align:right">{t.types.pluralShort[ty]}</th>)}
+                <th scope="col" style="text-align:right">{t.stats.colTotal}</th>
               </tr>
             </thead>
             <tbody>
               {stats.growth.length ? stats.growth.map((g) => (
                 <tr>
                   <td style="text-align:left">{formatShortDate(g.date)}</td>
-                  {growthCols.map((t) => <td style="text-align:right">{g.byType[t]}</td>)}
+                  {growthCols.map((ty) => <td style="text-align:right">{g.byType[ty]}</td>)}
                   <td style="text-align:right">{totalOf(g)}</td>
                 </tr>
               )) : (
-                <tr><td colspan={growthCols.length + 2} class="muted">No releases yet.</td></tr>
+                <tr><td colspan={growthCols.length + 2} class="muted">{t.stats.noReleases}</td></tr>
               )}
             </tbody>
           </table>
@@ -139,20 +135,20 @@ const ghTiles = gi ? [{ n: gi.stars, l: 'Stars' }, { n: gi.forks, l: 'Forks' }, 
 
     <div class="half-grid">
       <section class="stack gap8" aria-labelledby="s-fresh" style="min-width:0">
-        <h2 id="s-fresh" class="h2">Freshness</h2>
+        <h2 id="s-fresh" class="h2">{t.stats.freshness}</h2>
         <dl class="rows">{freshRows.map((f) => <div><dt>{f.k}</dt><dd style={`color:${f.color}`}>{f.v}</dd></div>)}</dl>
       </section>
       <section class="stack gap8" aria-labelledby="s-quality" style="min-width:0">
-        <h2 id="s-quality" class="h2">Quality</h2>
+        <h2 id="s-quality" class="h2">{t.stats.quality}</h2>
         <dl class="rows">{qualityRows.map((f) => <div><dt>{f.k}</dt><dd style={`color:${f.color}`}>{f.v}</dd></div>)}</dl>
       </section>
     </div>
 
     <section class="stack gap8" aria-labelledby="s-plugins">
-      <h2 id="s-plugins" class="h2">Plugins</h2>
-      <div class="box ptable" role="table" aria-label="Plugins">
+      <h2 id="s-plugins" class="h2">{t.stats.plugins}</h2>
+      <div class="box ptable" role="table" aria-label={t.stats.plugins}>
         <div class="ptable__row ptable__head" role="row">
-          <span role="columnheader">Plugin</span><span role="columnheader">Version</span><span role="columnheader">Artifacts</span><span role="columnheader">Last release</span><span role="columnheader">Validation</span>
+          <span role="columnheader">{t.stats.colPlugin}</span><span role="columnheader">{t.stats.colVersion}</span><span role="columnheader">{t.stats.colArtifacts}</span><span role="columnheader">{t.stats.colLastRelease}</span><span role="columnheader">{t.stats.colValidation}</span>
         </div>
         {stats.plugins.map((p) => (
           <div class="ptable__row" role="row">
@@ -161,7 +157,7 @@ const ghTiles = gi ? [{ n: gi.stars, l: 'Stars' }, { n: gi.forks, l: 'Forks' }, 
               {p.category && <span class="muted small">{p.category}</span>}
             </span>
             <span role="cell" class="mono">{p.version ?? '—'}</span>
-            <span role="cell">{p.components}<span class="only-narrow"> {p.components === 1 ? 'artifact' : 'artifacts'}</span></span>
+            <span role="cell">{p.components}<span class="only-narrow"> {t.nouns.artifact(p.components)}</span></span>
             <span role="cell">{p.updatedAt ? formatDate(p.updatedAt) : '—'}</span>
             <span role="cell"><ValidationBadge status={p.validation} /></span>
           </div>
@@ -171,28 +167,28 @@ const ghTiles = gi ? [{ n: gi.stars, l: 'Stars' }, { n: gi.forks, l: 'Forks' }, 
 
     <div class="half-grid">
       <section class="stack gap12" aria-labelledby="s-tags" style="min-width:0">
-        <h2 id="s-tags" class="h2">Tags <span class="muted" style="font-size:14px;font-weight:400">{stats.totals.tags}</span></h2>
+        <h2 id="s-tags" class="h2">{t.stats.tags} <span class="muted" style="font-size:14px;font-weight:400">{stats.totals.tags}</span></h2>
         {stats.topTags.length ? (
           <ul class="tag-chips">
             {stats.topTags.map((tg) => <li><a class="chip-btn" href={tagHref(tg.tag)} style="color:var(--text)"><span>{tg.tag}</span><span class="n">{tg.count}</span></a></li>)}
           </ul>
-        ) : <p class="muted">No tags yet.</p>}
+        ) : <p class="muted">{t.stats.noTags}</p>}
       </section>
       {gi && (
         <section class="stack gap12" aria-labelledby="s-gh" style="min-width:0">
           <div class="row-head">
-            <h2 id="s-gh" class="h2">GitHub</h2>
+            <h2 id="s-gh" class="h2">{t.stats.github}</h2>
             <a class="mono" style="font-size:13px;overflow-wrap:anywhere" href={gh} target="_blank" rel="noopener">{catalog.marketplace.repo}</a>
           </div>
           <ul class="tiles tiles--2">{ghTiles.map((s) => <li><span class="tile-n">{s.n}</span><span class="tile-l">{s.l}</span></li>)}</ul>
-          <p class="muted small">From the GitHub API at build time.</p>
+          <p class="muted small">{t.stats.githubNote}</p>
         </section>
       )}
     </div>
 
     <section class="stack gap12" aria-labelledby="s-not" style="max-width:760px">
-      <h2 id="s-not" class="h2">What's not here and why</h2>
-      <dl class="stack gap12">{notHere.map((n) => <div><dt style="font-weight:600">{n.k}</dt><dd class="muted">{n.v}</dd></div>)}</dl>
+      <h2 id="s-not" class="h2">{t.stats.notHereHeading}</h2>
+      <dl class="stack gap12">{t.stats.notHere.map((n) => <div><dt style="font-weight:600">{n.k}</dt><dd class="muted">{n.v}</dd></div>)}</dl>
     </section>
   </div>
 </Base>

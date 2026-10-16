@@ -1,5 +1,5 @@
 import { formatShortDate } from './format';
-import { TYPE_PLURAL } from './icons';
+import { t } from '../i18n/en';
 import { TYPE_ORDER, type ArtifactType, type Stats } from './types';
 
 // Stepped line chart of artifacts per type after each release (spec 9.4). Static SVG geometry.
@@ -26,7 +26,7 @@ export interface Chart {
 
 export function buildChart(growth: Stats['growth'], now: string, narrow: boolean): Chart | null {
   if (growth.length < 2) return null;
-  const types = TYPE_ORDER.filter((t) => growth.some((g) => g.byType[t] > 0));
+  const types = TYPE_ORDER.filter((ty) => growth.some((g) => g.byType[ty] > 0));
   if (!types.length) return null;
 
   const W = narrow ? 328 : 720;
@@ -40,7 +40,7 @@ export function buildChart(growth: Stats['growth'], now: string, narrow: boolean
   const t0 = Date.parse(growth[0].date);
   const end = Math.max(Date.parse(now), Date.parse(growth[growth.length - 1].date));
   const span = Math.max(1, end - t0);
-  const max = Math.max(1, ...growth.flatMap((g) => types.map((t) => g.byType[t])));
+  const max = Math.max(1, ...growth.flatMap((g) => types.map((ty) => g.byType[ty])));
   const step = max <= 4 ? 1 : Math.ceil(max / 4);
   const top = Math.ceil(max / step) * step;
   const X = (ms: number) => L + ((ms - t0) / span) * pw;
@@ -60,7 +60,7 @@ export function buildChart(growth: Stats['growth'], now: string, narrow: boolean
       type,
       points: pts.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' '),
       y0: Y(vals[vals.length - 1]) + off,
-      label: `${type === 'mcp' ? 'MCP' : TYPE_PLURAL[type]} ${vals[vals.length - 1]}`,
+      label: t.stats.chartLabel(t.types.pluralShort[type], vals[vals.length - 1]),
       lx: X(end) + 8,
     };
   });
@@ -78,13 +78,13 @@ export function buildChart(growth: Stats['growth'], now: string, narrow: boolean
 
   const grid = Array.from({ length: top / step + 1 }, (_, i) => i * step).map((v) => ({ y: Y(v), ty: Y(v) + 4, tx: L - 8, label: String(v) }));
   const dates = growth.map((g) => formatShortDate(g.date));
-  const totals = growth.map((g) => types.reduce((n, t) => n + g.byType[t], 0));
-  const series = types.map((t) => {
-    const vals = growth.map((g) => g.byType[t]);
-    const label = t === 'mcp' ? 'MCP servers' : TYPE_PLURAL[t].toLowerCase();
-    return vals.every((v) => v === vals[0]) ? `${label} ${vals[0]}` : `${label} ${vals.join(', ')}`;
+  const totals = growth.map((g) => types.reduce((n, ty) => n + g.byType[ty], 0));
+  const series = types.map((ty) => {
+    const vals = growth.map((g) => g.byType[ty]);
+    const label = t.types.pluralSeries[ty];
+    return t.stats.chartSeries(label, vals.every((v) => v === vals[0]) ? String(vals[0]) : vals.join(', '));
   });
-  const listDates = dates.length > 1 ? `${dates.slice(0, -1).join(', ')} and ${dates[dates.length - 1]}` : dates[0];
+  const listDates = dates.length > 1 ? t.stats.chartDatesAnd(dates.slice(0, -1).join(', '), dates[dates.length - 1]) : dates[0];
 
   return {
     w: W,
@@ -94,7 +94,7 @@ export function buildChart(growth: Stats['growth'], now: string, narrow: boolean
     grid,
     xt: growth.map((g, i) => ({ x: X(Date.parse(g.date)), y: H - 8, label: dates[i] })),
     lines: lines.map((l) => ({ type: l.type, points: l.points, label: l.label, lx: l.lx, ly: ly.get(l.type)! })),
-    aria: `Stepped line chart of artifacts per type: ${series.join('; ')} on ${listDates}.`,
-    caption: `Artifacts of each type after every release. Total: ${totals.map((n, i) => `${n} on ${dates[i]}`).join(', ')}.`,
+    aria: t.stats.chartAria(series.join('; '), listDates),
+    caption: t.stats.chartCaption(totals.map((n, i) => t.stats.chartCaptionItem(n, dates[i])).join(', ')),
   };
 }

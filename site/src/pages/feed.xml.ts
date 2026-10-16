@@ -14,8 +14,8 @@ export const GET: APIRoute = async ({ site }) => {
   const home = new URL(url(), site);
   const whatsNew = new URL(url('whats-new/'), site).href;
   return rss({
-    title: `What's new · ${t.siteName}`,
-    description: 'Plugin releases in this marketplace, newest first.',
+    title: t.feed.title(t.site.name),
+    description: t.whatsNew.description,
     site: home.href,
     trailingSlash: true,
     customData: '<language>en</language>',

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { t } from '../../i18n/en';
 import { ICON, TYPE_PLURAL } from '../../lib/icons';
-import { pluralize } from '../../lib/format';
 import type { ArtifactType, Catalog } from '../../lib/types';
 import { createEngine, toSearchDoc, type Engine } from '../../search/engine';
 import { Card } from './Card';
@@ -17,7 +17,6 @@ export interface HomeProps {
   issueUrl: string;
   examples: string[];
   freshDays: number;
-  noComponentsNote: string;
 }
 
 type Load = 'loading' | 'ready' | 'error';
@@ -42,7 +41,7 @@ export default function HomeCatalog(props: HomeProps) {
 
   const knownTags = useMemo(() => [...new Set(items.flatMap((i) => i.tags))], [items]);
   const knownPlugins = useMemo(() => [...new Set(items.map((i) => i.plugin))], [items]);
-  const noun = hasComponents ? 'artifact' : 'plugin';
+  const noun = hasComponents ? ('artifact' as const) : ('plugin' as const);
 
   // Restore state from the URL after hydration (keeps the server markup and first client render identical).
   useEffect(() => {
@@ -177,18 +176,18 @@ export default function HomeCatalog(props: HomeProps) {
   }, [items]);
 
   const label = showSearchResultsLabel
-    ? `${n} ${n === 1 ? 'result' : 'results'} for “${q}”`
+    ? t.home.resultsFor(n, q)
     : nActive
-      ? `${n} of ${view.total} ${noun}s`
-      : pluralize(n, noun);
+      ? t.home.ofTotal(n, view.total, noun)
+      : t.home.count(n, noun);
   const searchDisabled = load === 'error';
   const visibleTags = tagsAll ? view.tagFacets : view.tagFacets.slice(0, TAGS_SHOWN);
 
   return (
     <>
-      <section className="search js-only" role="search" aria-label="Search artifacts">
+      <section className="search js-only" role="search" aria-label={t.home.searchLabel}>
         <label className="lbl" htmlFor="dd-q">
-          Search artifacts
+          {t.home.searchLabel}
         </label>
         <div className="search__field">
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -200,7 +199,7 @@ export default function HomeCatalog(props: HomeProps) {
             type="text"
             value={input}
             disabled={searchDisabled}
-            placeholder="Describe what you need, e.g. a skill for PR review"
+            placeholder={t.home.placeholder}
             autoComplete="off"
             spellCheck={false}
             onChange={(e) => onInput(e.target.value)}
@@ -213,7 +212,7 @@ export default function HomeCatalog(props: HomeProps) {
             }}
           />
           {input.length > 0 && !searchDisabled ? (
-            <button type="button" className="icon-btn" aria-label="Clear search" onClick={() => { setInput(''); setQuery(''); setFilters((f) => ({ ...f, qTypeOff: '' })); inputRef.current?.focus(); }}>
+            <button type="button" className="icon-btn" aria-label={t.home.clearSearch} onClick={() => { setInput(''); setQuery(''); setFilters((f) => ({ ...f, qTypeOff: '' })); inputRef.current?.focus(); }}>
               ×
             </button>
           ) : (
@@ -223,26 +222,26 @@ export default function HomeCatalog(props: HomeProps) {
         {slow && (
           <div className="status-line" role="status">
             <span className="spinner" aria-hidden="true" />
-            <span>Preparing search…</span>
+            <span>{t.home.preparing}</span>
           </div>
         )}
         {load === 'error' && (
           <div className="alert-banner" role="alert">
-            <span>{offline ? "You're offline. The list below is current as of the last build." : "Couldn't load search. The list below is current as of the last build."}</span>
+            <span>{offline ? t.home.offline : t.home.loadFail}</span>
             <button type="button" className="btn-ghost" onClick={() => setAttempt((a) => a + 1)}>
-              Try again
+              {t.home.tryAgain}
             </button>
           </div>
         )}
         {!input && !searchDisabled && hasComponents && props.examples.length > 0 && (
           <div className="examples">
-            <span>Try</span>
+            <span>{t.home.try}</span>
             {props.examples.map((ex) => (
               <button key={ex} type="button" className="chip-btn" onClick={() => setExample(ex)}>
                 {ex}
               </button>
             ))}
-            <span>Ukrainian works too.</span>
+            <span>{t.home.ukrainianToo}</span>
           </div>
         )}
       </section>
@@ -250,9 +249,9 @@ export default function HomeCatalog(props: HomeProps) {
       {showNew && (
         <section className="stack js-only" aria-labelledby="h-new" style={{ gap: 8 }}>
           <div className="row-head">
-            <h2 id="h-new" className="h2 h2--sm">New and updated</h2>
-            <span className="muted" style={{ fontSize: 13 }}>last {props.freshDays} days</span>
-            <a className="more" href={props.whatsNewUrl}>What&apos;s new →</a>
+            <h2 id="h-new" className="h2 h2--sm">{t.home.newAndUpdated}</h2>
+            <span className="muted" style={{ fontSize: 13 }}>{t.home.lastDays(props.freshDays)}</span>
+            <a className="more" href={props.whatsNewUrl}>{t.home.whatsNewLink}</a>
           </div>
           <ul className="new-list">
             {freshItems.map((i) => (
@@ -270,15 +269,15 @@ export default function HomeCatalog(props: HomeProps) {
       )}
 
       <div id="results" ref={resultsRef} tabIndex={-1} className="catalog">
-        <aside className="filters js-only" aria-label="Filters">
+        <aside className="filters js-only" aria-label={t.home.filters}>
           <button type="button" className="filters__toggle" aria-expanded={filtersOpen} aria-controls="f-panel" onClick={() => setFiltersOpen((o) => !o)}>
-            <span>Filters ({nActive})</span>
+            <span>{t.home.filtersToggle(nActive)}</span>
             <span aria-hidden="true">{filtersOpen ? '▴' : '▾'}</span>
           </button>
           <div id="f-panel" className={`filters__panel${filtersOpen ? ' is-open' : ''}`}>
             {view.typeFacets.length > 0 && (
               <fieldset className="facet">
-                <legend>Type</legend>
+                <legend>{t.home.facetType}</legend>
                 {view.typeFacets.map((f) => (
                   <label key={f.type}>
                     <input type="checkbox" checked={f.checked} onChange={() => toggleType(f.type)} />
@@ -293,7 +292,7 @@ export default function HomeCatalog(props: HomeProps) {
             )}
             {view.pluginFacets.length > 0 && (
               <fieldset className="facet">
-                <legend>Plugin</legend>
+                <legend>{t.home.facetPlugin}</legend>
                 {view.pluginFacets.map((f) => (
                   <label key={f.plugin}>
                     <input type="checkbox" checked={f.checked} onChange={() => toggle('plugF', f.plugin)} />
@@ -305,7 +304,7 @@ export default function HomeCatalog(props: HomeProps) {
             )}
             {hasFreshFacet && (
               <fieldset className="facet">
-                <legend>Freshness</legend>
+                <legend>{t.home.facetFreshness}</legend>
                 {view.freshFacets.map((f) => (
                   <label key={f.value}>
                     <input type="checkbox" checked={f.checked} onChange={() => toggle('freshF', f.value)} />
@@ -317,7 +316,7 @@ export default function HomeCatalog(props: HomeProps) {
             )}
             {view.tagFacets.length > 0 && (
               <fieldset className="facet">
-                <legend>Tags</legend>
+                <legend>{t.home.facetTags}</legend>
                 {visibleTags.map((f) => (
                   <label key={f.tag}>
                     <input type="checkbox" checked={f.checked} onChange={() => toggle('tagF', f.tag)} />
@@ -327,7 +326,7 @@ export default function HomeCatalog(props: HomeProps) {
                 ))}
                 {view.tagFacets.length > TAGS_SHOWN && (
                   <button type="button" className="more-btn" onClick={() => setTagsAll((a) => !a)}>
-                    {tagsAll ? 'Show fewer' : `${view.tagFacets.length - TAGS_SHOWN} more ▾`}
+                    {tagsAll ? t.home.showFewer : t.home.moreTags(view.tagFacets.length - TAGS_SHOWN)}
                   </button>
                 )}
               </fieldset>
@@ -338,26 +337,26 @@ export default function HomeCatalog(props: HomeProps) {
         <section className="results" aria-labelledby="h-results">
           <div className="results__head">
             <h2 id="h-results" className="h2 h2--sm" aria-live="polite">
-              {!showSearchResultsLabel && !nActive && <span className="nojs-only">All </span>}
+              {!showSearchResultsLabel && !nActive && <span className="nojs-only">{t.home.all}</span>}
               {label}
             </h2>
             <label className="sort js-only">
-              <span>Sort</span>
+              <span>{t.home.sort}</span>
               <select value={view.sort} onChange={(e) => setSortChoice(e.target.value as SortKey)}>
-                {res?.ranked && <option value="relevance">Relevance</option>}
-                <option value="updated">Updated</option>
-                <option value="name">Name</option>
+                {res?.ranked && <option value="relevance">{t.home.sortRelevance}</option>}
+                <option value="updated">{t.home.sortUpdated}</option>
+                <option value="name">{t.home.sortName}</option>
               </select>
             </label>
           </div>
-          {!hasComponents && <p className="results__note">{props.noComponentsNote}</p>}
+          {!hasComponents && <p className="results__note">{t.states.noComponents}</p>}
           {view.fallbackType && (
             <p className="results__note" role="status">
-              No {TYPE_PLURAL[view.fallbackType].toLowerCase()} found — showing other artifacts for your query
+              {t.home.noTypeFound(TYPE_PLURAL[view.fallbackType].toLowerCase())}
             </p>
           )}
           {nActive > 0 && (
-            <div className="active-chips" aria-label="Active filters">
+            <div className="active-chips" aria-label={t.home.activeFilters}>
               {view.chips.map((c) => (
                 <span className="chip" key={c.key}>
                   <span>{c.label}</span>
@@ -367,14 +366,14 @@ export default function HomeCatalog(props: HomeProps) {
                 </span>
               ))}
               <button type="button" className="link-btn" onClick={clearAll}>
-                Clear filters
+                {t.home.clearFilters}
               </button>
             </div>
           )}
           {n === 0 && (
             <div className="no-results" role="status">
-              <h3 className="h3" style={{ overflowWrap: 'anywhere' }}>{q ? `No ${noun}s match “${q}”` : `No ${noun}s match these filters`}</h3>
-              <p>Try fewer words, or start from a popular tag:</p>
+              <h3 className="h3" style={{ overflowWrap: 'anywhere' }}>{q ? t.home.noMatchQuery(noun, q) : t.home.noMatchFilters(noun)}</h3>
+              <p>{t.home.tryFewer}</p>
               <div className="tags">
                 {popular.map(([tag, count]) => (
                   <button key={tag} type="button" className="chip-btn" onClick={() => { setInput(''); setQuery(''); setFilters({ ...emptyFilters(), tagF: [tag] }); }}>
@@ -384,11 +383,11 @@ export default function HomeCatalog(props: HomeProps) {
                 ))}
               </div>
               <div className="links">
-                <a href={`${props.issueUrl}${q ? `?title=${encodeURIComponent(`Suggest an artifact: ${q}`)}&body=${encodeURIComponent(`I looked for: ${q}`)}` : ''}`} target="_blank" rel="noopener">
-                  Suggest an artifact
+                <a href={`${props.issueUrl}${q ? `?title=${encodeURIComponent(t.home.issueTitle(q))}&body=${encodeURIComponent(t.home.issueBody(q))}` : ''}`} target="_blank" rel="noopener">
+                  {t.home.suggest}
                 </a>
                 <button type="button" className="link-btn" style={{ fontSize: 14 }} onClick={clearAll}>
-                  Clear filters
+                  {t.home.clearFilters}
                 </button>
               </div>
             </div>

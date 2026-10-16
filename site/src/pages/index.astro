@@ -5,7 +5,7 @@ import HomeCatalog from '../components/home/HomeCatalog';
 import type { CardItem } from '../components/home/shared';
 import { loadSiteData } from '../data/load';
 import { addCommand, installCommand, isInvocable, marketplaceInfo, primaryCommand } from '../lib/commands';
-import { formatDate, pluralize } from '../lib/format';
+import { formatDate } from '../lib/format';
 import { artifactHref, components, plugins, pluginHref, repoUrl } from '../lib/site';
 import { ALL_TYPES } from '../lib/types';
 import { url } from '../lib/url';
@@ -18,7 +18,7 @@ import { t } from '../i18n/en';
 const { catalog, stats } = await loadSiteData();
 const m = marketplaceInfo(catalog);
 // The hero line follows marketplace.json, so it stays true when the plugin line-up changes.
-const tagline = catalog.marketplace.description?.trim() || t.tagline;
+const tagline = catalog.marketplace.description?.trim() || t.site.tagline;
 const comps = components(catalog);
 const plgs = plugins(catalog);
 // Components are listed as cards; a plugin gets its own card only while it has no components,
@@ -44,37 +44,36 @@ const availableTypes = ALL_TYPES.filter((ty) => listable.some((a) => a.type === 
 const empty = listable.length === 0;
 const lastRelease = stats.freshness.lastReleaseAt;
 const strip: { n: string; l: string }[] = empty
-  ? [{ n: '0', l: 'plugins' }, { n: '0', l: 'artifacts' }]
+  ? [{ n: '0', l: t.nouns.plugin(0) }, { n: '0', l: t.nouns.artifact(0) }]
   : comps.length
     ? [
-        { n: String(plgs.length), l: plgs.length === 1 ? 'plugin' : 'plugins' },
-        { n: String(comps.length), l: comps.length === 1 ? 'artifact' : 'artifacts' },
-        { n: String(stats.totals.tags), l: stats.totals.tags === 1 ? 'tag' : 'tags' },
-        ...(lastRelease ? [{ n: formatDate(lastRelease), l: 'last release' }] : []),
+        { n: String(plgs.length), l: t.nouns.plugin(plgs.length) },
+        { n: String(comps.length), l: t.nouns.artifact(comps.length) },
+        { n: String(stats.totals.tags), l: t.nouns.tag(stats.totals.tags) },
+        ...(lastRelease ? [{ n: formatDate(lastRelease), l: t.home.lastRelease }] : []),
       ]
-    : [{ n: String(plgs.length), l: plgs.length === 1 ? 'plugin' : 'plugins' }];
+    : [{ n: String(plgs.length), l: t.nouns.plugin(plgs.length) }];
 
 const byNewest = (a: { updatedAt: string | null; name: string }, b: { updatedAt: string | null; name: string }) =>
   (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || a.name.localeCompare(b.name);
 const invocable = [...comps].sort(byNewest);
 const firstInvocable = invocable.find((a) => a.type === 'skill' && a.invoke) ?? invocable.find(isInvocable);
 // The install step points at the plugin of the example command, or the only plugin there is.
-const firstPlugin = firstInvocable?.plugin ?? plgs[0]?.name ?? '<plugin>';
+const firstPlugin = firstInvocable?.plugin ?? plgs[0]?.name ?? t.home.pluginPlaceholder;
 const manyPlugins = plgs.length > 1;
 const step3 = firstInvocable?.invoke ?? null;
 const steps = [
-  { n: '1', title: 'Add the marketplace', text: 'Run once in Claude Code.', cmd: addCommand(m) },
+  { n: '1', title: t.home.onboarding.step1Title, text: t.home.onboarding.step1Text, cmd: addCommand(m) },
   {
     n: '2',
-    title: 'Install a plugin',
-    text: manyPlugins ? 'Pick a plugin in the catalog below, for example:' : 'Installs all of its skills, agents and hooks.',
+    title: t.home.onboarding.step2Title,
+    text: manyPlugins ? t.home.onboarding.step2TextMany : t.home.onboarding.step2TextOne,
     cmd: installCommand(firstPlugin, m),
   },
-  { n: '3', title: 'Find and invoke', text: 'Search below and copy the command.', cmd: step3 },
+  { n: '3', title: t.home.onboarding.step3Title, text: t.home.onboarding.step3Text, cmd: step3 },
 ];
 // Example chips come from the real catalog: one "<type> for <tag>" per plugin, using its most
 // frequent tag, and only queries that actually return something make it onto the page.
-const TYPE_WORD: Record<ArtifactType, string> = { plugin: 'plugin', skill: 'skill', agent: 'agent', command: 'command', hook: 'hook', mcp: 'MCP server' };
 const engine = createEngine(comps.map(toSearchDoc));
 const compById = new Map(comps.map((a) => [a.id, a]));
 const finds = (q: string): boolean => {
@@ -92,21 +91,21 @@ const exampleFor = (plugin: string): string | null => {
   const types = new Map<ArtifactType, number>();
   own.filter((a) => a.tags.includes(tag)).forEach((a) => types.set(a.type, (types.get(a.type) ?? 0) + 1));
   const type = [...types].sort((a, b) => b[1] - a[1])[0][0];
-  return `${TYPE_WORD[type]} for ${tag}`;
+  return t.home.exampleFor(t.home.exampleTypeWord[type], tag);
 };
 const pluginsBySize = [...new Set(comps.map((a) => a.plugin))]
   .sort((a, b) => comps.filter((x) => x.plugin === b).length - comps.filter((x) => x.plugin === a).length || a.localeCompare(b));
-const examples = [...new Set([...pluginsBySize.map(exampleFor), 'skill for PR review', 'security agent', 'pre-commit hooks'])]
+const examples = [...new Set([...pluginsBySize.map(exampleFor), ...t.home.exampleFallbacks])]
   .filter((q): q is string => !!q && finds(q))
   .slice(0, 3);
 ---
-<Base title={t.siteName} description={tagline} nav="catalog" path="" home={!empty}>
+<Base title={t.site.name} description={tagline} nav="catalog" path="" home={!empty}>
   <div class="page-body">
     <section class="hero" aria-labelledby="h-title">
-      <h1 id="h-title" class="h1">DevDigest Marketplace</h1>
+      <h1 id="h-title" class="h1">{t.site.name}</h1>
       <p>{tagline}</p>
       <div class="hero__cmd">
-        <span>Add this marketplace in Claude Code</span>
+        <span>{t.home.heroCmd}</span>
         <CopyCommand cmd={addCommand(m)} />
       </div>
     </section>
@@ -114,38 +113,38 @@ const examples = [...new Set([...pluginsBySize.map(exampleFor), 'skill for PR re
     {!empty && (
       <section class="onboarding js-only" aria-labelledby="ob-h">
         <div class="onboarding__head">
-          <h2 id="ob-h" class="h2 h2--sm">New to Claude Code marketplaces? Three steps.</h2>
-          <button type="button" class="icon-btn" aria-label="Dismiss getting started" data-ob-dismiss>×</button>
+          <h2 id="ob-h" class="h2 h2--sm">{t.home.onboarding.heading}</h2>
+          <button type="button" class="icon-btn" aria-label={t.home.onboarding.dismissAria} data-ob-dismiss>×</button>
         </div>
         <ol class="steps">
           {steps.map((s) => (
             <li>
               <div class="t"><span class="n">{s.n}</span><strong>{s.title}</strong></div>
               <span class="d">{s.text}</span>
-              {s.cmd ? <CopyCommand cmd={s.cmd} /> : <span class="d">Commands for skills appear here once the plugin has any.</span>}
+              {s.cmd ? <CopyCommand cmd={s.cmd} /> : <span class="d">{t.home.onboarding.noInvoke}</span>}
             </li>
           ))}
         </ol>
         <div class="onboarding__actions">
-          <button type="button" class="btn-primary" data-ob-dismiss>Got it</button>
-          <a href={url('guide/')}>Learn more →</a>
+          <button type="button" class="btn-primary" data-ob-dismiss>{t.home.onboarding.gotIt}</button>
+          <a href={url('guide/')}>{t.home.onboarding.learnMore}</a>
         </div>
       </section>
     )}
 
-    <div class="summary-strip" aria-label="Catalog summary">
+    <div class="summary-strip" aria-label={t.home.summaryAria}>
       {strip.map((x) => <span><strong>{x.n}</strong> {x.l}</span>)}
-      {!empty && !comps.length && <span>no components yet</span>}
-      <a class="more" href={url('stats/')}>All stats →</a>
+      {!empty && !comps.length && <span>{t.home.noComponentsYet}</span>}
+      <a class="more" href={url('stats/')}>{t.home.allStats}</a>
     </div>
 
-    <noscript><p class="muted">Search needs JavaScript. The full list is below.</p></noscript>
+    <noscript><p class="muted">{t.states.noscript}</p></noscript>
 
     {empty ? (
       <section class="empty-box">
-        <h2 class="h2">No artifacts in this marketplace yet</h2>
-        <p>Plugins appear here after they're added to the repository and the site is rebuilt.</p>
-        <a href={url('guide/#g-authors')}>How to add a plugin →</a>
+        <h2 class="h2">{t.home.emptyTitle}</h2>
+        <p>{t.home.emptyText}</p>
+        <a href={url('guide/#g-authors')}>{t.home.emptyLink}</a>
       </section>
     ) : (
       <HomeCatalog
@@ -159,7 +158,6 @@ const examples = [...new Set([...pluginsBySize.map(exampleFor), 'skill for PR re
         issueUrl={`${repoUrl(catalog)}/issues/new`}
         examples={examples}
         freshDays={FRESH_DAYS}
-        noComponentsNote={t.noComponents}
       />
     )}
   </div>
