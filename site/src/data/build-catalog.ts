@@ -1,5 +1,6 @@
 import { BuildError, type Artifact, type ArtifactDetails, type Catalog, type ValidationStatus } from '../lib/types';
 import { discoverComponents, toSlug, type FileSource, type Manifest } from './discover';
+import { linkDependencies, parseCompatibility, parseDependencies } from './dependencies';
 import { asString, asStringList, parseJson, stripMarkdown } from './frontmatter';
 import { fsSource, git } from './sources';
 
@@ -28,6 +29,8 @@ export interface CatalogResult {
   bodies: Record<string, string>;
   /** Plugin README markdown by plugin name. */
   readmes: Record<string, string>;
+  /** Plugin COMPATIBILITY.md markdown by plugin name. */
+  compatDocs: Record<string, string>;
   warnings: string[];
 }
 
@@ -67,6 +70,10 @@ export function buildCatalog(opts: CatalogOptions): CatalogResult {
   const artifacts: Artifact[] = [];
   const bodies: Record<string, string> = {};
   const readmes: Record<string, string> = {};
+  const compatDocs: Record<string, string> = {};
+  const warn = (m: string): void => {
+    warnings.push(m);
+  };
 
   for (const entry of mp.plugins) {
     const entryTags = asStringList(entry.tags);
@@ -90,6 +97,9 @@ export function buildCatalog(opts: CatalogOptions): CatalogResult {
         details: {},
         validation: { status: 'unknown', messages: [] },
         external: true,
+        dependencies: [],
+        usedBy: [],
+        compatibility: { claudeCode: null, doc: false },
       });
       continue;
     }
@@ -113,6 +123,8 @@ export function buildCatalog(opts: CatalogOptions): CatalogResult {
     const description = asString(manifest.description) || asString(entry.description);
     const readme = src.read(`${dir}/README.md`);
     if (readme != null) readmes[pluginName] = readme;
+    const compatDoc = src.read(`${dir}/COMPATIBILITY.md`);
+    if (compatDoc != null) compatDocs[pluginName] = compatDoc;
     const author = manifest.author && typeof manifest.author === 'object' ? asString((manifest.author as { name?: unknown }).name) : asString(manifest.author);
 
     const supplied = opts.validation?.[pluginName];
@@ -140,6 +152,9 @@ export function buildCatalog(opts: CatalogOptions): CatalogResult {
         hasReadme: readme != null,
       },
       validation,
+      dependencies: parseDependencies(manifest.dependencies, mp.name, manifestFile, warn),
+      usedBy: [],
+      compatibility: parseCompatibility(compatDoc),
     };
     artifacts.push(pluginArtifact);
 
@@ -171,6 +186,8 @@ export function buildCatalog(opts: CatalogOptions): CatalogResult {
     }
   }
 
+  linkDependencies(artifacts.filter((a) => a.type === 'plugin'), warn);
+
   const seen = new Set<string>();
   for (const a of artifacts) {
     if (seen.has(a.id)) throw new BuildError(`duplicate artifact id "${a.id}"`);
@@ -188,6 +205,7 @@ export function buildCatalog(opts: CatalogOptions): CatalogResult {
     },
     bodies,
     readmes,
+    compatDocs,
     warnings,
   };
 }

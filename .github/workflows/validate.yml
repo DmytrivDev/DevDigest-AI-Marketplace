@@ -1,0 +1,53 @@
+name: Validate plugins
+
+# Structure and install checks for the marketplace and every plugin:
+# manifests, names, versions, pinned sources, no absolute paths or secrets,
+# bundled scripts parse, `claude plugin validate`, and a real install of each
+# plugin (with its dependencies) into a throwaway Claude config dir.
+# Behaviour evals (`claude plugin eval`) are billed model calls and run by hand
+# before a release — see docs/RELEASES.md.
+
+on:
+  pull_request:
+    paths:
+      - 'plugins/**'
+      - '.claude-plugin/**'
+      - 'scripts/validate.mjs'
+      - '.github/workflows/validate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/**'
+      - '.claude-plugin/**'
+      - 'scripts/validate.mjs'
+      - '.github/workflows/validate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Pinned so a CLI release cannot silently change what passes. Bump together with
+      # the "Tested with" line in each plugin's COMPATIBILITY.md.
+      CLAUDE_CODE_VERSION: 2.1.301
+      DISABLE_AUTOUPDATER: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Install Claude Code CLI
+        run: npm install --global "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+
+      - name: Validate marketplace and plugins, install each in an isolated config
+        run: node scripts/validate.mjs --install

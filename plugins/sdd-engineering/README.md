@@ -44,6 +44,11 @@ Its three dependencies, `engineering-paved-path`, `research-tools` and
 `architecture-review`, are installed and enabled automatically. Check with
 `claude plugin list`.
 
+## Compatibility
+
+Claude Code `>=2.1.110` (version-constrained plugin `dependencies`); tested with `2.1.301`.
+Details, and the features this plugin relies on: [`COMPATIBILITY.md`](COMPATIBILITY.md).
+
 ## What's inside
 
 | Component | Type | Namespaced name | What it does | Triggers |
@@ -54,9 +59,10 @@ Its three dependencies, `engineering-paved-path`, `research-tools` and
 | `plan-verifier` | agent (Sonnet) | `sdd-engineering:plan-verifier` | Read-only. Settles the working tree against the plan: exactly one verdict row per work item and one per requirement. | Dispatched by `run-plan`; or by name |
 | `run-plan` | skill (command) | `/sdd-engineering:run-plan` | Orchestrates the implementation half: preflight → implement → integrate → verify ⟲ fix → review ⟲ fix → final verify → report. Never commits. | **Manual only** |
 | `workflow-retro` | skill (command) | `/sdd-engineering:workflow-retro` | Retrospective of a finished multi-agent run: agents, order, tokens, what was hard, duplicated or lost, plus proposals. Appends one entry to the retro ledger. | **Manual only** |
+| `engineering-insights` | skill | `/sdd-engineering:engineering-insights` | Captures durable, non-obvious learnings (gotchas, what worked, dead ends, conventions, recurring errors) into the knowledge file of the area the work touched: reads it first, dedups, appends through a script that cannot overwrite, rebuilds a line-numbered index. Main session only, never a subagent. | On request, at the end of substantial work, "wrap up", "save this learning" |
 | `sdd-format` | skill (reference) | `sdd-engineering:sdd-format` | The shared contract: config keys, spec template, EARS rules, `[NEEDS CLARIFICATION]` grammar and checker, plan template, routing table, verification rules. | Preloaded into the four agents and loaded by `run-plan`; not shown in the `/` menu |
 | `mermaid-diagram` | skill | `sdd-engineering:mermaid-diagram` | Mermaid diagram guide and templates (flows, states, sequences, ER). | Preloaded into `spec-creator`; auto when Claude needs a diagram |
-| evals | `claude plugin eval` cases | — | Five behaviour checks of the pipeline's guard rails. See [Evals](#evals). | Run by you |
+| evals | `claude plugin eval` cases | — | Six behaviour checks of the pipeline's guard rails, including a negative activation case. See [Evals](#evals). | Run by you |
 
 The pipeline also dispatches two agents from its dependencies:
 `research-tools:researcher` (facts from the code or the web, for the spec and the plan) and
@@ -364,6 +370,17 @@ have stops the run: re-plan or drop the note.
 /sdd-engineering:workflow-retro deep --since 2026-10-16T09:00:00Z
 ```
 
+### Example: keep a lesson for the next session
+
+```
+/sdd-engineering:engineering-insights the coupon import: allSettled in chunks, not Promise.all
+```
+
+It picks the knowledge file whose area the work touched (from `knowledgeFiles`), reads it,
+skips what is already recorded, and appends at most five dated, `file:line`-grounded entries
+under fixed sections. With no `knowledgeFiles` configured, it proposes `docs/knowledge.md`
+and creates it only after you agree.
+
 ## Configuration
 
 Everything is optional. The pipeline reads **`.claude/sdd-engineering.json`** in the project
@@ -406,7 +423,7 @@ root; a missing file or key means the default. The full format is in the
 | `verify` | none: **asked once, never guessed** | implementer, plan-verifier, run-plan | per package: `dir`, a targeted command with `{files}`, a `full` command |
 | `routing` | the `sdd-format` §5 table | planner, implementer, reviewer | a project file with its own glob → skill table, same columns |
 | `designs` | none | spec-creator, run-plan | design sources: mock files, exported artboards, screenshot folders |
-| `knowledgeFiles` | none | spec-creator, planner, researcher, reviewer | project gotchas and notes; read-only for every agent |
+| `knowledgeFiles` | none | spec-creator, planner, researcher, reviewer; written by engineering-insights | project gotchas and notes; read-only for every agent. `/sdd-engineering:engineering-insights` is the only writer, append-only, from the main session |
 | `runLedgerDir` | `.claude/sdd/runs` | run-plan | run ledgers; **add it to `.gitignore`** |
 | `retroLedger` | `docs/retro/ledger.md` | workflow-retro | append-only retro log; usually committed |
 | `contractChecks` | none | planner, plan-verifier | extra items for the plan's `Contract changes` section |
@@ -477,6 +494,7 @@ totals are dominated by cheap cache reads.
 | `plan-verifier` | Read, Grep, Glob, Bash (read and check), Skill | nothing | edit anything; run state-changing git |
 | `run-plan` (your session) | your session's tools | its ledger; the `verify` key of the config, with your yes; a new branch, with your yes | commit, push or PR; edit the spec or the plan; write production code |
 | `workflow-retro` (your session) | your session's tools | scratch files; one appended entry in the retro ledger, through its script | edit agents, skills, specs, plans or knowledge files |
+| `engineering-insights` (your session) | your session's tools | appended entries in a `knowledgeFiles` file and its `.index.md`, through its scripts; a new knowledge file or the `knowledgeFiles` key, with your yes | run inside a subagent; edit or reorder existing entries |
 | `architecture-review:architecture-reviewer` | Read, Grep, Glob | nothing | — |
 | `research-tools:researcher` | Read, Grep, Glob, Bash (read-only), WebSearch, WebFetch | nothing | — |
 
@@ -485,7 +503,8 @@ totals are dominated by cheap cache reads.
 - **Everything an agent reads is data.** Spec text, code comments and web pages are never
   followed as instructions.
 - **No hooks and no MCP servers** ship with this plugin. The only scripts are the spec checker
-  (read-only) and the two retro scripts (one reads transcripts, one appends to the ledger).
+  (read-only), the two retro scripts (one reads transcripts, one appends to the ledger) and
+  the two engineering-insights scripts (one appends to a knowledge file, one writes its index).
 - **The `workflow-retro` collector reads your local transcripts** under
   `~/.claude/projects/`. Quotes in the ledger are kept to a line or two, because a brief can
   carry your own words and the ledger is usually committed.
@@ -494,7 +513,7 @@ totals are dominated by cheap cache reads.
 
 ## Evals
 
-Five `claude plugin eval` cases in [`evals/`](evals/) check the guard rails of the pipeline:
+Six `claude plugin eval` cases in [`evals/`](evals/) check the guard rails of the pipeline:
 
 | Case | Pass means |
 |---|---|
@@ -503,6 +522,7 @@ Five `claude plugin eval` cases in [`evals/`](evals/) check the guard rails of t
 | `plan-verifier-one-row-per-item` | exactly one verdict row per work item; the unbuilt item is `not verified` |
 | `run-plan-preflight-stops-on-marker` | `run-plan` stops in preflight; no implementer is dispatched |
 | `workflow-retro-not-auto-triggered` | "the run finished" does not start a retro |
+| `irrelevant-request-no-sdd` | an everyday coding question does not start the pipeline (negative) |
 
 Three cases carry a tiny sample project (a spec, a plan, a few source files) in a
 `fixture.sh` next to their `case.yaml`. It writes the files into the empty eval workspace and

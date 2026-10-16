@@ -7,7 +7,7 @@
 | Author | DmytrivDev |
 | Site URL | `https://dmytrivdev.github.io/DevDigest-AI-Marketplace/` |
 | Scope | Stage 1 (MVP) in detail, stages 2–3 as a roadmap |
-| Design brief | [catalog-site.design-brief.md](catalog-site.design-brief.md) |
+| Design brief | [catalog-site.design-brief.md](temp/catalog-site.design-brief.md) |
 
 ## 1. Goals
 
@@ -974,7 +974,7 @@ Manual setup: Settings → Pages → Source = **GitHub Actions**.
 
 Phase 2 delivered all of the items below except Lighthouse, which is still open. The smoke tests run on the real build and on a build of the test fixture (`dist-e2e/`), since the real marketplace has no components yet.
 
-Phase 1 (the first implementation, see `implementation-plan.md`) does not cover these criteria or parts of them:
+Phase 1 (the first implementation, see `temp/implementation-plan.md`) does not cover these criteria or parts of them:
 
 - Criterion 8, RSS part (`/feed.xml`, 8.5): the RSS links are left out of the pages until the feed exists.
 - Criterion 12, Playwright smoke and axe checks (section 14), the size budget script and Lighthouse (section 13), and the CSP `<meta>` with script hashes (section 12).

@@ -254,6 +254,8 @@ export const t = {
     suggest: 'Suggest an artifact',
     issueTitle: (q: string) => `Suggest an artifact: ${q}`,
     issueBody: (q: string) => `I looked for: ${q}`,
+    /** Plugin cards: how many plugins this one depends on. */
+    cardDependsOn: (n: number) => `depends on ${n} ${pick(n, 'plugin', 'plugins')}`,
   },
 
   plugin: {
@@ -269,6 +271,17 @@ export const t = {
     install: 'Install',
     installStep1: '1. Add the marketplace (once)',
     installStep2: '2. Install the plugin',
+    depsAutoInstall: (n: number) =>
+      `${pick(n, 'Its dependency installs', `Its ${n} dependencies install`)} automatically with it.`,
+    dependencies: 'Dependencies',
+    noDependencies: 'No dependencies.',
+    depAnyVersion: 'any version',
+    depFromMarketplace: (mp: string) => `from the ${mp} marketplace`,
+    depNotListed: 'not listed in this marketplace',
+    usedBy: 'Used by',
+    notUsedBy: 'No other plugin in this marketplace depends on this one.',
+    compatibility: 'Compatibility',
+    compatibilityShow: 'Show the compatibility notes',
     unavailableLead: 'Contents unavailable:',
     unavailableText: " this plugin is hosted outside this repository, so its skills, agents and README aren't indexed here.",
     viewSource: "View the plugin's source →",
@@ -284,6 +297,8 @@ export const t = {
     metaArtifacts: 'Artifacts',
     metaLastRelease: 'Last release',
     metaSource: 'Source',
+    metaCompatibility: 'Requires',
+    claudeCodeRange: (range: string) => `Claude Code ${range}`,
     unavailable: 'Unavailable',
     tags: 'Tags',
     sourceOnGithub: 'Source on GitHub →',

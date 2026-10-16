@@ -26,6 +26,25 @@ export interface ArtifactDetails {
   hasReadme?: boolean;
 }
 
+/** A plugin's `dependencies` entry from plugin.json, normalized. */
+export interface PluginDependency {
+  name: string;
+  /** Semver range ("^1.0.0"), or null when any version is accepted. */
+  version: string | null;
+  /** Marketplace given in the entry ("name@marketplace" or `marketplace`), or null. */
+  marketplace: string | null;
+  /** True when the dependency is a plugin of this marketplace (no marketplace or the same one). */
+  internal: boolean;
+}
+
+/** From the plugin's COMPATIBILITY.md. */
+export interface PluginCompatibility {
+  /** Claude Code version range from the "**Claude Code:** `>=x.y.z`" line, or null. */
+  claudeCode: string | null;
+  /** True when COMPATIBILITY.md exists. */
+  doc: boolean;
+}
+
 export interface Artifact {
   id: string;
   type: ArtifactType;
@@ -44,6 +63,12 @@ export interface Artifact {
   validation?: { status: ValidationStatus; messages: string[] };
   external?: boolean;
   freshness?: Freshness;
+  /** Plugin only: what this plugin depends on (plugin.json `dependencies`). */
+  dependencies?: PluginDependency[];
+  /** Plugin only: plugins of this marketplace that depend on this one, sorted. */
+  usedBy?: string[];
+  /** Plugin only. */
+  compatibility?: PluginCompatibility;
 }
 
 export interface Catalog {

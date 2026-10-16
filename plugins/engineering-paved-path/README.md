@@ -38,6 +38,11 @@ claude plugin install engineering-paved-path@devdigest-marketplace
 The plugin has no dependencies of its own. If you install `architecture-review` or
 `sdd-engineering`, Claude Code installs this plugin for you, because both depend on it.
 
+## Compatibility
+
+Claude Code `>=2.1.110` (version-constrained plugin `dependencies`); tested with `2.1.301`.
+Details, and the features this plugin relies on: [`COMPATIBILITY.md`](COMPATIBILITY.md).
+
 ## What's inside
 
 Seven skills. Claude loads a skill when its description matches the task. Every skill
@@ -150,18 +155,20 @@ own docs, or in the knowledge files listed under `knowledgeFiles` in
 
 ## Credits
 
-- **`next-best-practices`**: from
-  [vercel-labs/next-skills](https://github.com/vercel-labs/next-skills), path
-  `skills/next-best-practices`. Content hash at import:
-  `f4678aef4ffc10a5ea64a91e57abe5a5081af813b06d58d565caf3e8ef56e26c`. Licensed under the
-  upstream repository's license.
-- **`fastify-best-practices`**: from
-  [mcollina/skills](https://github.com/mcollina/skills), path `skills/fastify`. Content hash
-  at import: `269924684709b8c6f50a569ef988e66031efb822ef92cba6c8dfa160e54ed4d4`. Licensed
-  under the upstream repository's license. The upstream registry metadata file
-  (`tile.json`) is not included.
-- **`react-best-practices`, `react-testing-library`, `security`**: origin to be confirmed
-  (open question OQ-3). Attribution will be added here once the upstream sources are
-  confirmed.
-- **`onion-architecture`, `frontend-ui-architecture`**: written for this marketplace. Each
-  skill's `README.md` lists the articles and documentation it is based on.
+| Skill | Source | Commit | License |
+|---|---|---|---|
+| `fastify-best-practices` | [mcollina/skills](https://github.com/mcollina/skills) — `skills/fastify` | `58b3eeb` | MIT — [`LICENSE`](skills/fastify-best-practices/LICENSE) kept next to the skill. The registry metadata file `tile.json` is not included |
+| `next-best-practices` | [vercel-labs/next-skills](https://github.com/vercel-labs/next-skills) — `skills/next-best-practices` (removed upstream since; last version `dc1de9c`) | `31e6ebd` | **None declared upstream** — redistribution permission pending |
+| `react-best-practices` | [burnjohn/quick-blog](https://github.com/burnjohn/quick-blog) — `.claude/skills/react-best-practices` | `b63d321` | **None declared upstream** — redistribution permission pending |
+| `react-testing-library` | [burnjohn/quick-blog](https://github.com/burnjohn/quick-blog) — `.claude/skills/react-testing-library` | `71140a0` | **None declared upstream** — redistribution permission pending |
+| `security` | [burnjohn/quick-blog](https://github.com/burnjohn/quick-blog) — `.claude/skills/security` | `002a3ac` | **None declared upstream** — redistribution permission pending |
+| `onion-architecture`, `frontend-ui-architecture` | Written for this marketplace. Each skill's `README.md` lists the articles and docs it builds on | — | Same as this repository |
+
+Small local edits to third-party skills:
+- Wording that named one project was made neutral.
+- One install line in `security/references.md` now points to the upstream README instead of a
+  path.
+
+A repository without a license grants no right to redistribute by default. The four skills
+marked "pending" stay in the plugin only until their authors confirm permission, or until
+they are replaced. This must be settled before the `1.0.0` release tag.

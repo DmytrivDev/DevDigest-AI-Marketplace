@@ -25,6 +25,11 @@ claude plugin install research-tools@devdigest-marketplace
 `research-tools` has no dependencies. If you install a plugin that depends on it (such as
 `sdd-engineering`), it is installed for you automatically.
 
+## Compatibility
+
+Claude Code `>=2.1.110` (version-constrained plugin `dependencies`); tested with `2.1.301`.
+Details, and the features this plugin relies on: [`COMPATIBILITY.md`](COMPATIBILITY.md).
+
 ## What's inside
 
 | Component | Type | Namespaced name | What it does | Triggers |

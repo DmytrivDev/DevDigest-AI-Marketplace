@@ -1,6 +1,6 @@
 # Design brief: DevDigest Marketplace catalog
 
-A short brief for Claude Design. The full spec is [catalog-site.md](catalog-site.md)
+A short brief for Claude Design. The full spec is [SITE-SPEC.md](../SITE-SPEC.md)
 (sections 7–10). Where the brief and the spec disagree, the spec wins.
 
 ## 1. Context

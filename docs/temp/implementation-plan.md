@@ -7,7 +7,7 @@ Implements the Claude Design prototype as a real static site on GitHub Pages.
 | What | Where | Authority |
 |---|---|---|
 | Visual design and interactions | `docs/temp/design-source/DevDigest Marketplace.dc.html`, `CopyCommand.dc.html` | How it looks and behaves on screen |
-| Behavior, data model, rules | `docs/temp/catalog-site.md` (spec) | Everything the design doesn't show |
+| Behavior, data model, rules | `docs/SITE-SPEC.md` (spec) | Everything the design doesn't show |
 | Design brief | `docs/temp/catalog-site.design-brief.md` | Context only |
 
 `support.js` is the Claude Design runtime (React + Babel from unpkg). It is **not** shipped;
@@ -104,7 +104,7 @@ The real catalog has the `devdigest` plugin and zero components. Required behavi
 - Add a root `.gitignore` with `site/node_modules/`, `site/dist/`, `site/.astro/`.
 - `site/README.md`: local dev server first (`npm run dev`, port 4321, watches `plugins/**`
   and `.claude-plugin/**`), then test, build, preview; how data is produced; how deploy works.
-- In the spec (`docs/temp/catalog-site.md`) add a note to section 11 that the site renders
+- In the spec (`docs/SITE-SPEC.md`) add a note to section 11 that the site renders
   only real repository data and fixtures are test-only, and
   list in section 15 which criteria are deferred to phase 2. Don't rewrite other sections.
 

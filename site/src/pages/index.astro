@@ -37,6 +37,7 @@ const items: CardItem[] = listable.map((a) => ({
   ts: a.updatedAt ? Date.parse(a.updatedAt) : 0,
   fresh: a.freshness,
   cmd: primaryCommand(a, m),
+  ...(a.dependencies?.length ? { deps: a.dependencies.length } : {}),
 }));
 const availableTypes = ALL_TYPES.filter((ty) => listable.some((a) => a.type === ty));
 

@@ -9,7 +9,7 @@ import { renderMarkdown } from '../../../data/markdown';
 import { addCommand, installCommand, marketplaceInfo } from '../../../lib/commands';
 import { formatDate } from '../../../lib/format';
 import { TYPE_PLURAL } from '../../../lib/icons';
-import { artifactHref, repoUrl, releaseSummary, splitMessage } from '../../../lib/site';
+import { artifactHref, pluginHref, repoUrl, releaseSummary, splitMessage } from '../../../lib/site';
 import { TYPE_ORDER } from '../../../lib/types';
 import { url } from '../../../lib/url';
 import { stripCode } from '../../../lib/richtext';
@@ -21,7 +21,7 @@ export async function getStaticPaths() {
 }
 
 const { plugin: name } = Astro.params;
-const { catalog, changelog, readmes } = await loadSiteData();
+const { catalog, changelog, readmes, compatDocs } = await loadSiteData();
 const m = marketplaceInfo(catalog);
 const p = catalog.artifacts.find((a) => a.type === 'plugin' && a.plugin === name)!;
 const comps = catalog.artifacts.filter((a) => a.plugin === name && a.type !== 'plugin');
@@ -31,11 +31,28 @@ const groups = TYPE_ORDER.map((ty) => ({ type: ty, items: comps.filter((a) => a.
 const readmeHtml = readmes[name!]
   ? await renderMarkdown(readmes[name!], { headingOffset: 1, dropFirstH1: true, linkBase: `${repoUrl(catalog)}/blob/${catalog.commit}/${p.sourcePath}/` })
   : '';
+const compatHtml = !external && compatDocs[name!]
+  ? await renderMarkdown(compatDocs[name!], { headingOffset: 1, dropFirstH1: true, idPrefix: 'compat-', linkBase: `${repoUrl(catalog)}/blob/${catalog.commit}/${p.sourcePath}/` })
+  : '';
+const pluginsByName = new Map(catalog.artifacts.filter((a) => a.type === 'plugin').map((a) => [a.name, a]));
+// Dependencies (plugin.json): internal ones link to their plugin page when it exists.
+const deps = (p.dependencies ?? []).map((d) => {
+  const target = d.internal ? pluginsByName.get(d.name) : undefined;
+  return {
+    name: d.name,
+    version: d.version,
+    href: target ? pluginHref(target.plugin) : null,
+    note: !d.internal && d.marketplace ? t.plugin.depFromMarketplace(d.marketplace) : target ? stripCode(target.description) : t.plugin.depNotListed,
+  };
+});
+const usedBy = (p.usedBy ?? []).map((u) => ({ name: u, href: pluginHref(u), description: stripCode(pluginsByName.get(u)?.description ?? '') }));
+const claudeCode = p.compatibility?.claudeCode ?? null;
 const versions = changelog.releases.filter((r) => r.plugin === name).slice(0, 5);
 const lastRelease = versions[0]?.date;
 const tip = external ? t.plugin.tipExternal : t.plugin.tipNoValidator;
 const meta: [string, string, boolean][] = [
   [t.plugin.metaVersion, p.version ?? '—', true],
+  ...(claudeCode ? ([[t.plugin.metaCompatibility, t.plugin.claudeCodeRange(claudeCode), false]] as [string, string, boolean][]) : []),
   [t.plugin.metaCategory, p.category ?? '—', true],
   [t.plugin.metaAuthor, p.details.author ?? '—', false],
   [t.plugin.metaArtifacts, external ? t.plugin.unavailable : String(comps.length), false],
@@ -79,7 +96,38 @@ const sourceUrl = external ? `https://${p.sourcePath}` : `${repoUrl(catalog)}/tr
             <li><span class="muted small">{t.plugin.installStep1}</span><CopyCommand cmd={addCommand(m)} /></li>
             <li><span class="muted small">{t.plugin.installStep2}</span><CopyCommand cmd={installCommand(p.plugin, m)} /></li>
           </ol>
+          {deps.length > 0 && <p class="muted small">{t.plugin.depsAutoInstall(deps.length)}</p>}
         </section>
+
+        {(!external || usedBy.length > 0) && (
+          <section class="stack gap12" aria-labelledby="p-deps">
+            <h2 id="p-deps" class="h2">{t.plugin.dependencies}</h2>
+            {!external && (deps.length ? (
+              <ul class="art-list">
+                {deps.map((d) => (
+                  <li>
+                    {d.href ? <a class="mono strong" href={d.href}>{d.name}</a> : <span class="mono strong">{d.name}</span>}
+                    <span class="muted">{d.version ? <span class="mono">{d.version}</span> : t.plugin.depAnyVersion}{d.note && ` · ${d.note}`}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="muted">{t.plugin.noDependencies}</p>
+            ))}
+            <div class="stack">
+              <h3 class="group-h">{t.plugin.usedBy}</h3>
+              {usedBy.length ? (
+                <ul class="art-list">
+                  {usedBy.map((u) => (
+                    <li><a class="mono strong" href={u.href}>{u.name}</a><span class="muted">{u.description}</span></li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="muted">{t.plugin.notUsedBy}</p>
+              )}
+            </div>
+          </section>
+        )}
 
         {external ? (
           <section class="box box--surface pad16 stack gap8">
@@ -119,6 +167,15 @@ const sourceUrl = external ? `https://${p.sourcePath}` : `${repoUrl(catalog)}/tr
               <section class="stack gap12" aria-labelledby="p-readme">
                 <h2 id="p-readme" class="h2">{t.plugin.readme}</h2>
                 <div class="box readme"><div class="md" set:html={readmeHtml} /></div>
+              </section>
+            )}
+            {compatHtml && (
+              <section class="stack gap12" aria-labelledby="p-compat">
+                <h2 id="p-compat" class="h2">{t.plugin.compatibility}</h2>
+                <details class="notes">
+                  <summary>{t.plugin.compatibilityShow}</summary>
+                  <div class="box readme" style="margin-top:8px"><div class="md" set:html={compatHtml} /></div>
+                </details>
               </section>
             )}
           </>

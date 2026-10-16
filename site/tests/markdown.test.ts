@@ -35,6 +35,11 @@ describe('markdown pipeline (spec 12)', () => {
     expect(html).toContain('<h2 id="md-evals-1">Evals</h2>');
     expect(html).toContain('href="#md-evals"');
   });
+  it('takes another id prefix for a second document on the same page', async () => {
+    const html = await renderMarkdown('- [Setup](#setup)\n\n## Setup', { idPrefix: 'compat-' });
+    expect(html).toContain('<h2 id="compat-setup">Setup</h2>');
+    expect(html).toContain('href="#compat-setup"');
+  });
   it('renders GFM tables', async () => {
     const html = await renderMarkdown('| a | b |\n|---|---|\n| 1 | 2 |');
     expect(html).toContain('<table>');

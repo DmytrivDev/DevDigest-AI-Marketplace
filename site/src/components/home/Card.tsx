@@ -1,3 +1,4 @@
+import { t } from '../../i18n/en';
 import { richParts } from '../../lib/richtext';
 import { splitHighlight } from '../../search/engine';
 import { CopyButton, FreshBadge, TypeBadge, type CardItem } from './shared';
@@ -47,6 +48,12 @@ export function Card({ item, terms }: { item: CardItem; terms: string[] }) {
         </p>
         <p className="card__meta">
           <a href={item.pluginHref}>{item.plugin}</a>
+          {item.deps ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>{t.home.cardDependsOn(item.deps)}</span>
+            </>
+          ) : null}
           {meta && (
             <>
               <span aria-hidden="true">·</span>

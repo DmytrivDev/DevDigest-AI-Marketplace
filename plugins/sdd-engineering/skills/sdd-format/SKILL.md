@@ -32,6 +32,9 @@ except `run-plan` when the user agrees to save an answer there.
 | `retroLedger` | string | `"docs/retro/ledger.md"` | Append-only ledger of `workflow-retro` |
 | `contractChecks` | array | none | Extra items for a plan's `Contract changes` section |
 
+`knowledgeFiles` have one writer: the `sdd-engineering:engineering-insights` skill, run in the
+main session when the user or that session decides, and only by appending.
+
 `verify` entries:
 
 ```json

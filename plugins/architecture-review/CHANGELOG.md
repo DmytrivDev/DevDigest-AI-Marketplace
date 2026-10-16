@@ -20,3 +20,4 @@ Changelog 1.1.0, and versions follow Semantic Versioning 2.0.0.
 - Four eval cases for `claude plugin eval`: `benign-rename`, `checkout-layering`,
   `checkout-scope-discipline` and `core-validation-gate`.
 - Dependency on `engineering-paved-path` `^1.0.0`.
+- `COMPATIBILITY.md`: minimum Claude Code version and the features the plugin relies on.

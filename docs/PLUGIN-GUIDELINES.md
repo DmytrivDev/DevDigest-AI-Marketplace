@@ -1,10 +1,14 @@
-# Plugin authoring guide (temporary reference)
+# Plugin guidelines
 
-Working notes for building plugins in this marketplace. Distilled from the official
-Claude Code docs (Oct 2026, CLI ~2.1.28x) plus community reports. Items marked
-**(verify)** were not confirmed against the docs — check before relying on them.
-Short rules for PRs live in [`CONTRIBUTING.md`](../../CONTRIBUTING.md); this file is the
-"why" and the detail behind them.
+How to build a plugin for this marketplace and why the rules are what they are. Distilled
+from the official Claude Code docs (Oct 2026, CLI 2.1.28x–2.1.301) plus community reports.
+Items marked **(verify)** were not confirmed against the docs — check before relying on them.
+
+Related documents:
+- [`CONTRIBUTING.md`](../CONTRIBUTING.md) — the short rules and the PR checklist.
+- [`SECURITY.md`](SECURITY.md) — what may never ship, and what to do after a bad release.
+- [`RELEASES.md`](RELEASES.md) — versions, tags, update, channels and rollback.
+- [`SITE-SPEC.md`](SITE-SPEC.md) — how the catalog site reads plugins.
 
 Primary sources:
 - Marketplace reference — https://code.claude.com/docs/en/plugins/marketplace-reference
@@ -33,8 +37,10 @@ plugins/<name>/
 └── README.md
 ```
 
-- Every component is namespaced by the plugin name: skill `review` in plugin `devdigest`
-  runs as `/devdigest:review`, agent `x` appears as `devdigest:x`.
+- Every component is namespaced by the plugin name: skill `run-plan` in plugin
+  `sdd-engineering` runs as `/sdd-engineering:run-plan`, agent `researcher` in
+  `research-tools` appears as `research-tools:researcher`. Reference another plugin's
+  components only by that full name.
 - A `CLAUDE.md` inside a plugin is **not loaded** — put standing instructions in a skill.
 - Default directories are discovered automatically; you only list paths in `plugin.json`
   for non-default locations. `skills`, `hooks`, `mcpServers` **add to** the defaults;
@@ -46,12 +52,15 @@ plugins/<name>/
 
 ```json
 {
-  "name": "devdigest",
-  "version": "0.2.0",
+  "name": "architecture-review",
+  "version": "1.0.0",
   "description": "What the plugin does, in one line",
   "author": { "name": "DmytrivDev" },
   "homepage": "https://github.com/DmytrivDev/DevDigest-AI-Marketplace",
-  "keywords": ["code-review"]
+  "keywords": ["architecture"],
+  "dependencies": [
+    { "name": "engineering-paved-path", "version": "^1.0.0" }
+  ]
 }
 ```
 
@@ -67,7 +76,7 @@ A skill is `skills/<skill-name>/SKILL.md` with YAML frontmatter and a Markdown b
 ```markdown
 ---
 name: review-pr
-description: Reviews a pull request diff for correctness bugs and grounds every finding in a file and line. Use when the user asks to review a PR, a diff or a branch, or mentions DevDigest findings.
+description: Reviews a pull request diff for correctness bugs and grounds every finding in a file and line. Use when the user asks to review a PR, a diff or a branch.
 ---
 
 # Review a pull request
@@ -111,8 +120,13 @@ You review ... Return findings as ...
 
 - The `description` is how Claude decides to delegate — same rules as for skills.
 - Grant the **minimum tools**. A reviewer does not need `Edit`/`Write`/`Bash`.
-- Plugin agents may not support every frontmatter key a project agent does (for example
-  agent-level hooks, MCP servers, permission mode) **(verify)** — keep plugin agents simple.
+- Plugin agents ignore `hooks`, `mcpServers`, `permissionMode` and `initialPrompt` in
+  frontmatter (confirmed in the sub-agents docs). Supported: `name`, `description`, `model`,
+  `effort`, `maxTurns`, `tools`, `disallowedTools`, `skills`, `memory`, `background`,
+  `isolation: worktree`, `color`.
+- `skills:` preloads full skill content. Skills with `disable-model-invocation: true` cannot
+  be preloaded. Whether another plugin's namespaced skill can be preloaded is **(verify)** —
+  our agents also load such skills through the `Skill` tool as a fallback.
 
 ## 5. Hooks
 
@@ -154,10 +168,10 @@ You review ... Return findings as ...
 ```json
 {
   "mcpServers": {
-    "devdigest": {
+    "example-api": {
       "command": "node",
       "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/mcp-server.mjs"],
-      "env": { "DEVDIGEST_API_URL": "${user_config.api_url}" }
+      "env": { "EXAMPLE_API_URL": "${user_config.api_url}" }
     }
   }
 }
@@ -204,7 +218,8 @@ You review ... Return findings as ...
   skill/agent/hook, major = removed or renamed component).
 - Auto-update is off by default for third-party marketplaces; users refresh with
   `claude plugin marketplace update devdigest-marketplace` and
-  `claude plugin update devdigest@devdigest-marketplace`, or enable auto-update in `/plugin`.
+  `claude plugin update sdd-engineering@devdigest-marketplace`, or enable auto-update in `/plugin`.
+- The full release, channel and rollback procedure is in [`RELEASES.md`](RELEASES.md).
 - Tag releases with `claude plugin tag --push` → `<plugin>--v<version>`; it checks that
   versions agree and the tree is clean.
 - A running session keeps the old version until `/reload-plugins`.
@@ -214,15 +229,15 @@ You review ... Return findings as ...
 ## 9. Develop and test
 
 ```bash
-claude --plugin-dir ./plugins/devdigest      # load for one session, edits apply after /reload-plugins
-node scripts/validate.mjs                    # manifests + claude plugin validate --strict
+claude --plugin-dir ./plugins                # load every plugin for one session; edits apply after /reload-plugins
+node scripts/validate.mjs                    # manifests, content rules, claude plugin validate --strict
 node scripts/validate.mjs --install          # + real install in a throwaway config dir
-claude plugin details devdigest              # what components actually loaded
+claude plugin details sdd-engineering        # what components actually loaded, and their token cost
 ```
 
 - `/plugin` → **Errors** tab shows load errors (`path escapes plugin directory`,
   `conflicting manifests`, …).
-- Behaviour tests: `claude plugin eval ./plugins/devdigest` (cases in `evals/<case>/`
+- Behaviour tests: `claude plugin eval ./plugins/sdd-engineering` (cases in `evals/<case>/`
   with `prompt.md` + `graders/*.md`; `claude plugin eval init` scaffolds one). Each case
   runs with and without the plugin; every run is a real, billed model call. In CI add
   `--trust-plugin --json out.json --no-publish` and pin `--model`.
@@ -237,23 +252,77 @@ claude plugin details devdigest              # what components actually loaded
 - Never have a hook edit `settings*.json`, permissions or other plugins' files — that is
   the exact pattern of reported marketplace-plugin hijacks.
 - External plugin sources pin `ref` + full 40-char `sha`.
+- The full policy — no secrets, no absolute paths, what to do after an unsafe release — is
+  [`SECURITY.md`](SECURITY.md). `node scripts/validate.mjs` enforces the mechanical part.
 
-## 11. Porting DevDigest's existing `.claude/` artifacts
+## 11. Porting a project's existing `.claude/` artifacts
 
-The dev-digest repo already has skills and agents under `.claude/`. When moving one into
-`plugins/devdigest/`:
+First sort everything in the source project's `.claude/` into four groups:
+
+| Group | Examples | What happens |
+|---|---|---|
+| Reusable | skills, agents, hooks, evals with no product-specific paths | ported into a plugin |
+| Project-specific | `CLAUDE.md`, product specs, module names, rules only that product needs | stays in the product repo; the plugin reads it through explicit inputs (config, brief) |
+| Optional integrations | MCP servers, anything with network access or credentials | its own plugin, opt-in, credentials via `userConfig` |
+| Local leftovers | caches, personal memory, experiments, absolute paths | never ported |
+
+Then, when moving a reusable file into `plugins/<name>/`:
 - Copy every file it reads (references, scripts, templates) **into the plugin**; repo
   paths like `docs/…`, `INSIGHTS.md`, `scripts/…` will not exist after install.
 - Replace hard-coded paths with `${CLAUDE_PLUGIN_ROOT}/…` (bundled) or
   `${CLAUDE_PROJECT_DIR}/…` (the user's repo — and handle it being absent).
 - Instructions that lived in `CLAUDE.md` become a skill.
 - Hooks written as `.sh` → rewrite as Node exec-form hooks.
-- The `mcp/` server uses pnpm — ship an npm lockfile or a bundled build.
+- A server or script that uses pnpm or yarn — ship an npm lockfile or a bundled build.
+- Remove every mention of the source project (name, packages, paths, spec numbers, measured
+  numbers) — the plugin is public and must read as project-agnostic.
+- Record where every third-party file came from (repo, path, commit) and its license in the
+  plugin README's Credits. A file without a license that allows redistribution does not ship.
 - Re-check the description: inside a plugin it competes with every other installed skill.
 
-## 12. Pre-PR checklist
+## 12. Boundaries and owners
+
+Every plugin owns one job and is released on its own. Before adding a component, check that
+it belongs to the plugin's boundary below. If it doesn't, it goes in another plugin or a new
+one. Owners are listed in [`CODEOWNERS`](../CODEOWNERS).
+
+| Plugin | Boundary — what belongs here | What does not |
+|---|---|---|
+| `engineering-paved-path` | Stack knowledge as skills: architecture, React, Next.js, Fastify, testing, security | Agents, workflows, anything that writes files on its own |
+| `research-tools` | Read-only research agents | Agents that edit, review or implement |
+| `architecture-review` | The read-only architecture reviewer and its evals | The rules themselves — those live in `engineering-paved-path` |
+| `sdd-engineering` | The SDD pipeline: its agents, orchestration skills, shared formats, evals | Stack rules (→ `engineering-paved-path`), research (→ `research-tools`), review (→ `architecture-review`) |
+
+A file's owner, consumer scenario and update reason must be explainable. For example,
+`sdd-format` is owned by `sdd-engineering` and read by its four agents and `run-plan`. It
+changes whenever the spec or plan format changes, and that is why it is released with them.
+
+## 13. Dependencies between plugins
+
+- **Declare everything you use.** A plugin that dispatches another plugin's agent or loads
+  its skill lists that plugin in `dependencies`. An undeclared one fails silently: the name
+  simply does not resolve on a machine where the other plugin is not installed.
+- **Object form with a range:** `{ "name": "engineering-paved-path", "version": "^1.0.0" }`.
+  A bare name resolves in this marketplace. A plugin from another marketplace needs
+  `allowCrossMarketplaceDependenciesOn` in `marketplace.json` — we have none.
+- **Ranges are caret on the major:** `^1.0.0`. A breaking change in a dependency is a new
+  major. Every dependent then raises its range in the same release train.
+- **Release dependencies first,** then the plugins that depend on them
+  ([`RELEASES.md`](RELEASES.md)).
+- **No cycles,** and keep the graph shallow. Today it is
+  `sdd-engineering → {engineering-paved-path, research-tools, architecture-review}` and
+  `architecture-review → engineering-paved-path`.
+- **Check it:** after a test install, `claude plugin list --json` must show no
+  `dependency-unsatisfied`, `range-conflict` or `no-matching-tag`.
+- **Relative-path plugins** resolve to the marketplace's current copy. If that copy does not
+  satisfy the range, the dependent plugin stays disabled. Bump ranges and versions together.
+
+## 14. Pre-PR checklist
 
 - [ ] Entry `name` = `plugin.json` `name`; no reserved prefix
+- [ ] Every other plugin's component you use is in `dependencies` with a `^` range (§13)
+- [ ] `COMPATIBILITY.md` updated if you rely on a newer Claude Code feature
+- [ ] Third-party files credited, with a license that allows redistribution
 - [ ] `version` bumped in `plugin.json`, absent from `marketplace.json`
 - [ ] Nothing referenced outside `plugins/<name>/`
 - [ ] Hooks in exec form, scripts in Node, `${CLAUDE_PLUGIN_ROOT}` paths

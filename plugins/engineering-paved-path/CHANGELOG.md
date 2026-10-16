@@ -16,3 +16,4 @@ plugin follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `security`: web application security checklists and examples based on the OWASP Top 10:2025.
 - `onion-architecture`: Onion Architecture rings, ports and adapters, and layering rules for Node/TypeScript backends and MCP servers.
 - `frontend-ui-architecture`: component homes, file roles, logic and state placement, and the Next.js server/client boundary.
+- `COMPATIBILITY.md`: minimum Claude Code version and the features the plugin relies on.
