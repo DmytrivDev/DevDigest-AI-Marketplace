@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: repo-question-cited
+description: >-
+  A concrete repository question, part of which the repository cannot answer. Passes when the
+  report has a Not established section and every conclusion is cited as file:line.
+tags: [research-tools, mode-a]
+context:
+  # Copies the sample repository in ./repo into the empty eval workspace. It only runs with
+  # `claude plugin eval --scaffold`; without it the workspace is empty and the case fails.
+  scaffold_script: scaffold.sh

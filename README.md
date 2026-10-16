@@ -1,7 +1,8 @@
 # DevDigest AI Marketplace
 
-Claude Code plugin marketplace for DevDigest — homework and lab for the final
-course lesson on building marketplaces and development plugins.
+Claude Code plugin marketplace for Spec Driven Development and engineering paved
+paths — homework and lab for the final course lesson on building marketplaces and
+development plugins.
 
 ## Install
 
@@ -9,14 +10,17 @@ In a Claude Code session:
 
 ```
 /plugin marketplace add DmytrivDev/DevDigest-AI-Marketplace
-/plugin install devdigest@devdigest-marketplace
+/plugin install sdd-engineering@devdigest-marketplace
 ```
+
+`sdd-engineering` pulls in its three dependencies automatically. Each of them can also
+be installed on its own.
 
 Or from a shell:
 
 ```bash
 claude plugin marketplace add DmytrivDev/DevDigest-AI-Marketplace
-claude plugin install devdigest@devdigest-marketplace
+claude plugin install sdd-engineering@devdigest-marketplace
 ```
 
 Auto-update is off by default for third-party marketplaces; turn it on in
@@ -24,9 +28,14 @@ Auto-update is off by default for third-party marketplaces; turn it on in
 
 ## Plugins
 
-| Plugin | Description |
-|---|---|
-| [devdigest](plugins/devdigest/) | DevDigest review workflow: skills, agents, hooks and MCP server |
+| Plugin | Description | Depends on |
+|---|---|---|
+| [sdd-engineering](plugins/sdd-engineering/) | Spec Driven Development pipeline: spec, plan, implement, verify and retro with dedicated agents | engineering-paved-path, research-tools, architecture-review |
+| [engineering-paved-path](plugins/engineering-paved-path/) | Stack skills for React, Next.js and Fastify apps: architecture, component placement, testing, security | — |
+| [research-tools](plugins/research-tools/) | Read-only `researcher` agent with cited evidence | — |
+| [architecture-review](plugins/architecture-review/) | Read-only `architecture-reviewer` agent | engineering-paved-path |
+
+All dependencies use the range `^1.0.0`.
 
 ## Layout
 
@@ -47,10 +56,11 @@ node scripts/validate.mjs --install
 
 Drop `--install` for the fast manifest-only pass.
 
-Load a plugin for one session without installing it:
+Load every plugin for one session without installing them. A folder of plugins loads each
+child, so dependencies resolve too:
 
 ```bash
-claude --plugin-dir ./plugins/devdigest
+claude --plugin-dir ./plugins
 ```
 
 ## Rules

@@ -1,0 +1,9 @@
+{
+  "name": "research-tools",
+  "version": "1.0.0",
+  "description": "Read-only researcher agent for codebase and external questions, with cited evidence and an explicit list of what it could not establish",
+  "author": { "name": "DmytrivDev", "url": "https://github.com/DmytrivDev" },
+  "homepage": "https://github.com/DmytrivDev/DevDigest-AI-Marketplace",
+  "repository": "https://github.com/DmytrivDev/DevDigest-AI-Marketplace",
+  "keywords": ["research", "agent", "read-only"]
+}

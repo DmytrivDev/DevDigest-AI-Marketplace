@@ -10,7 +10,10 @@
 /.claude-plugin/                    @DmytrivDev
 
 # Plugins — each plugin directory names its own maintainers
-/plugins/devdigest/                 @DmytrivDev
+/plugins/engineering-paved-path/    @DmytrivDev
+/plugins/research-tools/            @DmytrivDev
+/plugins/architecture-review/       @DmytrivDev
+/plugins/sdd-engineering/           @DmytrivDev
 
 # Repository ownership rules themselves
 /CODEOWNERS                         @DmytrivDev

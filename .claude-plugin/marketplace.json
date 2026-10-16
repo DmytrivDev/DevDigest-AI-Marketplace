@@ -1,17 +1,41 @@
 {
   "name": "devdigest-marketplace",
-  "description": "Claude Code plugins for DevDigest, the local-first AI PR reviewer",
+  "description": "Claude Code plugins for Spec Driven Development and engineering paved paths",
   "owner": {
     "name": "DmytrivDev",
     "url": "https://github.com/DmytrivDev"
   },
+  "renames": {
+    "devdigest": null
+  },
   "plugins": [
     {
-      "name": "devdigest",
-      "source": "./plugins/devdigest",
-      "description": "DevDigest review workflow for Claude Code: skills, agents, hooks and MCP server",
+      "name": "sdd-engineering",
+      "source": "./plugins/sdd-engineering",
+      "description": "Spec Driven Development pipeline: spec, plan, implement, verify and retro with dedicated agents",
+      "category": "workflow",
+      "tags": ["sdd", "spec-driven-development", "agents", "workflow"]
+    },
+    {
+      "name": "engineering-paved-path",
+      "source": "./plugins/engineering-paved-path",
+      "description": "Stack skills for React, Next.js and Fastify apps: architecture, component placement, testing and security",
+      "category": "development",
+      "tags": ["react", "nextjs", "fastify", "architecture", "testing", "security"]
+    },
+    {
+      "name": "research-tools",
+      "source": "./plugins/research-tools",
+      "description": "Read-only researcher agent for codebase and external questions, with cited evidence",
+      "category": "research",
+      "tags": ["research", "agent", "read-only"]
+    },
+    {
+      "name": "architecture-review",
+      "source": "./plugins/architecture-review",
+      "description": "Read-only architecture reviewer against onion architecture and frontend UI placement rules",
       "category": "code-review",
-      "tags": ["code-review", "pull-requests", "devdigest"]
+      "tags": ["architecture", "code-review", "agent"]
     }
   ]
 }
