@@ -1,0 +1,16 @@
+# Code owners for the DevDigest AI Marketplace.
+# GitHub requests a review from the owners of every path a PR touches.
+# Later rules win: the last matching pattern decides the owner.
+# Enforced only when branch protection on main requires review from Code Owners.
+
+# Default owner for everything in the repo
+*                                   @DmytrivDev
+
+# Marketplace catalog — every plugin entry, rename and removal goes through here
+/.claude-plugin/                    @DmytrivDev
+
+# Plugins — each plugin directory names its own maintainers
+/plugins/devdigest/                 @DmytrivDev
+
+# Repository ownership rules themselves
+/CODEOWNERS                         @DmytrivDev
