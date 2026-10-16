@@ -71,17 +71,14 @@ code and hooks on users' machines, so every change is reviewed by the owners in
 ## Before opening a PR
 
 ```bash
-claude plugin validate . --strict
-claude plugin validate ./plugins/<name> --strict
+node scripts/validate.mjs --install
 ```
 
-`validate` does not catch a missing `source` directory, so also run the install loop
-from your checkout:
-
-```bash
-claude plugin marketplace add ./
-claude plugin install <name>@devdigest-marketplace
-```
+It runs `claude plugin validate --strict` on the marketplace and on every plugin, plus
+the checks `validate` misses: a `source` directory that does not exist, an entry name
+that differs from `plugin.json`, `version` in the marketplace entry, and external sources
+without a pinned `sha`. `--install` then adds the marketplace and installs every plugin
+in a throwaway Claude config dir, so your own `~/.claude` is not touched.
 
 During development, load a plugin for one session without installing it:
 

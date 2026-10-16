@@ -33,28 +33,24 @@ Auto-update is off by default for third-party marketplaces; turn it on in
 ```
 .claude-plugin/marketplace.json   # catalog: name, owner, plugins[]
 plugins/<name>/                   # one self-contained directory per plugin
+scripts/                          # repo maintenance tooling — not shipped with any plugin
 ```
 
 ## Development
 
-Validate the catalog and each plugin (`--strict` turns warnings into errors):
+Validate the marketplace and every plugin, then install each one in a throwaway
+Claude config dir:
 
 ```bash
-claude plugin validate . --strict
-claude plugin validate ./plugins/devdigest --strict
+node scripts/validate.mjs --install
 ```
+
+Drop `--install` for the fast manifest-only pass.
 
 Load a plugin for one session without installing it:
 
 ```bash
 claude --plugin-dir ./plugins/devdigest
-```
-
-Test the full install loop from this checkout:
-
-```bash
-claude plugin marketplace add ./
-claude plugin install devdigest@devdigest-marketplace
 ```
 
 ## Rules
