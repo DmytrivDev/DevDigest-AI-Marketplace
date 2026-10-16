@@ -13,6 +13,7 @@ import { TYPE_PLURAL } from '../../../../lib/icons';
 import { artifactHref, components, repoUrl } from '../../../../lib/site';
 import { url } from '../../../../lib/url';
 import { stripCode } from '../../../../lib/richtext';
+import { t } from '../../../../i18n/en';
 
 export async function getStaticPaths() {
   const { catalog } = await loadSiteData();
@@ -31,13 +32,8 @@ const typePlural = TYPE_PLURAL[a.type];
 const invocable = isInvocable(a);
 const cmd = primaryCommand(a, m);
 
-const NOTES: Record<string, string> = {
-  agent: 'Claude delegates to this agent when a task matches its description. You can also mention it by name in a prompt.',
-  hook: 'This hook is part of the plugin and runs automatically once the plugin is installed.',
-  mcp: 'This server is part of the plugin and starts automatically once the plugin is installed.',
-};
 const rawBody = (bodies[a.id] ?? '').trim();
-const fallback = [a.description, NOTES[a.type]].filter(Boolean).join('\n\n');
+const fallback = [a.description, t.artifact.notes[a.type]].filter(Boolean).join('\n\n');
 const html = await renderMarkdown(rawBody || fallback, {
   dropFirstH1: true,
   linkBase: `${repoUrl(catalog)}/blob/${catalog.commit}/${a.sourcePath}/`,
@@ -49,40 +45,40 @@ const more = [...siblings.filter((x) => x.id !== a.id && x.type === a.type), ...
 const fields = a.details.fields ?? [];
 const files = a.details.files ?? [];
 const crumbs = [
-  { label: 'Catalog', href: url() },
+  { label: t.nav.catalog, href: url() },
   { label: a.plugin, href: url(`plugins/${a.plugin}/`), mono: true },
   { label: typePlural, href: url(`?type=${a.type}`) },
   { label: a.name, mono: true },
 ];
-const cmdLabel = invocable ? 'Invoke in Claude Code' : 'Comes with the plugin. Install it';
+const cmdLabel = invocable ? t.artifact.invoke : t.artifact.comesWithPlugin;
 ---
-<Base title={`${a.name} — ${a.plugin} plugin ${a.type}`} description={a.description} nav="catalog" path={`plugins/${a.plugin}/${a.type}/${a.slug}/`}>
+<Base title={t.artifact.pageTitle(a.name, a.plugin, a.type)} description={a.description} nav="catalog" path={`plugins/${a.plugin}/${a.type}/${a.slug}/`}>
   <div class="page-body">
     <Breadcrumb items={crumbs} />
     <header class="stack" style="gap:12px">
       <div class="badge-row">
         <TypeBadge type={a.type} />
         <FreshBadge value={a.freshness} />
-        <span class="muted small">in <a class="mono" href={url(`plugins/${a.plugin}/`)}>{a.plugin}</a>{pluginArt?.version ? ` ${pluginArt.version}` : ''}{a.updatedAt ? ` · updated ${formatDate(a.updatedAt)}` : ''}</span>
+        <span class="muted small">{t.artifact.in} <a class="mono" href={url(`plugins/${a.plugin}/`)}>{a.plugin}</a>{pluginArt?.version ? ` ${pluginArt.version}` : ''}{a.updatedAt ? t.artifact.updated(formatDate(a.updatedAt)) : ''}</span>
       </div>
       <h1 class="h1 mono" style="overflow-wrap:anywhere">{a.name}</h1>
       {a.description && <p class="lead"><Rich text={a.description} /></p>}
       <div class="hero__cmd">
         <span>{cmdLabel}</span>
         <CopyCommand cmd={cmd} />
-        {!invocable && <span class="muted small">Install command: <span class="mono">{installCommand(a.plugin, m)}</span></span>}
+        {!invocable && <span class="muted small">{t.artifact.installCommand} <span class="mono">{installCommand(a.plugin, m)}</span></span>}
       </div>
     </header>
 
     <div class="two-col">
-      <article aria-label="Documentation" class="doc">
-        <div class="doc__source"><a class="mono" href={ghUrl} target="_blank" rel="noopener" title="Open on GitHub">{mainFile}</a></div>
+      <article aria-label={t.artifact.documentation} class="doc">
+        <div class="doc__source"><a class="mono" href={ghUrl} target="_blank" rel="noopener" title={t.artifact.openOnGithub}>{mainFile}</a></div>
         <div class="md" set:html={html} />
       </article>
       <aside class="side-stack">
         {fields.length > 0 && (
           <section class="stack gap8" aria-labelledby="a-fm">
-            <h2 id="a-fm" class="h2 h2--sm">{a.details.fieldsTitle ?? 'Frontmatter'}</h2>
+            <h2 id="a-fm" class="h2 h2--sm">{a.details.fieldsTitle ?? t.artifact.frontmatter}</h2>
             <dl class="kv box">
               {fields.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}
             </dl>
@@ -90,7 +86,7 @@ const cmdLabel = invocable ? 'Invoke in Claude Code' : 'Comes with the plugin. I
         )}
         {files.length > 0 && (
           <section class="stack gap8" aria-labelledby="a-files">
-            <h2 id="a-files" class="h2 h2--sm">{a.type === 'skill' ? 'Skill files' : 'Files'}</h2>
+            <h2 id="a-files" class="h2 h2--sm">{a.type === 'skill' ? t.artifact.skillFiles : t.artifact.files}</h2>
             <ul class="kv box files">
               {files.map((f) => (
                 <li><span class="mono">{f.path}</span><span class="muted small">{f.description ? `${f.description} · ` : ''}{f.size ? formatBytes(f.size) : ''}</span></li>
@@ -104,8 +100,8 @@ const cmdLabel = invocable ? 'Invoke in Claude Code' : 'Comes with the plugin. I
     {more.length > 0 && (
       <section class="stack gap12" aria-labelledby="a-more">
         <div class="row-head">
-          <h2 id="a-more" class="h2">More from this plugin</h2>
-          <a class="more" href={url(`plugins/${a.plugin}/`)}>All {siblings.length} {siblings.length === 1 ? 'artifact' : 'artifacts'} in {a.plugin} →</a>
+          <h2 id="a-more" class="h2">{t.artifact.moreFromPlugin}</h2>
+          <a class="more" href={url(`plugins/${a.plugin}/`)}>{t.artifact.allInPlugin(siblings.length, a.plugin)}</a>
         </div>
         <ul class="more-grid">
           {more.map((x) => (

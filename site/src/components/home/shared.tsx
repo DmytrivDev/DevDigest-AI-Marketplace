@@ -1,3 +1,4 @@
+import { t } from '../../i18n/en';
 import { ICON, TYPE_LABEL } from '../../lib/icons';
 import type { ArtifactType, Freshness } from '../../lib/types';
 
@@ -32,14 +33,14 @@ export function TypeBadge({ type, label }: { type: ArtifactType; label?: string 
 
 export function FreshBadge({ value }: { value?: Freshness }) {
   if (!value) return null;
-  return <span className={`fresh fresh--${value}`}>{value === 'new' ? 'New' : 'Updated'}</span>;
+  return <span className={`fresh fresh--${value}`}>{t.fresh[value]}</span>;
 }
 
 /** Same markup as CopyCommand.astro; behaviour comes from the page-level copy script. */
 export function CopyButton({ cmd }: { cmd: string }) {
   return (
     <div className="copy" data-copy>
-      <button type="button" className="copy__btn" data-cmd={cmd} aria-label={`Copy command: ${cmd}`} title={cmd}>
+      <button type="button" className="copy__btn" data-cmd={cmd} aria-label={t.copy.ariaCopy(cmd)} title={cmd}>
         <code className="copy__code">{cmd}</code>
         <span className="copy__st" aria-live="polite">
           <svg className="copy__idle" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">

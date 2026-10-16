@@ -24,15 +24,15 @@ interface Props {
 const { title, description, nav, path = '', home = false, noindex = false } = Astro.props;
 const { catalog } = await loadSiteData();
 const repoUrl = `https://github.com/${catalog.marketplace.repo}`;
-const fullTitle = title === t.siteName ? title : `${title} · ${t.siteName}`;
+const fullTitle = title === t.site.name ? title : t.site.htmlTitle(title, t.site.name);
 const items = [
-  { id: 'catalog', label: 'Catalog', href: url() },
-  { id: 'whats-new', label: "What's new", href: url('whats-new/') },
-  { id: 'stats', label: 'Stats', href: url('stats/') },
-  { id: 'guide', label: 'Guide', href: url('guide/') },
+  { id: 'catalog', label: t.nav.catalog, href: url() },
+  { id: 'whats-new', label: t.nav.whatsNew, href: url('whats-new/') },
+  { id: 'stats', label: t.nav.stats, href: url('stats/') },
+  { id: 'guide', label: t.nav.guide, href: url('guide/') },
 ] as const;
 const canonical = new URL(url(path), Astro.site).href;
-const metaDescription = stripCode(description ?? t.tagline).slice(0, 160);
+const metaDescription = stripCode(description ?? t.site.tagline).slice(0, 160);
 const ogImage = new URL(url('og.png'), Astro.site).href;
 ---
 <!doctype html>
@@ -44,16 +44,16 @@ const ogImage = new URL(url('og.png'), Astro.site).href;
     {description && <meta name="description" content={metaDescription} />}
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={url('favicon.svg')} type="image/svg+xml" />
-    <link rel="alternate" type="application/rss+xml" title={`What's new · ${t.siteName}`} href={url('feed.xml')} />
+    <link rel="alternate" type="application/rss+xml" title={t.feed.title(t.site.name)} href={url('feed.xml')} />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content={t.siteName} />
+    <meta property="og:site_name" content={t.site.name} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={metaDescription} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={`${t.siteName}: Claude Code plugins catalog`} />
+    <meta property="og:image:alt" content={t.site.ogImageAlt(t.site.name)} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="dd-commit" content={catalog.commit} />
     {noindex && <meta name="robots" content="noindex" />}
@@ -71,11 +71,11 @@ const ogImage = new URL(url('og.png'), Astro.site).href;
   </head>
   <body data-releases-url={url('api/releases-head.json')} data-page={home ? 'home' : path.replace(/\/$/, '')}>
     <div class="page">
-      <a class="skip" href={home ? '#results' : '#main'}>{home ? 'Skip to results' : 'Skip to content'}</a>
+      <a class="skip" href={home ? '#results' : '#main'}>{home ? t.nav.skipToResults : t.nav.skipToContent}</a>
       <header class="site-header">
         <div class="wrap site-header__bar">
-          <a class="brand" href={url()}>{catalog.marketplace.name || t.brand}</a>
-          <nav class="nav" aria-label="Main">
+          <a class="brand" href={url()}>{catalog.marketplace.name || t.site.brand}</a>
+          <nav class="nav" aria-label={t.nav.main}>
             {items.map((i) => (
               <a href={i.href} aria-current={nav === i.id ? 'page' : undefined}>
                 <span>{i.label}</span>
@@ -84,16 +84,16 @@ const ogImage = new URL(url('og.png'), Astro.site).href;
             ))}
           </nav>
           <div class="header-tools">
-            <a href={repoUrl} target="_blank" rel="noopener">GitHub</a>
-            <div class="theme-switch js-only" role="group" aria-label="Theme">
-              <button type="button" data-theme-set="system" aria-pressed="true">System</button>
-              <button type="button" data-theme-set="light" aria-pressed="false">Light</button>
-              <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
+            <a href={repoUrl} target="_blank" rel="noopener">{t.nav.github}</a>
+            <div class="theme-switch js-only" role="group" aria-label={t.nav.theme}>
+              <button type="button" data-theme-set="system" aria-pressed="true">{t.nav.themeSystem}</button>
+              <button type="button" data-theme-set="light" aria-pressed="false">{t.nav.themeLight}</button>
+              <button type="button" data-theme-set="dark" aria-pressed="false">{t.nav.themeDark}</button>
             </div>
           </div>
           <details class="menu">
-            <summary><span class="menu__open">Menu</span><span class="menu__close">Close</span></summary>
-            <nav class="menu__panel" id="m-menu" aria-label="Main">
+            <summary><span class="menu__open">{t.nav.menu}</span><span class="menu__close">{t.nav.close}</span></summary>
+            <nav class="menu__panel" id="m-menu" aria-label={t.nav.main}>
               {items.map((i) => (
                 <a class="menu__link" href={i.href} aria-current={nav === i.id ? 'page' : undefined}>
                   <span>{i.label}</span>
@@ -101,11 +101,11 @@ const ogImage = new URL(url('og.png'), Astro.site).href;
                 </a>
               ))}
               <div class="menu__tools">
-                <a href={repoUrl} target="_blank" rel="noopener">GitHub</a>
-                <div class="theme-switch js-only" role="group" aria-label="Theme">
-                  <button type="button" data-theme-set="system" aria-pressed="true">System</button>
-                  <button type="button" data-theme-set="light" aria-pressed="false">Light</button>
-                  <button type="button" data-theme-set="dark" aria-pressed="false">Dark</button>
+                <a href={repoUrl} target="_blank" rel="noopener">{t.nav.github}</a>
+                <div class="theme-switch js-only" role="group" aria-label={t.nav.theme}>
+                  <button type="button" data-theme-set="system" aria-pressed="true">{t.nav.themeSystem}</button>
+                  <button type="button" data-theme-set="light" aria-pressed="false">{t.nav.themeLight}</button>
+                  <button type="button" data-theme-set="dark" aria-pressed="false">{t.nav.themeDark}</button>
                 </div>
               </div>
             </nav>
@@ -115,8 +115,8 @@ const ogImage = new URL(url('og.png'), Astro.site).href;
 
       <div class="stale" id="dd-stale" role="status" hidden>
         <div class="wrap stale__in">
-          <span>Catalog updated since this page was loaded.</span>
-          <button type="button" data-reload>Reload page</button>
+          <span>{t.states.stale}</span>
+          <button type="button" data-reload>{t.states.reload}</button>
         </div>
       </div>
 
@@ -127,15 +127,15 @@ const ogImage = new URL(url('og.png'), Astro.site).href;
       <footer class="site-footer">
         <div class="wrap site-footer__in">
           <span>
-            Built {formatDate(catalog.generatedAt)} from commit
+            {t.footer.built(formatDate(catalog.generatedAt))}
             <a class="mono" href={`${repoUrl}/commit/${catalog.commit}`} target="_blank" rel="noopener">{shortSha(catalog.commit)}</a>
           </span>
-          <nav aria-label="Footer">
-            <a href={repoUrl} target="_blank" rel="noopener">Repository</a>
-            <a href={url('feed.xml')}>RSS</a>
-            <a class="mono" href={url('api/catalog.json')}>catalog.json</a>
+          <nav aria-label={t.footer.label}>
+            <a href={repoUrl} target="_blank" rel="noopener">{t.footer.repository}</a>
+            <a href={url('feed.xml')}>{t.footer.rss}</a>
+            <a class="mono" href={url('api/catalog.json')}>{t.footer.catalogJson}</a>
           </nav>
-          <span class="note">This site collects no visitor data.</span>
+          <span class="note">{t.footer.noData}</span>
         </div>
       </footer>
     </div>

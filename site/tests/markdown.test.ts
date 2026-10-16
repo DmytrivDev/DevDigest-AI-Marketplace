@@ -36,6 +36,9 @@ describe('markdown pipeline (spec 12)', () => {
     expect(html).toContain('href="#md-evals"');
   });
   it('renders GFM tables', async () => {
-    expect(await renderMarkdown('| a | b |\n|---|---|\n| 1 | 2 |')).toContain('<table>');
+    const html = await renderMarkdown('| a | b |\n|---|---|\n| 1 | 2 |');
+    expect(html).toContain('<table>');
+    // Wide tables scroll inside a keyboard-focusable, labelled region.
+    expect(html).toMatch(/<div class="md-scroll" role="region" tabindex="0" aria-label="[^"]+"><table>/);
   });
 });

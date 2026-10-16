@@ -4,6 +4,7 @@ import TypeBadge from '../components/TypeBadge.astro';
 import { loadSiteData } from '../data/load';
 import { formatDate, formatMonth } from '../lib/format';
 import { artifactHref, pluginHref, releaseTitle, repoUrl } from '../lib/site';
+import { t } from '../i18n/en';
 import type { ArtifactRef, Changes, Release } from '../lib/types';
 import { url } from '../lib/url';
 
@@ -19,9 +20,9 @@ const hrefOf = (r: ArtifactRef): string | null => {
 };
 const rows = (c: Changes) =>
   [
-    { key: 'added', label: '+ Added', color: 'var(--success)', items: c.added },
-    { key: 'updated', label: '~ Updated', color: 'var(--warning)', items: c.updated },
-    { key: 'removed', label: '− Removed', color: 'var(--danger)', items: c.removed },
+    { key: 'added', label: t.whatsNew.added, color: 'var(--success)', items: c.added },
+    { key: 'updated', label: t.whatsNew.updated, color: 'var(--warning)', items: c.updated },
+    { key: 'removed', label: t.whatsNew.removed, color: 'var(--danger)', items: c.removed },
   ].filter((x) => x.items.length);
 
 const months: { month: string; items: Release[] }[] = [];
@@ -35,20 +36,20 @@ const pending = changelog.pending;
 const gh = repoUrl(catalog);
 const key = (id: string) => id.replace(/[^A-Za-z0-9]+/g, '-');
 ---
-<Base title="What's new" description="Plugin releases in this marketplace, newest first." nav="whats-new" path="whats-new/">
+<Base title={t.whatsNew.title} description={t.whatsNew.description} nav="whats-new" path="whats-new/">
   <div class="page-body">
     <div class="narrow stack" style="gap:24px">
       <header class="page-head">
         <div class="stack" style="flex:1;min-width:220px;gap:4px">
-          <h1 class="h1">What's new</h1>
-          <p class="muted">Plugin releases in this marketplace, newest first.</p>
-          <p class="muted small">Follow in a feed reader: <a href={url('feed.xml')}>RSS feed</a></p>
+          <h1 class="h1">{t.whatsNew.title}</h1>
+          <p class="muted">{t.whatsNew.description}</p>
+          <p class="muted small">{t.whatsNew.followFeed} <a href={url('feed.xml')}>{t.whatsNew.rssFeed}</a></p>
         </div>
         {changelog.releases.length > 0 && (
           <div class="head-tools js-only">
-            <label for="rel-plugin" class="muted small">Plugin</label>
+            <label for="rel-plugin" class="muted small">{t.whatsNew.plugin}</label>
             <select id="rel-plugin">
-              <option value="all">All plugins</option>
+              <option value="all">{t.whatsNew.allPlugins}</option>
               {pluginNames.map((n) => <option value={n}>{n}</option>)}
             </select>
           </div>
@@ -58,10 +59,10 @@ const key = (id: string) => id.replace(/[^A-Za-z0-9]+/g, '-');
       {pending.length > 0 && pending.map((p) => (
         <section class="box box--surface pad16 stack gap8" aria-labelledby={`w-unrel-${p.plugin}`}>
           <div class="row-head">
-            <h2 id={`w-unrel-${p.plugin}`} class="h2 h2--sm">Unreleased</h2>
-            <span class="muted small">{p.plugin}, since {p.since}</span>
+            <h2 id={`w-unrel-${p.plugin}`} class="h2 h2--sm">{t.whatsNew.unreleased}</h2>
+            <span class="muted small">{t.whatsNew.unreleasedMeta(p.plugin, p.since)}</span>
           </div>
-          <p>Changes in the repository not yet released in a new version:</p>
+          <p>{t.whatsNew.unreleasedLead}</p>
           {rows(p.changes).map((row) => (
             <div class="rel-row">
               <span class="rel-label mono" style={`color:${row.color}`}>{row.label}</span>
@@ -80,8 +81,8 @@ const key = (id: string) => id.replace(/[^A-Za-z0-9]+/g, '-');
 
       {changelog.releases.length === 0 ? (
         <section class="empty-box">
-          <h2 class="h2">No releases yet</h2>
-          <p>When a plugin publishes its first version, it appears here.</p>
+          <h2 class="h2">{t.whatsNew.noReleasesTitle}</h2>
+          <p>{t.whatsNew.noReleasesText}</p>
         </section>
       ) : (
         months.map((mo) => (
@@ -94,7 +95,7 @@ const key = (id: string) => id.replace(/[^A-Za-z0-9]+/g, '-');
                   <header class="rel__head">
                     <h3 id={`rel-${key(r.id)}`} class="h3" style="flex:1;min-width:180px">
                       {livePlugins.has(r.plugin) ? <a href={pluginHref(r.plugin)} style="color:var(--text)">{releaseTitle(r)}</a> : releaseTitle(r)}
-                      <span class="fresh fresh--new" style="margin-left:8px" data-new-for-you hidden>New for you</span>
+                      <span class="fresh fresh--new" style="margin-left:8px" data-new-for-you hidden>{t.whatsNew.newForYou}</span>
                     </h3>
                     <span class="muted small">
                       <time datetime={r.date}>{formatDate(r.date)}</time> ·
@@ -118,17 +119,17 @@ const key = (id: string) => id.replace(/[^A-Za-z0-9]+/g, '-');
                       ))}
                     </div>
                   ) : (
-                    <p class="muted">No changes to contents</p>
+                    <p class="muted">{t.release.noChanges}</p>
                   )}
                   {r.notes && (
                     <details class="notes">
-                      <summary>Release notes</summary>
+                      <summary>{t.whatsNew.releaseNotes}</summary>
                       {r.notes.source === 'changelog' ? (
                         <div class="md" set:html={r.notes.html} />
                       ) : (
                         <ul class="plain-list">
                           {r.notes.items.map((s) => <li>{s}</li>)}
-                          {r.notes.more > 0 && <li class="muted">and {r.notes.more} more</li>}
+                          {r.notes.more > 0 && <li class="muted">{t.whatsNew.andMore(r.notes.more)}</li>}
                         </ul>
                       )}
                     </details>
@@ -139,7 +140,7 @@ const key = (id: string) => id.replace(/[^A-Za-z0-9]+/g, '-');
           </section>
         ))
       )}
-      {changelog.truncated && <p class="muted small">History shown from {formatDate(changelog.historyStart)}</p>}
+      {changelog.truncated && <p class="muted small">{t.whatsNew.historyFrom(formatDate(changelog.historyStart))}</p>}
     </div>
   </div>
 </Base>

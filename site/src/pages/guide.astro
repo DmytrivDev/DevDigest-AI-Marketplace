@@ -7,81 +7,88 @@ import { loadSiteData } from '../data/load';
 import { addCommand, installCommand, marketplaceInfo, removeCommand, updateCommand } from '../lib/commands';
 import { components, plugins, repoUrl } from '../lib/site';
 import { url } from '../lib/url';
+import { t } from '../i18n/en';
 import type { ArtifactType } from '../lib/types';
 
 const { catalog } = await loadSiteData();
 const m = marketplaceInfo(catalog);
 const gh = repoUrl(catalog);
-const plugin = plugins(catalog)[0]?.name ?? '<plugin>';
+const plugin = plugins(catalog)[0]?.name ?? t.home.pluginPlaceholder;
 const comps = components(catalog);
 const skill = comps.find((a) => a.type === 'skill');
 const command = comps.find((a) => a.type === 'command');
-const exSkill = skill?.invoke ?? `/${plugin}:<skill>`;
-const exCommand = command?.invoke ?? `/${plugin}:<command>`;
+const exSkill = skill?.invoke ?? t.guide.exampleSkill(plugin);
+const exCommand = command?.invoke ?? t.guide.exampleCommand(plugin);
 
+const g = t.guide;
 const toc: [string, string][] = [
-  ['g-add', 'Add the marketplace'],
-  ['g-install', 'Install a plugin'],
-  ['g-invoke', 'Find and invoke'],
-  ['g-types', 'Artifact types'],
-  ['g-update', 'Update and remove'],
-  ['g-problems', 'Common problems'],
-  ['g-authors', 'For authors'],
+  ['g-add', g.toc.add],
+  ['g-install', g.toc.install],
+  ['g-invoke', g.toc.invoke],
+  ['g-types', g.toc.types],
+  ['g-update', g.toc.update],
+  ['g-problems', g.toc.problems],
+  ['g-authors', g.toc.authors],
 ];
-const types: [ArtifactType, string, string][] = [
-  ['plugin', 'A versioned bundle of the artifacts below.', `Install it: \`${installCommand(plugin, m)}\``],
-  ['skill', 'Instructions and files Claude loads for a specific task.', `Invoke by name, \`${exSkill}\`, or let Claude pick it from its description.`],
-  ['agent', 'A subagent with its own prompt and tools.', 'Claude delegates matching tasks. You can also ask for it by name.'],
-  ['command', 'A slash command, optionally with arguments.', `Type it: \`${exCommand}\``],
-  ['hook', 'A script that runs on a Claude Code event.', 'Runs automatically once the plugin is installed.'],
-  ['mcp', 'A server that gives Claude extra tools and data.', 'Starts with the plugin. Set the env vars it needs, if the plugin page lists any.'],
-];
+// The argument of each "how you use it" text: the install command, or the example invoke command.
+const howArg: Record<ArtifactType, string> = {
+  plugin: installCommand(plugin, m),
+  skill: exSkill,
+  agent: '',
+  command: exCommand,
+  hook: '',
+  mcp: '',
+};
+const types: [ArtifactType, string, string][] = (['plugin', 'skill', 'agent', 'command', 'hook', 'mcp'] as const).map(
+  (ty) => [ty, g.typesTable.what[ty], g.typesTable.how[ty](howArg[ty])],
+);
+const pr = g.problems;
 const problems: [string, string, string][] = [
-  ['“Marketplace not found”', 'A typo in the repository path, or no access to it.', `Check the path \`${m.repo}\` and that you can open it on GitHub.`],
-  [`\`${exSkill}\` isn't recognized`, "The plugin isn't installed, or the session started before the install.", 'Install the plugin, then restart Claude Code.'],
-  ['An MCP server fails to start', 'An environment variable it needs isn\'t set.', 'Set the variables listed on the plugin page before starting Claude Code.'],
-  ['A command is blocked', 'A hook from an installed plugin matched its rule.', 'Read the message the hook prints, fix the cause and run the command again.'],
+  [pr.notFound.problem, pr.notFound.cause, pr.notFound.fix(m.repo)],
+  [pr.notRecognized.problem(exSkill), pr.notRecognized.cause, pr.notRecognized.fix],
+  [pr.mcpFails.problem, pr.mcpFails.cause, pr.mcpFails.fix],
+  [pr.blocked.problem, pr.blocked.cause, pr.blocked.fix],
 ];
 ---
-<Base title="Guide" description="How to add this marketplace to Claude Code, install plugins and use what's inside." nav="guide" path="guide/">
+<Base title={g.title} description={g.description} nav="guide" path="guide/">
   <div class="page-body" style="gap:0">
     <div class="guide-grid">
-      <nav aria-label="On this page" class="guide-toc" data-toc>
-        <span class="muted" style="font-size:13px;font-weight:600">On this page</span>
+      <nav aria-label={g.onThisPage} class="guide-toc" data-toc>
+        <span class="muted" style="font-size:13px;font-weight:600">{g.onThisPage}</span>
         <ol>
           {toc.map(([id, label], i) => <li><a href={`#${id}`} aria-current={i === 0 ? 'location' : undefined}>{label}</a></li>)}
         </ol>
       </nav>
       <article class="guide">
         <header class="stack" style="gap:8px">
-          <h1 class="h1">Guide</h1>
-          <p class="muted" style="font-size:16px">How to add this marketplace to Claude Code, install plugins and use what's inside.</p>
+          <h1 class="h1">{g.title}</h1>
+          <p class="muted" style="font-size:16px">{g.description}</p>
         </header>
 
         <section id="g-add" aria-labelledby="g-add-h">
-          <h2 id="g-add-h">Add the marketplace</h2>
-          <p>Run this once in Claude Code. It registers the repository as a marketplace named <code class="ic">{m.name}</code>.</p>
+          <h2 id="g-add-h">{g.toc.add}</h2>
+          <p><Rich text={g.add.text(m.name)} /></p>
           <CopyCommand cmd={addCommand(m)} />
         </section>
 
         <section id="g-install" aria-labelledby="g-install-h">
-          <h2 id="g-install-h">Install a plugin</h2>
-          <p>Install by plugin name and marketplace. Everything inside the plugin is installed together: skills, agents, commands, hooks and the MCP server.</p>
+          <h2 id="g-install-h">{g.toc.install}</h2>
+          <p>{g.install.text}</p>
           <CopyCommand cmd={installCommand(plugin, m)} />
-          <p class="muted">If the new commands don't show up, restart Claude Code.</p>
+          <p class="muted">{g.install.restart}</p>
         </section>
 
         <section id="g-invoke" aria-labelledby="g-invoke-h">
-          <h2 id="g-invoke-h">Find and invoke</h2>
-          <p>Search the <a href={url()}>catalog</a> in plain words, then copy the command from the card. Skills and commands are invoked by name:</p>
+          <h2 id="g-invoke-h">{g.toc.invoke}</h2>
+          <p>{g.invoke.before}<a href={url()}>{g.invoke.catalog}</a>{g.invoke.after}</p>
           <CopyCommand cmd={exSkill} />
-          <p>Agents, hooks and MCP servers have no command of their own. Claude delegates to agents when a task matches, hooks run on their event, and MCP servers start with the plugin.</p>
+          <p>{g.invoke.agents}</p>
         </section>
 
         <section id="g-types" aria-labelledby="g-types-h">
-          <h2 id="g-types-h">Artifact types</h2>
-          <div class="box gtable" role="table" aria-label="Artifact types">
-            <div class="gtable__row gtable__head gtable__row--types" role="row"><span role="columnheader">Type</span><span role="columnheader">What it is</span><span role="columnheader">How you use it</span></div>
+          <h2 id="g-types-h">{g.toc.types}</h2>
+          <div class="box gtable" role="table" aria-label={g.typesTable.aria}>
+            <div class="gtable__row gtable__head gtable__row--types" role="row"><span role="columnheader">{g.typesTable.colType}</span><span role="columnheader">{g.typesTable.colWhat}</span><span role="columnheader">{g.typesTable.colHow}</span></div>
             {types.map(([ty, what, how]) => (
               <div class="gtable__row gtable__row--types" role="row">
                 <span role="cell"><TypeBadge type={ty} /></span>
@@ -93,18 +100,18 @@ const problems: [string, string, string][] = [
         </section>
 
         <section id="g-update" aria-labelledby="g-update-h">
-          <h2 id="g-update-h">Update and remove</h2>
-          <p>Pull the latest versions of every plugin in the marketplace:</p>
+          <h2 id="g-update-h">{g.toc.update}</h2>
+          <p>{g.update.pull}</p>
           <CopyCommand cmd={updateCommand(m)} />
-          <p>Remove a plugin:</p>
+          <p>{g.update.remove}</p>
           <CopyCommand cmd={removeCommand(plugin, m)} />
-          <p class="muted">See <a href={url('whats-new/')}>What's new</a> for what changed in each release.</p>
+          <p class="muted">{g.update.seeBefore}<a href={url('whats-new/')}>{g.update.whatsNew}</a>{g.update.seeAfter}</p>
         </section>
 
         <section id="g-problems" aria-labelledby="g-problems-h">
-          <h2 id="g-problems-h">Common problems</h2>
-          <div class="box gtable" role="table" aria-label="Common problems">
-            <div class="gtable__row gtable__head gtable__row--probs" role="row"><span role="columnheader">Problem</span><span role="columnheader">Cause</span><span role="columnheader">Fix</span></div>
+          <h2 id="g-problems-h">{g.toc.problems}</h2>
+          <div class="box gtable" role="table" aria-label={g.problems.aria}>
+            <div class="gtable__row gtable__head gtable__row--probs" role="row"><span role="columnheader">{g.problems.colProblem}</span><span role="columnheader">{g.problems.colCause}</span><span role="columnheader">{g.problems.colFix}</span></div>
             {problems.map(([p, c, f]) => (
               <div class="gtable__row gtable__row--probs" role="row">
                 <span role="cell" style="font-weight:600;overflow-wrap:anywhere"><Rich text={p} /></span>
@@ -116,9 +123,9 @@ const problems: [string, string, string][] = [
         </section>
 
         <section id="g-authors" aria-labelledby="g-authors-h">
-          <h2 id="g-authors-h">For authors</h2>
-          <p>Plugins live in the <code class="ic">plugins/</code> folder of the repository and are listed in <code class="ic">.claude-plugin/marketplace.json</code>. Open a pull request with your plugin. Validation runs on every build and its result appears as a badge on the plugin page.</p>
-          <a href={gh} target="_blank" rel="noopener">Open the repository →</a>
+          <h2 id="g-authors-h">{g.toc.authors}</h2>
+          <p><Rich text={g.authors.text} /></p>
+          <a href={gh} target="_blank" rel="noopener">{g.authors.link}</a>
         </section>
       </article>
     </div>

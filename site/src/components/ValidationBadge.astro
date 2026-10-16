@@ -1,9 +1,10 @@
 ---
+import { t } from '../i18n/en';
 import { IC_CHECK, IC_Q, IC_X } from '../lib/icons';
 import type { ValidationStatus } from '../lib/types';
 interface Props { status: ValidationStatus; tip?: string; id?: string }
 const { status, tip, id = 'val-tip' } = Astro.props;
-const label = status === 'pass' ? 'Validation passed' : status === 'fail' ? 'Validation failed' : 'Not verified';
+const label = t.validation[status];
 const icon = status === 'pass' ? IC_CHECK : status === 'fail' ? IC_X : IC_Q;
 ---
 {status === 'unknown' && tip ? (

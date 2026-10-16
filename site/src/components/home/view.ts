@@ -1,3 +1,4 @@
+import { t } from '../../i18n/en';
 import { TYPE_LABEL, TYPE_PLURAL } from '../../lib/icons';
 import { ALL_TYPES, type ArtifactType, type Freshness } from '../../lib/types';
 import type { SearchResult } from '../../search/engine';
@@ -41,7 +42,7 @@ export interface View {
   highlight: string[];
 }
 
-const freshLabel = (f: Freshness): string => (f === 'new' ? 'New' : 'Updated');
+const freshLabel = (f: Freshness): string => t.fresh[f];
 export { freshLabel };
 
 const byUpdated = (a: CardItem, b: CardItem): number => b.ts - a.ts || a.name.localeCompare(b.name);
@@ -106,11 +107,11 @@ export function computeView(items: CardItem[], availableTypes: ArtifactType[], r
     : [];
 
   const chips: Chip[] = [];
-  if (qType) chips.push({ key: 'q', kind: 'qtype', value: qType, label: `Type: ${TYPE_LABEL[qType]} (from query)`, aria: `Remove filter Type: ${TYPE_LABEL[qType]}` });
-  f.plugF.forEach((x) => chips.push({ key: `p-${x}`, kind: 'plugin', value: x, label: `Plugin: ${x}`, aria: `Remove filter Plugin: ${x}` }));
-  f.typeF.forEach((t) => chips.push({ key: `t-${t}`, kind: 'type', value: t, label: `Type: ${TYPE_LABEL[t]}`, aria: `Remove filter Type: ${TYPE_LABEL[t]}` }));
-  f.freshF.forEach((x) => chips.push({ key: `f-${x}`, kind: 'fresh', value: x, label: `Freshness: ${freshLabel(x)}`, aria: `Remove filter Freshness: ${freshLabel(x)}` }));
-  f.tagF.forEach((t) => chips.push({ key: `g-${t}`, kind: 'tag', value: t, label: `Tag: ${t}`, aria: `Remove filter Tag: ${t}` }));
+  if (qType) chips.push({ key: 'q', kind: 'qtype', value: qType, label: t.home.chipTypeFromQuery(TYPE_LABEL[qType]), aria: t.home.chipRemove(t.home.chipType(TYPE_LABEL[qType])) });
+  f.plugF.forEach((x) => chips.push({ key: `p-${x}`, kind: 'plugin', value: x, label: t.home.chipPlugin(x), aria: t.home.chipRemove(t.home.chipPlugin(x)) }));
+  f.typeF.forEach((ty) => chips.push({ key: `t-${ty}`, kind: 'type', value: ty, label: t.home.chipType(TYPE_LABEL[ty]), aria: t.home.chipRemove(t.home.chipType(TYPE_LABEL[ty])) }));
+  f.freshF.forEach((x) => chips.push({ key: `f-${x}`, kind: 'fresh', value: x, label: t.home.chipFreshness(freshLabel(x)), aria: t.home.chipRemove(t.home.chipFreshness(freshLabel(x))) }));
+  f.tagF.forEach((tg) => chips.push({ key: `g-${tg}`, kind: 'tag', value: tg, label: t.home.chipTag(tg), aria: t.home.chipRemove(t.home.chipTag(tg)) }));
 
   return { results, total: items.length, qType, fallbackType, typeFacets, tagFacets, freshFacets, pluginFacets, chips, sort, highlight: res?.highlight ?? [] };
 }

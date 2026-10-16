@@ -1,8 +1,9 @@
 ---
+import { t } from '../i18n/en';
 interface Props { items: { label: string; href?: string; mono?: boolean }[] }
 const { items } = Astro.props;
 ---
-<nav aria-label="Breadcrumb" class="breadcrumb">
+<nav aria-label={t.nav.breadcrumb} class="breadcrumb">
   <ol>
     {items.map((it, i) => (
       <>

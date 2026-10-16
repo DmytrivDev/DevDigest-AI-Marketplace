@@ -1,22 +1,9 @@
+import { t } from '../i18n/en';
 import type { ArtifactType } from './types';
 
-export const TYPE_LABEL: Record<ArtifactType, string> = {
-  plugin: 'Plugin',
-  skill: 'Skill',
-  agent: 'Agent',
-  command: 'Command',
-  hook: 'Hook',
-  mcp: 'MCP',
-};
-
-export const TYPE_PLURAL: Record<ArtifactType, string> = {
-  plugin: 'Plugins',
-  skill: 'Skills',
-  agent: 'Agents',
-  command: 'Commands',
-  hook: 'Hooks',
-  mcp: 'MCP servers',
-};
+/** Type names live in src/i18n/en.ts; re-exported here for convenience. */
+export const TYPE_LABEL: Record<ArtifactType, string> = t.types.label;
+export const TYPE_PLURAL: Record<ArtifactType, string> = t.types.plural;
 
 /** 16x16 stroke icons, taken from the design prototype. */
 export const ICON: Record<ArtifactType, string> = {

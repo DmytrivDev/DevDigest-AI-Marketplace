@@ -1,9 +1,10 @@
 ---
+import { t } from '../i18n/en';
 interface Props { cmd: string }
 const { cmd } = Astro.props;
 ---
 <div class="copy" data-copy>
-  <button type="button" class="copy__btn" data-cmd={cmd} aria-label={`Copy command: ${cmd}`} title={cmd}>
+  <button type="button" class="copy__btn" data-cmd={cmd} aria-label={t.copy.ariaCopy(cmd)} title={cmd}>
     <code class="copy__code">{cmd}</code>
     <span class="copy__st" aria-live="polite">
       <svg class="copy__idle" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 5.5h8v8h-8z"></path><path d="M10.5 5.5v-3h-8v8h3"></path></svg>
