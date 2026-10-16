@@ -1,0 +1,45 @@
+# /sdd-engineering:run-plan is started on a plan whose spec still holds a
+# [NEEDS CLARIFICATION] marker. Preflight must stop before any implementer is dispatched.
+# The fixture (fixture.sh) only runs with `claude plugin eval --scaffold`.
+schema_version: "1.1"
+name: run-plan-preflight-stops-on-marker
+description: run-plan preflight finds OQ-1 in the plan's spec and stops before dispatching sdd-engineering:implementer.
+tags: [sdd, run-plan, markers]
+plugins: ["../..", "../../../research-tools", "../../../architecture-review", "../../../engineering-paved-path"]
+runs: 1
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 25
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Bash, Skill, Agent]
+  prompt: |
+    /sdd-engineering:run-plan docs/plans/checkout-coupons.plan.md
+graders:
+  - name: implementer-never-dispatched
+    type: tool_used
+    tool: Agent
+    input_match: 'sdd-engineering:implementer'
+    min: 0
+    max: 0
+  - name: no-source-written
+    type: file_exists
+    path: "src/coupons*"
+    exists: false
+  - name: names-the-marker
+    type: regex
+    pattern: "OQ-1"
+    match: contains
+  - name: stops-in-preflight
+    type: llm
+    criteria: |
+      The plan `docs/plans/checkout-coupons.plan.md` cites `specs/SPEC-01-checkout-coupons.md`,
+      which holds one unresolved marker `[NEEDS CLARIFICATION: OQ-1 — …]` in AC-3 (line 23).
+      PASS only if the response:
+      1. says the run stopped in preflight, before implementation started;
+      2. names the spec and lists the marker `OQ-1` with its location (file:line, or at least
+         AC-3);
+      3. tells the user to answer it, re-dispatch spec-creator, and then re-run the planner
+         before running the plan again;
+      4. does not claim any code was written, any check passed, or any review ran.
+      FAIL if the response reports implementation progress, or answers OQ-1 itself.

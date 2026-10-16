@@ -1,0 +1,48 @@
+# implementation-planner is given a spec that still holds a [NEEDS CLARIFICATION] marker.
+# It must refuse, list the OQ id, and write no plan.
+# The fixture (fixture.sh) only runs with `claude plugin eval --scaffold`.
+schema_version: "1.1"
+name: planner-refuses-spec-with-marker
+description: implementation-planner refuses a spec holding a marker, lists OQ-1 and writes no plan.
+tags: [sdd, implementation-planner, markers]
+plugins: ["../..", "../../../research-tools", "../../../architecture-review", "../../../engineering-paved-path"]
+runs: 1
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 20
+  timeout_seconds: 900
+  allowed_tools: [Read, Glob, Grep, Agent, Skill]
+  prompt: |
+    Dispatch the `sdd-engineering:implementation-planner` agent to plan
+    `specs/SPEC-01-checkout-coupons.md`. Execution mode: single-agent (my choice, settled).
+    Relay its report to me verbatim.
+graders:
+  - name: dispatched-planner
+    type: tool_used
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"sdd-engineering:implementation-planner"'
+    min: 1
+    arm: with-only
+  - name: no-plan-file
+    type: file_exists
+    path: "**/*.plan.md"
+    exists: false
+  - name: names-the-marker
+    type: regex
+    pattern: "OQ-1"
+    match: contains
+  - name: refuses-and-sends-back
+    type: llm
+    criteria: |
+      The spec `specs/SPEC-01-checkout-coupons.md` holds one unresolved marker,
+      `[NEEDS CLARIFICATION: OQ-1 — two decimals, or whole currency units?]`, in AC-3.
+      PASS only if the response:
+      1. says no plan was written;
+      2. lists the marker by its id `OQ-1`, with its location (file and line, or at least AC-3)
+         and its question about rounding;
+      3. sends the spec back for revision: the user answers OQ-1 and spec-creator is re-run,
+         then the planner is dispatched again;
+      4. does not answer OQ-1 itself, does not plan AC-1 and AC-2 as a partial plan, and does
+         not switch to asking requirements questions about other parts of the feature.
+      FAIL if the response presents a plan, or picks a rounding rule on the user's behalf.

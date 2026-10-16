@@ -1,0 +1,14 @@
+{
+  "name": "sdd-engineering",
+  "version": "1.0.0",
+  "description": "Spec Driven Development pipeline: spec, plan, implement, verify and retro with dedicated agents",
+  "author": { "name": "DmytrivDev", "url": "https://github.com/DmytrivDev" },
+  "homepage": "https://github.com/DmytrivDev/DevDigest-AI-Marketplace",
+  "repository": "https://github.com/DmytrivDev/DevDigest-AI-Marketplace",
+  "keywords": ["sdd", "spec-driven-development", "workflow", "agents"],
+  "dependencies": [
+    { "name": "engineering-paved-path", "version": "^1.0.0" },
+    { "name": "research-tools", "version": "^1.0.0" },
+    { "name": "architecture-review", "version": "^1.0.0" }
+  ]
+}

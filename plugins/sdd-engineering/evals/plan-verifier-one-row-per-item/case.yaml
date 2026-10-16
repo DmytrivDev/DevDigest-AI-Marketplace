@@ -1,0 +1,50 @@
+# plan-verifier checks a 3-item plan against a partial change (W3 not built).
+# It must return exactly one row per work item and mark W3 `not verified`.
+# The fixture (fixture.sh) only runs with `claude plugin eval --scaffold`.
+schema_version: "1.1"
+name: plan-verifier-one-row-per-item
+description: plan-verifier returns one verdict row per work item; the unbuilt W3 is not verified.
+tags: [sdd, plan-verifier]
+plugins: ["../..", "../../../research-tools", "../../../architecture-review", "../../../engineering-paved-path"]
+runs: 1
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 15
+  timeout_seconds: 900
+  allowed_tools: [Read, Glob, Grep, Bash, Agent, Skill]
+  prompt: |
+    Dispatch the `sdd-engineering:plan-verifier` agent on
+    `docs/plans/checkout-coupons.plan.md`. The implementation is in the working tree,
+    uncommitted. Relay its full report to me verbatim, tables included.
+graders:
+  - name: dispatched-plan-verifier
+    type: tool_used
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"sdd-engineering:plan-verifier"'
+    min: 1
+    arm: with-only
+  - name: w3-not-verified
+    type: regex
+    pattern: "\\|\\s*W3\\b[^\\n]*\\bnot verified\\b"
+    flags: i
+    match: contains
+  - name: nothing-edited
+    type: file_exists
+    path: "src/**"
+    exists: false
+  - name: one-row-per-item
+    type: llm
+    criteria: |
+      The plan has exactly three work items, W1, W2 and W3. The working tree implements W1
+      (SAVE10 → 90, tested) and W2 (unknown code → `invalid_coupon`, tested), but not W3: the
+      lookup is case-sensitive, so `applyCoupon(100, "save10")` throws, and no test covers it.
+      PASS only if the relayed report:
+      1. has a per-item verdict table with exactly one row for each of W1, W2 and W3 — no item
+         missing, merged or duplicated, and no extra rows for things that are not plan items;
+      2. quotes each item's `Done means`;
+      3. marks W1 and W2 verified with evidence (a line of code, a test, or a check result);
+      4. marks W3 `not verified` (not `partially verified`, not `verified`);
+      5. has a per-requirement table where AC-3 is not verified and the overall verdict is
+         PARTIALLY VERIFIED (or an equivalent "not fully verified" verdict).
+      FAIL if W3 is reported as done, or if any item lacks its own row.
