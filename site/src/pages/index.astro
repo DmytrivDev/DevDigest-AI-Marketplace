@@ -21,10 +21,9 @@ const m = marketplaceInfo(catalog);
 const tagline = catalog.marketplace.description?.trim() || t.site.tagline;
 const comps = components(catalog);
 const plgs = plugins(catalog);
-// Components are listed as cards; a plugin gets its own card only while it has no components,
-// so every real plugin stays discoverable without duplicating the prototype's artifact grid.
-const withComponents = new Set(comps.map((a) => a.plugin));
-const listable = [...comps, ...plgs.filter((p) => !withComponents.has(p.name))];
+// Plugins are a type of their own in the catalog: every plugin has a card, listed first,
+// and "Plugins" is the first option of the Type filter (ALL_TYPES starts with it).
+const listable = [...plgs, ...comps];
 const items: CardItem[] = listable.map((a) => ({
   id: a.id,
   type: a.type,
@@ -43,16 +42,16 @@ const availableTypes = ALL_TYPES.filter((ty) => listable.some((a) => a.type === 
 
 const empty = listable.length === 0;
 const lastRelease = stats.freshness.lastReleaseAt;
-const strip: { n: string; l: string }[] = empty
+// Summary strip (spec 9.3): one count per type that exists, each linking to that type's filter.
+const strip: { n: string; l: string; href?: string }[] = empty
   ? [{ n: '0', l: t.nouns.plugin(0) }, { n: '0', l: t.nouns.artifact(0) }]
-  : comps.length
-    ? [
-        { n: String(plgs.length), l: t.nouns.plugin(plgs.length) },
-        { n: String(comps.length), l: t.nouns.artifact(comps.length) },
-        { n: String(stats.totals.tags), l: t.nouns.tag(stats.totals.tags) },
-        ...(lastRelease ? [{ n: formatDate(lastRelease), l: t.home.lastRelease }] : []),
-      ]
-    : [{ n: String(plgs.length), l: t.nouns.plugin(plgs.length) }];
+  : [
+      ...availableTypes.map((ty) => {
+        const n = listable.filter((a) => a.type === ty).length;
+        return { n: String(n), l: t.nouns.ofType(ty, n), href: url(`?type=${ty}`) };
+      }),
+      ...(lastRelease ? [{ n: formatDate(lastRelease), l: t.home.lastRelease }] : []),
+    ];
 
 const byNewest = (a: { updatedAt: string | null; name: string }, b: { updatedAt: string | null; name: string }) =>
   (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || a.name.localeCompare(b.name);
@@ -133,7 +132,7 @@ const examples = [...new Set([...pluginsBySize.map(exampleFor), ...t.home.exampl
     )}
 
     <div class="summary-strip" aria-label={t.home.summaryAria}>
-      {strip.map((x) => <span><strong>{x.n}</strong> {x.l}</span>)}
+      {strip.map((x) => (x.href ? <a href={x.href}><strong>{x.n}</strong> {x.l}</a> : <span><strong>{x.n}</strong> {x.l}</span>))}
       {!empty && !comps.length && <span>{t.home.noComponentsYet}</span>}
       <a class="more" href={url('stats/')}>{t.home.allStats}</a>
     </div>

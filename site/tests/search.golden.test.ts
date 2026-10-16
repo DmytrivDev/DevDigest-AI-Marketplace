@@ -162,6 +162,16 @@ describe('facets and URL state', () => {
     expect(view.results.map((r) => r.id)).toEqual(['other:plugin:other']);
     expect(view.chips.map((c) => c.label)).toContain('Plugin: other');
   });
+  it('lists plugin cards first and offers Plugins as the first type', () => {
+    const plugin: CardItem = { ...items[0], id: 'devdigest:plugin:devdigest', type: 'plugin', name: 'devdigest', ts: 0 };
+    const all = [...items, plugin];
+    const allTypes = ALL_TYPES.filter((t) => all.some((i) => i.type === t));
+    const view = computeView(all, allTypes, null, emptyFilters(), '');
+    expect(view.results[0].id).toBe(plugin.id);
+    expect(view.typeFacets[0]).toMatchObject({ type: 'plugin', count: 1 });
+    const only = computeView(all, allTypes, null, { ...emptyFilters(), typeF: ['plugin'] }, '');
+    expect(only.results.map((r) => r.type)).toEqual(['plugin']);
+  });
   it('round-trips the plugin filter and drops unknown plugins', () => {
     const s = parseUrl('?plugin=other,ghost', types, [], ['devdigest', 'other']);
     expect(s.filters.plugF).toEqual(['other']);
