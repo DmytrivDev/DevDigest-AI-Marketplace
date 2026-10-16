@@ -1,4 +1,4 @@
-import { t } from '../../i18n/en';
+import { islandStrings as t } from '../../i18n/en';
 import { ICON, TYPE_LABEL } from '../../lib/icons';
 import type { ArtifactType, Freshness } from '../../lib/types';
 

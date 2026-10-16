@@ -1,4 +1,4 @@
-import { t } from '../../i18n/en';
+import { islandStrings as t } from '../../i18n/en';
 import { richParts } from '../../lib/richtext';
 import { splitHighlight } from '../../search/engine';
 import { CopyButton, FreshBadge, TypeBadge, type CardItem } from './shared';

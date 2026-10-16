@@ -1,7 +1,7 @@
-import { t } from '../i18n/en';
+import { islandStrings as t } from '../i18n/en';
 import type { ArtifactType } from './types';
 
-/** Type names live in src/i18n/en.ts; re-exported here for convenience. */
+/** Type names live in src/i18n/en.ts; re-exported here for convenience (the island's subset, see islandStrings). */
 export const TYPE_LABEL: Record<ArtifactType, string> = t.types.label;
 export const TYPE_PLURAL: Record<ArtifactType, string> = t.types.plural;
 

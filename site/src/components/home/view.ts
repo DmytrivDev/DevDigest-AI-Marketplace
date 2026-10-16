@@ -1,4 +1,4 @@
-import { t } from '../../i18n/en';
+import { islandStrings as t } from '../../i18n/en';
 import { TYPE_LABEL, TYPE_PLURAL } from '../../lib/icons';
 import { ALL_TYPES, type ArtifactType, type Freshness } from '../../lib/types';
 import type { SearchResult } from '../../search/engine';
