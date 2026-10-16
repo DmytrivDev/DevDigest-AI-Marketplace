@@ -148,6 +148,11 @@ export const t = {
     noChanges: 'No changes to contents',
   },
 
+  /** Rendered markdown (READMEs and artifact bodies). */
+  markdown: {
+    scrollTable: 'Scrollable table',
+  },
+
   /** Plain-text release descriptions in /feed.xml (spec 8.5). */
   feed: {
     title: (site: string) => `What's new · ${site}`,

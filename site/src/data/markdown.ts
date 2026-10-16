@@ -8,6 +8,7 @@ import { createHighlighter, type Highlighter } from 'shiki';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
 import type { Element, Root } from 'hast';
+import { t } from '../i18n/en';
 
 // Markdown -> sanitized HTML (spec 3, 12). Raw HTML in markdown is dropped by remark-rehype
 // (no allowDangerousHtml), then everything goes through rehype-sanitize (GitHub's schema),
@@ -60,6 +61,22 @@ function rewriteLinks(linkBase?: string) {
         if (linkBase) node.properties = { ...node.properties, href: new URL(href, linkBase).href, rel: ['noopener', 'noreferrer'], target: '_blank' };
         else delete node.properties!.href;
       }
+    });
+  };
+}
+
+/** Wide tables scroll inside a focusable region, so keyboard users can scroll them too (axe: scrollable-region-focusable). */
+function scrollableTables() {
+  return (tree: Root) => {
+    visit(tree, 'element', (node: Element, index, parent) => {
+      if (node.tagName !== 'table' || !parent || typeof index !== 'number') return;
+      parent.children[index] = {
+        type: 'element',
+        tagName: 'div',
+        properties: { className: ['md-scroll'], role: 'region', tabIndex: 0, ariaLabel: t.markdown.scrollTable },
+        children: [node],
+      };
+      return index + 1;
     });
   };
 }
@@ -131,6 +148,7 @@ export async function renderMarkdown(md: string, opts: RenderOptions = {}): Prom
     .use(rehypeSanitize, schema)
     .use(() => shiftHeadings(opts.headingOffset ?? 0, opts.dropFirstH1 ?? false))
     .use(headingIds)
+    .use(scrollableTables)
     .use(() => rewriteLinks(opts.linkBase))
     .use(highlight)
     .use(rehypeStringify)
