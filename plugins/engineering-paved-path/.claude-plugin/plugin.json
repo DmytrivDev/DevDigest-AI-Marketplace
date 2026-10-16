@@ -1,0 +1,9 @@
+{
+  "name": "engineering-paved-path",
+  "version": "1.0.0",
+  "description": "Stack skills for React, Next.js and Fastify apps: architecture, component placement, testing and security",
+  "author": { "name": "DmytrivDev", "url": "https://github.com/DmytrivDev" },
+  "homepage": "https://github.com/DmytrivDev/DevDigest-AI-Marketplace",
+  "repository": "https://github.com/DmytrivDev/DevDigest-AI-Marketplace",
+  "keywords": ["react", "nextjs", "fastify", "architecture", "testing", "security"]
+}
