@@ -4,7 +4,7 @@ import CopyCommand from '../components/CopyCommand.astro';
 import Rich from '../components/Rich.astro';
 import TypeBadge from '../components/TypeBadge.astro';
 import { loadSiteData } from '../data/load';
-import { addCommand, installCommand, marketplaceInfo, removeCommand, updateCommand } from '../lib/commands';
+import { addCommand, disableCommand, installCommand, marketplaceInfo, pluginUpdateCommand, removeCommand, updateCommand } from '../lib/commands';
 import { components, plugins, repoUrl } from '../lib/site';
 import { url } from '../lib/url';
 import { t } from '../i18n/en';
@@ -101,9 +101,14 @@ const problems: [string, string, string][] = [
 
         <section id="g-update" aria-labelledby="g-update-h">
           <h2 id="g-update-h">{g.toc.update}</h2>
-          <p>{g.update.pull}</p>
+          <p><Rich text={g.update.refresh} /></p>
           <CopyCommand cmd={updateCommand(m)} />
-          <p>{g.update.remove}</p>
+          <p><Rich text={g.update.upgrade} /></p>
+          <CopyCommand cmd={pluginUpdateCommand(plugin, m)} />
+          <p><Rich text={g.update.autoUpdate} /></p>
+          <p><Rich text={g.update.disable} /></p>
+          <CopyCommand cmd={disableCommand(plugin)} />
+          <p><Rich text={g.update.remove} /></p>
           <CopyCommand cmd={removeCommand(plugin, m)} />
           <p class="muted">{g.update.seeBefore}<a href={url('whats-new/')}>{g.update.whatsNew}</a>{g.update.seeAfter}</p>
         </section>

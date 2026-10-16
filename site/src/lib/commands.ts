@@ -11,6 +11,10 @@ export const addCommand = (m: MarketplaceInfo): string => `/plugin marketplace a
 export const installCommand = (plugin: string, m: MarketplaceInfo): string => `/plugin install ${plugin}@${m.name}`;
 export const updateCommand = (m: MarketplaceInfo): string => `/plugin marketplace update ${m.name}`;
 export const removeCommand = (plugin: string, m: MarketplaceInfo): string => `/plugin uninstall ${plugin}@${m.name}`;
+// Checked against https://code.claude.com/docs/en/plugins/cli-reference.md and plugins/install.md (2026-10-16):
+// `marketplace update` only refreshes the catalog; installed plugins are upgraded with `claude plugin update`.
+export const pluginUpdateCommand = (plugin: string, m: MarketplaceInfo): string => `claude plugin update ${plugin}@${m.name}`;
+export const disableCommand = (plugin: string): string => `/plugin disable ${plugin}`;
 
 export function isInvocable(a: Pick<Artifact, 'type'>): boolean {
   return a.type === 'skill' || a.type === 'command';
