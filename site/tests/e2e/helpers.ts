@@ -55,6 +55,7 @@ export async function pageKinds(request: APIRequestContext): Promise<Record<stri
     artifact: artifact ? `plugins/${artifact.plugin}/${artifact.type}/${artifact.slug}/` : null,
     'whats-new': 'whats-new/',
     stats: 'stats/',
+    'settings-builder': 'settings-builder/',
     guide: 'guide/',
     '404': '404.html',
   };

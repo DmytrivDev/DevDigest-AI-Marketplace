@@ -10,6 +10,8 @@ export interface MarketplaceInfo {
 export const addCommand = (m: MarketplaceInfo): string => `/plugin marketplace add ${m.repo}`;
 export const installCommand = (plugin: string, m: MarketplaceInfo): string => `/plugin install ${plugin}@${m.name}`;
 export const updateCommand = (m: MarketplaceInfo): string => `/plugin marketplace update ${m.name}`;
+/** Installs a plugin into the project's settings (for teams that commit .claude/settings.json). */
+export const projectInstallCommand = (plugin: string, m: MarketplaceInfo): string => `claude plugin install ${plugin}@${m.name} --scope project`;
 export const removeCommand = (plugin: string, m: MarketplaceInfo): string => `/plugin uninstall ${plugin}@${m.name}`;
 // Checked against https://code.claude.com/docs/en/plugins/cli-reference.md and plugins/install.md (2026-10-16):
 // `marketplace update` only refreshes the catalog; installed plugins are upgraded with `claude plugin update`.

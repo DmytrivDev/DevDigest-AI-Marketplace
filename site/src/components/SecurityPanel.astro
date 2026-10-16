@@ -1,0 +1,121 @@
+---
+import TypeBadge from './TypeBadge.astro';
+import { isQuiet, securitySummary } from '../lib/security-summary';
+import { artifactPath, url } from '../lib/url';
+import type { PluginSecurity } from '../lib/types';
+import { t } from '../i18n/en';
+
+interface Props { plugin: string; security: PluginSecurity }
+const { plugin, security: sec } = Astro.props;
+const s = t.security;
+const summary = securitySummary(sec);
+const line = (command: string, args: string[]): string => [command, ...args].join(' ');
+---
+<section class="stack gap12" aria-labelledby="p-security">
+  <h2 id="p-security" class="h2">{s.heading}</h2>
+  <p class="sec-summary">
+    {summary.map((i, n) => (
+      <>
+        {n > 0 && <span class="sec-sep" aria-hidden="true"> · </span>}
+        <span class={i.warn ? 'sec-flag' : undefined}>{i.text}</span>
+      </>
+    ))}
+  </p>
+  <p class="muted small">{s.intro}</p>
+  {isQuiet(sec) && <p class="sec-empty">{s.empty}</p>}
+
+  {sec.hooks.length > 0 && (
+    <div class="stack gap8">
+      <h3 class="group-h">{s.hooksHeading}</h3>
+      <ul class="sec-list">
+        {sec.hooks.map((h) => (
+          <li>
+            <div class="sec-row"><span class="muted">{s.hookEvent}</span> <code class="mono strong">{h.event}</code> <span class="muted">{s.hookMatcher}</span> <code class="mono">{h.matcher || s.hookAny}</code></div>
+            <div class="sec-row"><span class="muted">{s.hookRuns}</span> <code class="mono sec-cmd">{line(h.command, h.args)}</code></div>
+            <div class="muted small">{h.form === 'exec' ? s.formExec : s.formShell} · <span class="mono">{h.file}</span></div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+  {sec.mcp.length > 0 && (
+    <div class="stack gap8">
+      <h3 class="group-h">{s.mcpHeading}</h3>
+      <ul class="sec-list">
+        {sec.mcp.map((m) => (
+          <li>
+            <div class="sec-row"><code class="mono strong">{m.name}</code></div>
+            {m.kind === 'process' && <div class="sec-row"><span class="muted">{s.mcpStarts}</span> <code class="mono sec-cmd">{line(m.command, m.args)}</code></div>}
+            {m.kind === 'remote' && <div class="sec-row"><span class="muted">{s.mcpConnects}</span> <code class="mono sec-cmd">{m.url}</code></div>}
+            {m.kind === 'unknown' && <div class="muted">{s.mcpUnknown}</div>}
+            <div class="sec-row small">
+              {m.envNames.length ? (
+                <>
+                  <span class="muted">{s.mcpEnv}</span> {m.envNames.map((n) => <code class="mono tag">{n}</code>)}
+                </>
+              ) : (
+                <span class="muted">{s.mcpNoEnv}</span>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+  {sec.tools.length > 0 && (
+    <div class="stack gap8">
+      <h3 class="group-h">{s.toolsHeading}</h3>
+      <ul class="sec-list">
+        {sec.tools.map((u) => (
+          <li>
+            <div class="sec-row">
+              <TypeBadge type={u.type} />
+              <a class="mono strong" href={url(artifactPath(plugin, u.type, u.slug))}>{u.name}</a>
+            </div>
+            <div class="sec-row small">
+              {u.inheritsAll ? <span class="sec-flag">{s.toolsAll}</span> : u.tools.map((tool) => <code class="mono tag">{tool}</code>)}
+            </div>
+            {u.broad.length > 0 && !u.inheritsAll && (
+              <div class="sec-row small sec-flag">{[...new Set(u.broad.map((b) => s.flag[b.capability]))].join(', ')}</div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+  <div class="stack gap8">
+    <h3 class="group-h">{s.networkHeading}</h3>
+    {sec.network.total === 0 ? (
+      <p class="muted">{s.networkNone}</p>
+    ) : (
+      <>
+        <p class="sec-flag">{s.networkLead}</p>
+        <ul class="sec-list">
+          {sec.network.hits.map((h) => (
+            <li><span class="mono small">{h.file}:{h.line}</span> <code class="mono sec-cmd">{h.text}</code></li>
+          ))}
+        </ul>
+        {sec.network.total > sec.network.hits.length && <p class="muted small">{s.networkCapped(sec.network.hits.length, sec.network.total)}</p>}
+      </>
+    )}
+  </div>
+
+  <div class="stack gap8">
+    <h3 class="group-h">{s.outsideHeading}</h3>
+    {sec.outside.length === 0 ? (
+      <p class="muted">{s.outsideOk}</p>
+    ) : (
+      <>
+        <p class="sec-flag">{s.outsideLead}</p>
+        <ul class="sec-list">
+          {sec.outside.map((o) => (
+            <li><code class="mono sec-cmd">{o.ref}</code> <span class="muted small">{s.reason[o.reason]} · <span class="mono">{o.file}</span></span></li>
+          ))}
+        </ul>
+      </>
+    )}
+  </div>
+</section>

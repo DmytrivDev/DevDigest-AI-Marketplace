@@ -55,11 +55,15 @@ Real data only. Nothing on the site is sample data.
    plugin's `CHANGELOG.md` (`## [x.y.z]`) or else from commit subjects.
 3. **Stats** (`src/data/build-stats.ts`): derived from the catalog and the changelog, plus public
    GitHub numbers when the API answers.
-4. **Validation** (`src/data/validation.ts`): `claude plugin validate --strict` per local plugin when
+4. **Security panel** (`src/data/security.ts`): static analysis of each local plugin's hooks, MCP
+   servers, agent/skill tools, network indicators in `scripts/**` and references that leave the
+   plugin directory. Stored as `details.security` on the plugin in `catalog.json` and shown in the
+   "Security" section of `/plugins/<plugin>/`. It reads files only, it is not a guarantee.
+5. **Validation** (`src/data/validation.ts`): `claude plugin validate --strict` per local plugin when
    the CLI is installed and works; otherwise the badge reads "Not verified".
 
 Build output also contains `api/catalog.json`, `api/changelog.json`, `api/releases-head.json`,
-`api/stats.json`, the release RSS `feed.xml` (last 50 releases), `sitemap-index.xml`, `robots.txt`
+`api/stats.json`, the release RSS `feed.xml` (last 50 releases), one `plugins/<plugin>/feed.xml` per local plugin, `sitemap-index.xml`, `robots.txt`
 and the Open Graph image `og.png`.
 
 **There is no separate `build:index` step.** The index (catalog, changelog and stats JSON) is
@@ -72,6 +76,10 @@ npm ci
 npm run build      # indexes plugins/ and .claude-plugin/, then builds the pages
 npm run preview    # serves dist/ under the GitHub Pages base path
 ```
+
+The `/settings-builder/` page builds a `.claude/settings.json` snippet (`extraKnownMarketplaces` +
+`enabledPlugins`, `src/lib/settings-snippet.ts`). It renders for all plugins without JavaScript;
+a small script updates it live.
 
 ## Checks on the build
 

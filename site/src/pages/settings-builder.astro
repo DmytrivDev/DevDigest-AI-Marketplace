@@ -1,0 +1,89 @@
+---
+import Base from '../layouts/Base.astro';
+import { loadSiteData } from '../data/load';
+import { projectInstallCommand } from '../lib/commands';
+import { settingsText } from '../lib/settings-snippet';
+import { plugins } from '../lib/site';
+import { t } from '../i18n/en';
+
+const { catalog } = await loadSiteData();
+const sbt = t.settingsBuilder;
+const mp = catalog.marketplace;
+const list = plugins(catalog);
+const names = list.map((p) => p.plugin);
+// Without JavaScript the snippet lists every plugin; the script narrows it to the checked ones.
+const snippet = settingsText(mp.name, mp.repo, names);
+const example = projectInstallCommand(names[0] ?? t.home.pluginPlaceholder, { name: mp.name, repo: mp.repo });
+---
+<Base title={sbt.title} description={sbt.description} nav="settings" path="settings-builder/">
+  <div class="page-body">
+    <header class="stack" style="gap:8px">
+      <h1 class="h1">{sbt.title}</h1>
+      <p class="lead">{sbt.lead}</p>
+    </header>
+
+    <div class="sb" data-sb data-marketplace={mp.name} data-repo={mp.repo}>
+      <fieldset class="sb__plugins js-only">
+        <legend class="h2 h2--sm">{sbt.pluginsLegend}</legend>
+        <ul class="sb__list">
+          {list.map((p) => (
+            <li>
+              <label class="sb__item">
+                <input type="checkbox" name="plugin" value={p.plugin} checked />
+                <span class="mono strong">{p.plugin}</span>
+                {p.external && <span class="ext-badge">{sbt.external}</span>}
+              </label>
+            </li>
+          ))}
+        </ul>
+      </fieldset>
+
+      <div class="stack gap8">
+        <p class="nojs-only">{sbt.noJs}</p>
+        <p class="muted small">{sbt.steps}</p>
+        <pre class="sb__out" tabindex="0" aria-label={sbt.outputLabel} data-sb-out>{snippet}</pre>
+        <div class="copy js-only" data-copy>
+          <button type="button" class="copy__btn" data-cmd={snippet} aria-label={sbt.copyAria} data-aria={sbt.copyAria} data-sb-copy>
+            <code class="copy__code">{sbt.copyLabel}</code>
+            <span class="copy__st" aria-live="polite">
+              <svg class="copy__idle" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 5.5h8v8h-8z"></path><path d="M10.5 5.5v-3h-8v8h3"></path></svg>
+              <svg class="copy__ok" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5"></path></svg>
+              <span class="copy__label"></span>
+            </span>
+          </button>
+          <span class="copy__fail" role="status" hidden></span>
+        </div>
+        <p class="muted small" data-sb-empty hidden>{sbt.emptyHint}</p>
+      </div>
+
+      <ul class="muted small sb__notes">
+        <li>{sbt.trustNote}</li>
+        <li>{sbt.installNote(example)}</li>
+        <li>{sbt.docsLead} <a href="https://code.claude.com/docs/en/plugins/org#pre-install-and-require-plugins" target="_blank" rel="noopener">{sbt.docsLink}</a></li>
+      </ul>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { settingsText } from '../lib/settings-snippet';
+
+  const root = document.querySelector<HTMLElement>('[data-sb]');
+  if (root) {
+    const boxes = [...root.querySelectorAll<HTMLInputElement>('input[name="plugin"]')];
+    const out = root.querySelector<HTMLElement>('[data-sb-out]')!;
+    const copy = root.querySelector<HTMLElement>('[data-sb-copy]')!;
+    const empty = root.querySelector<HTMLElement>('[data-sb-empty]')!;
+    const want = new URLSearchParams(location.search).getAll('plugin');
+    if (want.length && boxes.some((b) => want.includes(b.value))) boxes.forEach((b) => (b.checked = want.includes(b.value)));
+    const update = (): void => {
+      const picked = boxes.filter((b) => b.checked).map((b) => b.value);
+      const text = settingsText(root.dataset.marketplace ?? '', root.dataset.repo ?? '', picked);
+      out.textContent = text;
+      copy.dataset.cmd = text;
+      empty.hidden = picked.length > 0;
+    };
+    root.addEventListener('change', update);
+    update();
+  }
+</script>

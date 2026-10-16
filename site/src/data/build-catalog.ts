@@ -2,6 +2,7 @@ import { BuildError, type Artifact, type ArtifactDetails, type Catalog, type Val
 import { discoverComponents, toSlug, type FileSource, type Manifest } from './discover';
 import { linkDependencies, parseCompatibility, parseDependencies } from './dependencies';
 import { asString, asStringList, parseJson, stripMarkdown } from './frontmatter';
+import { analyzePluginSecurity } from './security';
 import { fsSource, git } from './sources';
 
 // Indexer (spec 5): .claude-plugin/ + plugins/** -> catalog.json (without markdown bodies).
@@ -158,7 +159,9 @@ export function buildCatalog(opts: CatalogOptions): CatalogResult {
     };
     artifacts.push(pluginArtifact);
 
-    for (const c of discoverComponents(src, dir, manifest)) {
+    const components = discoverComponents(src, dir, manifest);
+    pluginArtifact.details.security = analyzePluginSecurity(src, dir, manifest, components);
+    for (const c of components) {
       warnings.push(...c.warnings);
       const id = `${pluginName}:${c.type}:${c.name}`;
       const fmTags = asStringList(c.frontmatter.tags);

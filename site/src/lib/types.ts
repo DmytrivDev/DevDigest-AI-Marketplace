@@ -24,6 +24,57 @@ export interface ArtifactDetails {
   homepage?: string;
   repository?: string;
   hasReadme?: boolean;
+  security?: PluginSecurity;
+}
+
+// Plugin security panel: static analysis of a plugin's files, computed at build time.
+export type Capability = 'run-commands' | 'write-files' | 'network';
+
+export interface HookUse {
+  event: string;
+  matcher: string;
+  command: string;
+  args: string[];
+  /** `exec` = `command` + `args`; `shell` = one string run by a shell. */
+  form: 'exec' | 'shell';
+  file: string;
+}
+export interface McpUse {
+  name: string;
+  /** `process` starts a local command, `remote` connects to a URL. */
+  kind: 'process' | 'remote' | 'unknown';
+  command: string;
+  args: string[];
+  url: string;
+  /** Names only, never values. */
+  envNames: string[];
+  file: string;
+}
+export interface ToolUse {
+  type: 'skill' | 'agent' | 'command';
+  name: string;
+  slug: string;
+  tools: string[];
+  /** True when an agent has no `tools` field and so inherits every tool. */
+  inheritsAll: boolean;
+  broad: { tool: string; capability: Capability }[];
+}
+export interface NetworkHit {
+  file: string;
+  line: number;
+  text: string;
+}
+export interface OutsideRef {
+  file: string;
+  ref: string;
+  reason: 'parent' | 'absolute';
+}
+export interface PluginSecurity {
+  hooks: HookUse[];
+  mcp: McpUse[];
+  tools: ToolUse[];
+  network: { hits: NetworkHit[]; total: number };
+  outside: OutsideRef[];
 }
 
 /** A plugin's `dependencies` entry from plugin.json, normalized. */

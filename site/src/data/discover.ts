@@ -67,7 +67,7 @@ export function hookName(event: string, matcher: string): string {
   return m ? `${e}-${m}` : e;
 }
 
-const join = (dir: string, p: string): string | null => {
+export const join = (dir: string, p: string): string | null => {
   const parts = `${dir}/${p}`.split('/');
   const out: string[] = [];
   for (const part of parts) {

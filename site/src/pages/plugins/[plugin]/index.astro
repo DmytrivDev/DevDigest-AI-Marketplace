@@ -2,6 +2,7 @@
 import Base from '../../../layouts/Base.astro';
 import Breadcrumb from '../../../components/Breadcrumb.astro';
 import CopyCommand from '../../../components/CopyCommand.astro';
+import SecurityPanel from '../../../components/SecurityPanel.astro';
 import TypeBadge from '../../../components/TypeBadge.astro';
 import ValidationBadge from '../../../components/ValidationBadge.astro';
 import { loadSiteData } from '../../../data/load';
@@ -61,7 +62,7 @@ const meta: [string, string, boolean][] = [
 ];
 const sourceUrl = external ? `https://${p.sourcePath}` : `${repoUrl(catalog)}/tree/${catalog.commit}/${p.sourcePath}`;
 ---
-<Base title={t.plugin.pageTitle(p.name)} description={p.description} nav="catalog" path={`plugins/${p.plugin}/`}>
+<Base title={t.plugin.pageTitle(p.name)} description={p.description} nav="catalog" path={`plugins/${p.plugin}/`} feed={external ? undefined : { href: url(`plugins/${p.plugin}/feed.xml`), title: t.feed.pluginTitle(p.plugin, t.site.name) }}>
   <div class="page-body">
     <Breadcrumb items={[{ label: t.nav.catalog, href: url() }, { label: p.name, mono: true }]} />
     <header class="stack" style="gap:12px">
@@ -97,6 +98,7 @@ const sourceUrl = external ? `https://${p.sourcePath}` : `${repoUrl(catalog)}/tr
             <li><span class="muted small">{t.plugin.installStep2}</span><CopyCommand cmd={installCommand(p.plugin, m)} /></li>
           </ol>
           {deps.length > 0 && <p class="muted small">{t.plugin.depsAutoInstall(deps.length)}</p>}
+          <a class="small" href={url(`settings-builder/?plugin=${encodeURIComponent(p.plugin)}`)}>{t.plugin.addToSettings}</a>
         </section>
 
         {(!external || usedBy.length > 0) && (
@@ -163,6 +165,7 @@ const sourceUrl = external ? `https://${p.sourcePath}` : `${repoUrl(catalog)}/tr
                 ))}
               </section>
             )}
+            {p.details.security && <SecurityPanel plugin={p.plugin} security={p.details.security} />}
             {readmeHtml && (
               <section class="stack gap12" aria-labelledby="p-readme">
                 <h2 id="p-readme" class="h2">{t.plugin.readme}</h2>
@@ -185,6 +188,7 @@ const sourceUrl = external ? `https://${p.sourcePath}` : `${repoUrl(catalog)}/tr
           <div class="row-head">
             <h2 id="p-versions" class="h2">{t.plugin.versionHistory}</h2>
             <a class="more" href={url('whats-new/')}>{t.plugin.allReleases}</a>
+            {!external && <a class="more" href={url(`plugins/${p.plugin}/feed.xml`)}>{t.plugin.rssForPlugin}</a>}
           </div>
           {versions.length ? (
             <ul class="versions">

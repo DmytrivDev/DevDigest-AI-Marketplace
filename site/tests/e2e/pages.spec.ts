@@ -3,7 +3,7 @@ import { expectNoAxeViolations, pageKinds, watchErrors } from './helpers';
 
 // Every page type, in both builds (spec 14): axe-core in light and dark, no console errors,
 // no CSP violations, no horizontal scroll at 360 px.
-const KINDS = ['home', 'plugin', 'artifact', 'whats-new', 'stats', 'guide', '404'] as const;
+const KINDS = ['home', 'plugin', 'artifact', 'whats-new', 'stats', 'settings-builder', 'guide', '404'] as const;
 
 for (const kind of KINDS) {
   test.describe(`${kind} page`, () => {
