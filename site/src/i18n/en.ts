@@ -56,6 +56,65 @@ export const clientStrings = {
   unseen: (n: number) => `${n} unseen ${pick(n, 'release', 'releases')}`,
 } as const;
 
+/**
+ * Strings the home page React island (src/components/home) and the helpers it imports (src/lib/icons.ts)
+ * need, for the same reason as `clientStrings`: the bundler keeps a whole object it sees used, so the island
+ * reads this smaller one and the rest of `t` stays out of the browser bundles (spec 13). `t` reuses it.
+ */
+export const islandStrings = {
+  types: { label: typeLabel, plural: typePlural },
+  fresh: { new: 'New', updated: 'Updated' },
+  copy: clientStrings.copy,
+  states: { noComponents: "This marketplace's plugins don't have any skills, agents or hooks yet." },
+  home: {
+    searchLabel: 'Search artifacts',
+    placeholder: 'Describe what you need, e.g. a skill for PR review',
+    clearSearch: 'Clear search',
+    preparing: 'Preparing search…',
+    offline: "You're offline. The list below is current as of the last build.",
+    loadFail: "Couldn't load search. The list below is current as of the last build.",
+    tryAgain: 'Try again',
+    try: 'Try',
+    ukrainianToo: 'Ukrainian works too.',
+    newAndUpdated: 'New and updated',
+    lastDays: (n: number) => `last ${n} days`,
+    whatsNewLink: "What's new →",
+    filters: 'Filters',
+    filtersToggle: (n: number) => `Filters (${n})`,
+    facetType: 'Type',
+    facetPlugin: 'Plugin',
+    facetFreshness: 'Freshness',
+    facetTags: 'Tags',
+    showFewer: 'Show fewer',
+    moreTags: (n: number) => `${n} more ▾`,
+    all: 'All ',
+    resultsFor: (n: number, q: string) => `${n} ${pick(n, 'result', 'results')} for “${q}”`,
+    ofTotal: (n: number, total: number, noun: HomeNoun) => `${n} of ${total} ${homeNouns[noun][1]}`,
+    count: (n: number, noun: HomeNoun) => `${n} ${pick(n, homeNouns[noun][0], homeNouns[noun][1])}`,
+    sort: 'Sort',
+    sortRelevance: 'Relevance',
+    sortUpdated: 'Updated',
+    sortName: 'Name',
+    noTypeFound: (typePluralLower: string) => `No ${typePluralLower} found — showing other artifacts for your query`,
+    activeFilters: 'Active filters',
+    clearFilters: 'Clear filters',
+    chipType: (label: string) => `Type: ${label}`,
+    chipTypeFromQuery: (label: string) => `Type: ${label} (from query)`,
+    chipPlugin: (name: string) => `Plugin: ${name}`,
+    chipFreshness: (label: string) => `Freshness: ${label}`,
+    chipTag: (tag: string) => `Tag: ${tag}`,
+    chipRemove: (chip: string) => `Remove filter ${chip}`,
+    noMatchQuery: (noun: HomeNoun, q: string) => `No ${homeNouns[noun][1]} match “${q}”`,
+    noMatchFilters: (noun: HomeNoun) => `No ${homeNouns[noun][1]} match these filters`,
+    tryFewer: 'Try fewer words, or start from a popular tag:',
+    suggest: 'Suggest an artifact',
+    issueTitle: (q: string) => `Suggest an artifact: ${q}`,
+    issueBody: (q: string) => `I looked for: ${q}`,
+    /** Plugin cards: how many plugins this one depends on. */
+    cardDependsOn: (n: number) => `depends on ${n} ${pick(n, 'plugin', 'plugins')}`,
+  },
+};
+
 export const t = {
   site: {
     name: 'DevDigest Marketplace',
@@ -95,7 +154,7 @@ export const t = {
   states: {
     stale: 'Catalog updated since this page was loaded.',
     reload: 'Reload page',
-    noComponents: "This marketplace's plugins don't have any skills, agents or hooks yet.",
+    noComponents: islandStrings.states.noComponents,
     noscript: 'Search needs JavaScript. The full list is below.',
   },
 
@@ -122,10 +181,7 @@ export const t = {
     ), mcp: 'MCP servers' } as Record<ArtifactType, string>,
   },
 
-  fresh: {
-    new: 'New',
-    updated: 'Updated',
-  },
+  fresh: islandStrings.fresh,
 
   validation: {
     pass: 'Validation passed',
@@ -210,52 +266,8 @@ export const t = {
     } as Record<ArtifactType, string>,
     exampleFor: (typeWord: string, tag: string) => `${typeWord} for ${tag}`,
     exampleFallbacks: ['skill for PR review', 'security agent', 'pre-commit hooks'],
-    /** The React island (src/components/home). */
-    searchLabel: 'Search artifacts',
-    placeholder: 'Describe what you need, e.g. a skill for PR review',
-    clearSearch: 'Clear search',
-    preparing: 'Preparing search…',
-    offline: "You're offline. The list below is current as of the last build.",
-    loadFail: "Couldn't load search. The list below is current as of the last build.",
-    tryAgain: 'Try again',
-    try: 'Try',
-    ukrainianToo: 'Ukrainian works too.',
-    newAndUpdated: 'New and updated',
-    lastDays: (n: number) => `last ${n} days`,
-    whatsNewLink: "What's new →",
-    filters: 'Filters',
-    filtersToggle: (n: number) => `Filters (${n})`,
-    facetType: 'Type',
-    facetPlugin: 'Plugin',
-    facetFreshness: 'Freshness',
-    facetTags: 'Tags',
-    showFewer: 'Show fewer',
-    moreTags: (n: number) => `${n} more ▾`,
-    all: 'All ',
-    resultsFor: (n: number, q: string) => `${n} ${pick(n, 'result', 'results')} for “${q}”`,
-    ofTotal: (n: number, total: number, noun: HomeNoun) => `${n} of ${total} ${homeNouns[noun][1]}`,
-    count: (n: number, noun: HomeNoun) => `${n} ${pick(n, homeNouns[noun][0], homeNouns[noun][1])}`,
-    sort: 'Sort',
-    sortRelevance: 'Relevance',
-    sortUpdated: 'Updated',
-    sortName: 'Name',
-    noTypeFound: (typePluralLower: string) => `No ${typePluralLower} found — showing other artifacts for your query`,
-    activeFilters: 'Active filters',
-    clearFilters: 'Clear filters',
-    chipType: (label: string) => `Type: ${label}`,
-    chipTypeFromQuery: (label: string) => `Type: ${label} (from query)`,
-    chipPlugin: (name: string) => `Plugin: ${name}`,
-    chipFreshness: (label: string) => `Freshness: ${label}`,
-    chipTag: (tag: string) => `Tag: ${tag}`,
-    chipRemove: (chip: string) => `Remove filter ${chip}`,
-    noMatchQuery: (noun: HomeNoun, q: string) => `No ${homeNouns[noun][1]} match “${q}”`,
-    noMatchFilters: (noun: HomeNoun) => `No ${homeNouns[noun][1]} match these filters`,
-    tryFewer: 'Try fewer words, or start from a popular tag:',
-    suggest: 'Suggest an artifact',
-    issueTitle: (q: string) => `Suggest an artifact: ${q}`,
-    issueBody: (q: string) => `I looked for: ${q}`,
-    /** Plugin cards: how many plugins this one depends on. */
-    cardDependsOn: (n: number) => `depends on ${n} ${pick(n, 'plugin', 'plugins')}`,
+    /** The React island (src/components/home): shared with `islandStrings`. */
+    ...islandStrings.home,
   },
 
   plugin: {

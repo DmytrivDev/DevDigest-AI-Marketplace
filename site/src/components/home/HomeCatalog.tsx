@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { t } from '../../i18n/en';
+import { islandStrings as t } from '../../i18n/en';
 import { ICON, TYPE_PLURAL } from '../../lib/icons';
 import type { ArtifactType, Catalog } from '../../lib/types';
 import { createEngine, toSearchDoc, type Engine } from '../../search/engine';

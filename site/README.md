@@ -5,6 +5,11 @@ Static catalog of the marketplace, built with Astro and published on GitHub Page
 
 ## Run it locally
 
+Needs **Node.js 22.22.0 or newer** on the 22.x line (Astro 7 and `@astrojs/react` 7 declare
+`engines.node >=22.22.0`; odd-numbered releases are not supported). On older Node `npm ci` warns with
+`EBADENGINE` and the build is not supported. CI uses the version pinned as `node-version` in
+`.github/workflows/pages.yml`. Check with `node -v`; with nvm, `nvm install 22.23.3` and `nvm use 22.23.3`.
+
 ```bash
 cd site
 npm ci          # first time
