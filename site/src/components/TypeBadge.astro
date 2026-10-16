@@ -1,0 +1,7 @@
+---
+import { ICON, TYPE_LABEL } from '../lib/icons';
+import type { ArtifactType } from '../lib/types';
+interface Props { type: ArtifactType; label?: string }
+const { type, label = TYPE_LABEL[type] } = Astro.props;
+---
+<span class={`badge badge--${type}`}><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d={ICON[type]}></path></svg><span>{label}</span></span>

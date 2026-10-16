@@ -1,0 +1,169 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Breadcrumb from '../../../components/Breadcrumb.astro';
+import CopyCommand from '../../../components/CopyCommand.astro';
+import TypeBadge from '../../../components/TypeBadge.astro';
+import ValidationBadge from '../../../components/ValidationBadge.astro';
+import { loadSiteData } from '../../../data/load';
+import { renderMarkdown } from '../../../data/markdown';
+import { addCommand, installCommand, marketplaceInfo } from '../../../lib/commands';
+import { formatDate } from '../../../lib/format';
+import { TYPE_PLURAL } from '../../../lib/icons';
+import { artifactHref, repoUrl, releaseSummary, splitMessage } from '../../../lib/site';
+import { TYPE_ORDER } from '../../../lib/types';
+import { url } from '../../../lib/url';
+import { stripCode } from '../../../lib/richtext';
+import { t } from '../../../i18n/en';
+
+export async function getStaticPaths() {
+  const { catalog } = await loadSiteData();
+  return catalog.artifacts.filter((a) => a.type === 'plugin').map((a) => ({ params: { plugin: a.plugin } }));
+}
+
+const { plugin: name } = Astro.params;
+const { catalog, changelog, readmes } = await loadSiteData();
+const m = marketplaceInfo(catalog);
+const p = catalog.artifacts.find((a) => a.type === 'plugin' && a.plugin === name)!;
+const comps = catalog.artifacts.filter((a) => a.plugin === name && a.type !== 'plugin');
+const external = !!p.external;
+const val = p.validation ?? { status: 'unknown' as const, messages: [] };
+const groups = TYPE_ORDER.map((ty) => ({ type: ty, items: comps.filter((a) => a.type === ty) })).filter((g) => g.items.length);
+const readmeHtml = readmes[name!]
+  ? await renderMarkdown(readmes[name!], { headingOffset: 1, dropFirstH1: true, linkBase: `${repoUrl(catalog)}/blob/${catalog.commit}/${p.sourcePath}/` })
+  : '';
+const versions = changelog.releases.filter((r) => r.plugin === name).slice(0, 5);
+const lastRelease = versions[0]?.date;
+const tip = external
+  ? "External plugins aren't checked by this marketplace's validator."
+  : "The validator didn't run on the last build, so this plugin's manifest hasn't been checked.";
+const meta: [string, string, boolean][] = [
+  ['Version', p.version ?? '—', true],
+  ['Category', p.category ?? '—', true],
+  ['Author', p.details.author ?? '—', false],
+  ['Artifacts', external ? 'Unavailable' : String(comps.length), false],
+  ['Last release', lastRelease ? formatDate(lastRelease) : '—', false],
+  ['Source', p.sourcePath, true],
+];
+const sourceUrl = external ? `https://${p.sourcePath}` : `${repoUrl(catalog)}/tree/${catalog.commit}/${p.sourcePath}`;
+---
+<Base title={`${p.name} plugin`} description={p.description} nav="catalog" path={`plugins/${p.plugin}/`}>
+  <div class="page-body">
+    <Breadcrumb items={[{ label: 'Catalog', href: url() }, { label: p.name, mono: true }]} />
+    <header class="stack" style="gap:12px">
+      <div class="badge-row">
+        <TypeBadge type="plugin" />
+        {p.version && <span class="ver-badge">v{p.version}</span>}
+        <ValidationBadge status={external ? 'unknown' : val.status} tip={tip} />
+        {external && <span class="ext-badge">External</span>}
+      </div>
+      <h1 class="h1 mono">{p.name}</h1>
+      {p.description && <p class="lead">{p.description}</p>}
+    </header>
+
+    {val.status === 'fail' && !external && (
+      <section class="fail-box" role="alert" aria-labelledby="p-fail">
+        <h2 id="p-fail" class="h2 h2--sm" style="color:var(--danger)">Validation failed: {val.messages.length} {val.messages.length === 1 ? 'error' : 'errors'}</h2>
+        <ul>
+          {val.messages.map((msg) => {
+            const x = splitMessage(msg);
+            return <li>{x.file && <code class="mono strong">{x.file}</code>} {x.msg}</li>;
+          })}
+        </ul>
+        <p class="muted" style="font-size:13px">Checked {formatDate(catalog.generatedAt)} at commit {catalog.commit.slice(0, 7)}. The plugin can still be installed, but the files listed may not load.</p>
+      </section>
+    )}
+
+    <div class="two-col">
+      <div class="col-main">
+        <section class="stack gap12" aria-labelledby="p-install">
+          <h2 id="p-install" class="h2">Install</h2>
+          <ol class="install-steps">
+            <li><span class="muted small">1. Add the marketplace (once)</span><CopyCommand cmd={addCommand(m)} /></li>
+            <li><span class="muted small">2. Install the plugin</span><CopyCommand cmd={installCommand(p.plugin, m)} /></li>
+          </ol>
+        </section>
+
+        {external ? (
+          <section class="box box--surface pad16 stack gap8">
+            <p><strong>Contents unavailable:</strong> this plugin is hosted outside this repository, so its skills, agents and README aren't indexed here.</p>
+            <a href={sourceUrl} target="_blank" rel="noopener">View the plugin's source →</a>
+          </section>
+        ) : (
+          <>
+            <section class="stack gap12" aria-labelledby="p-contents">
+              <h2 id="p-contents" class="h2">Contents</h2>
+              {groups.length ? (
+                <ul class="contents">
+                  {groups.map((g) => (
+                    <li><TypeBadge type={g.type} label={TYPE_PLURAL[g.type]} /><span class="num">{g.items.length}</span></li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="muted">{t.noComponents}</p>
+              )}
+            </section>
+            {groups.length > 0 && (
+              <section class="stack" style="gap:20px" aria-labelledby="p-arts">
+                <h2 id="p-arts" class="h2">Artifacts</h2>
+                {groups.map((g) => (
+                  <div class="stack">
+                    <h3 class="group-h"><TypeBadge type={g.type} label={TYPE_PLURAL[g.type]} /><span class="muted" style="font-weight:400">{g.items.length}</span></h3>
+                    <ul class="art-list">
+                      {g.items.map((a) => (
+                        <li><a class="mono strong" href={artifactHref(a)}>{a.name}</a><span class="muted">{stripCode(a.description)}</span></li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </section>
+            )}
+            {readmeHtml && (
+              <section class="stack gap12" aria-labelledby="p-readme">
+                <h2 id="p-readme" class="h2">README</h2>
+                <div class="box readme"><div class="md" set:html={readmeHtml} /></div>
+              </section>
+            )}
+          </>
+        )}
+
+        <section class="stack gap12" aria-labelledby="p-versions">
+          <div class="row-head">
+            <h2 id="p-versions" class="h2">Version history</h2>
+            <a class="more" href={url('whats-new/')}>All releases in What's new →</a>
+          </div>
+          {versions.length ? (
+            <ul class="versions">
+              {versions.map((v) => (
+                <li>
+                  <span class="mono strong">{v.version ?? '—'}</span>
+                  <span>{releaseSummary(v)}</span>
+                  <span class="muted small">{formatDate(v.date)} · <span class="mono">{v.commit.slice(0, 7)}</span></span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="muted">No releases yet.</p>
+          )}
+        </section>
+      </div>
+
+      <aside class="box side-meta" aria-label="Plugin details">
+        <dl>
+          {meta.map(([k, v, mono]) => (
+            <>
+              <dt>{k}</dt>
+              <dd class={mono ? 'mono' : undefined}>{v}</dd>
+            </>
+          ))}
+        </dl>
+        {p.tags.length > 0 && (
+          <div class="stack gap6">
+            <span class="muted small">Tags</span>
+            <div class="tag-row">{p.tags.map((tg) => <span class="tag">{tg}</span>)}</div>
+          </div>
+        )}
+        <a href={sourceUrl} target="_blank" rel="noopener">Source on GitHub →</a>
+      </aside>
+    </div>
+  </div>
+</Base>

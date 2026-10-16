@@ -1,0 +1,124 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import Breadcrumb from '../../../../components/Breadcrumb.astro';
+import CopyCommand from '../../../../components/CopyCommand.astro';
+import FreshBadge from '../../../../components/FreshBadge.astro';
+import Rich from '../../../../components/Rich.astro';
+import TypeBadge from '../../../../components/TypeBadge.astro';
+import { loadSiteData } from '../../../../data/load';
+import { renderMarkdown } from '../../../../data/markdown';
+import { installCommand, isInvocable, marketplaceInfo, primaryCommand } from '../../../../lib/commands';
+import { formatBytes, formatDate } from '../../../../lib/format';
+import { TYPE_PLURAL } from '../../../../lib/icons';
+import { artifactHref, components, repoUrl } from '../../../../lib/site';
+import { url } from '../../../../lib/url';
+import { stripCode } from '../../../../lib/richtext';
+
+export async function getStaticPaths() {
+  const { catalog } = await loadSiteData();
+  return catalog.artifacts
+    .filter((a) => a.type !== 'plugin')
+    .map((a) => ({ params: { plugin: a.plugin, type: a.type, slug: a.slug } }));
+}
+
+const { plugin, type, slug } = Astro.params;
+const { catalog, bodies } = await loadSiteData();
+const m = marketplaceInfo(catalog);
+const a = catalog.artifacts.find((x) => x.plugin === plugin && x.type === type && x.slug === slug)!;
+const pluginArt = catalog.artifacts.find((x) => x.type === 'plugin' && x.plugin === plugin);
+const siblings = components(catalog).filter((x) => x.plugin === plugin);
+const typePlural = TYPE_PLURAL[a.type];
+const invocable = isInvocable(a);
+const cmd = primaryCommand(a, m);
+
+const NOTES: Record<string, string> = {
+  agent: 'Claude delegates to this agent when a task matches its description. You can also mention it by name in a prompt.',
+  hook: 'This hook is part of the plugin and runs automatically once the plugin is installed.',
+  mcp: 'This server is part of the plugin and starts automatically once the plugin is installed.',
+};
+const rawBody = (bodies[a.id] ?? '').trim();
+const fallback = [a.description, NOTES[a.type]].filter(Boolean).join('\n\n');
+const html = await renderMarkdown(rawBody || fallback, {
+  dropFirstH1: true,
+  linkBase: `${repoUrl(catalog)}/blob/${catalog.commit}/${a.sourcePath}/`,
+});
+
+const mainFile = a.type === 'skill' ? `${a.sourcePath}/SKILL.md` : a.sourcePath;
+const ghUrl = `${repoUrl(catalog)}/${a.type === 'skill' ? 'blob' : 'blob'}/${catalog.commit}/${mainFile}`;
+const more = [...siblings.filter((x) => x.id !== a.id && x.type === a.type), ...siblings.filter((x) => x.type !== a.type)].slice(0, 3);
+const fields = a.details.fields ?? [];
+const files = a.details.files ?? [];
+const crumbs = [
+  { label: 'Catalog', href: url() },
+  { label: a.plugin, href: url(`plugins/${a.plugin}/`), mono: true },
+  { label: typePlural, href: url(`?type=${a.type}`) },
+  { label: a.name, mono: true },
+];
+const cmdLabel = invocable ? 'Invoke in Claude Code' : 'Comes with the plugin. Install it';
+---
+<Base title={`${a.name} — ${a.plugin} plugin ${a.type}`} description={a.description} nav="catalog" path={`plugins/${a.plugin}/${a.type}/${a.slug}/`}>
+  <div class="page-body">
+    <Breadcrumb items={crumbs} />
+    <header class="stack" style="gap:12px">
+      <div class="badge-row">
+        <TypeBadge type={a.type} />
+        <FreshBadge value={a.freshness} />
+        <span class="muted small">in <a class="mono" href={url(`plugins/${a.plugin}/`)}>{a.plugin}</a>{pluginArt?.version ? ` ${pluginArt.version}` : ''}{a.updatedAt ? ` · updated ${formatDate(a.updatedAt)}` : ''}</span>
+      </div>
+      <h1 class="h1 mono" style="overflow-wrap:anywhere">{a.name}</h1>
+      {a.description && <p class="lead"><Rich text={a.description} /></p>}
+      <div class="hero__cmd">
+        <span>{cmdLabel}</span>
+        <CopyCommand cmd={cmd} />
+        {!invocable && <span class="muted small">Install command: <span class="mono">{installCommand(a.plugin, m)}</span></span>}
+      </div>
+    </header>
+
+    <div class="two-col">
+      <article aria-label="Documentation" class="doc">
+        <div class="doc__source"><a class="mono" href={ghUrl} target="_blank" rel="noopener" title="Open on GitHub">{mainFile}</a></div>
+        <div class="md" set:html={html} />
+      </article>
+      <aside class="side-stack">
+        {fields.length > 0 && (
+          <section class="stack gap8" aria-labelledby="a-fm">
+            <h2 id="a-fm" class="h2 h2--sm">{a.details.fieldsTitle ?? 'Frontmatter'}</h2>
+            <dl class="kv box">
+              {fields.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}
+            </dl>
+          </section>
+        )}
+        {files.length > 0 && (
+          <section class="stack gap8" aria-labelledby="a-files">
+            <h2 id="a-files" class="h2 h2--sm">{a.type === 'skill' ? 'Skill files' : 'Files'}</h2>
+            <ul class="kv box files">
+              {files.map((f) => (
+                <li><span class="mono">{f.path}</span><span class="muted small">{f.description ? `${f.description} · ` : ''}{f.size ? formatBytes(f.size) : ''}</span></li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </aside>
+    </div>
+
+    {more.length > 0 && (
+      <section class="stack gap12" aria-labelledby="a-more">
+        <div class="row-head">
+          <h2 id="a-more" class="h2">More from this plugin</h2>
+          <a class="more" href={url(`plugins/${a.plugin}/`)}>All {siblings.length} {siblings.length === 1 ? 'artifact' : 'artifacts'} in {a.plugin} →</a>
+        </div>
+        <ul class="more-grid">
+          {more.map((x) => (
+            <li>
+              <a href={artifactHref(x)}>
+                <TypeBadge type={x.type} />
+                <span class="mono name">{x.name}</span>
+                <span class="muted small clamp2">{stripCode(x.description)}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </div>
+</Base>

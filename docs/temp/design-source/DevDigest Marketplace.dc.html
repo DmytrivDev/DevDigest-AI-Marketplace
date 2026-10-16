@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{margin:0;background:#e6e6e3}
+a{color:#0b5cad}a:hover{color:#084a8c}
+[data-theme="light"]{color-scheme:light;--bg:#ffffff;--surface:#f6f7f9;--surface-hover:#eef0f3;--border:#d9dde3;--text:#1b1f24;--text-muted:#57606a;--accent:#0b5cad;--highlight:#fff3b0;--success:#1a7f37;--warning:#9a6700;--danger:#b42318;--t-plugin:#6639ba;--t-skill:#0b6e4f;--t-agent:#8a4b00;--t-command:#0a6877;--t-hook:#a40e26;--t-mcp:#3d4b5c}
+[data-theme="dark"]{color-scheme:dark;--bg:#0f1216;--surface:#171b21;--surface-hover:#1f242c;--border:#2b313a;--text:#e6e8eb;--text-muted:#9aa4b0;--accent:#6cb2ff;--highlight:#5c4a00;--success:#4ac26b;--warning:#d29922;--danger:#ff7b72;--t-plugin:#b392f0;--t-skill:#56d4a4;--t-agent:#f0b72f;--t-command:#5cc8d6;--t-hook:#ff8182;--t-mcp:#a8b3c1}
+[data-theme]{--t-plugin-bg:color-mix(in srgb,var(--t-plugin) 12%,transparent);--t-skill-bg:color-mix(in srgb,var(--t-skill) 12%,transparent);--t-agent-bg:color-mix(in srgb,var(--t-agent) 12%,transparent);--t-command-bg:color-mix(in srgb,var(--t-command) 12%,transparent);--t-hook-bg:color-mix(in srgb,var(--t-hook) 12%,transparent);--t-mcp-bg:color-mix(in srgb,var(--t-mcp) 12%,transparent);--success-bg:color-mix(in srgb,var(--success) 12%,transparent);--warning-bg:color-mix(in srgb,var(--warning) 12%,transparent);--danger-bg:color-mix(in srgb,var(--danger) 10%,transparent);--muted-bg:color-mix(in srgb,var(--text-muted) 14%,transparent)}
+[data-theme] :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[data-theme] a{color:var(--accent);text-decoration:none}
+[data-theme] a:hover{color:var(--accent);text-decoration:underline}
+[data-theme] input::placeholder{color:var(--text-muted);opacity:1}
+[data-theme] ::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
+@keyframes dd-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){[data-theme] *{transition:none!important}}
+</style>
+</helmet>
+<div style="height:100vh;display:flex;flex-direction:column;font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+<sc-if value="{{ showPanel }}" hint-placeholder-val="{{ true }}">
+<div role="region" aria-label="Prototype controls" style="flex-shrink:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:8px 16px;background:#f4f4f2;border-bottom:1px solid #cfcfcb;color:#222;font-size:12px">
+<strong style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#666">Prototype</strong>
+<div style="display:flex;align-items:center;gap:6px"><span style="color:#666">Page</span><div style="display:flex;flex-wrap:wrap;gap:2px"><sc-for list="{{ pageBtns }}" as="b" hint-placeholder-count="7"><button type="button" onClick="{{ b.go }}" style="padding:4px 8px;border:1px solid #c8c8c4;border-radius:4px;background:{{ b.bg }};color:{{ b.color }};font:inherit;cursor:pointer">{{ b.label }}</button></sc-for></div></div>
+<div style="display:flex;align-items:center;gap:6px"><span style="color:#666">Width</span><div style="display:flex;gap:2px"><sc-for list="{{ widthBtns }}" as="b" hint-placeholder-count="2"><button type="button" onClick="{{ b.go }}" style="padding:4px 8px;border:1px solid #c8c8c4;border-radius:4px;background:{{ b.bg }};color:{{ b.color }};font:inherit;cursor:pointer">{{ b.label }}</button></sc-for></div></div>
+<div style="display:flex;align-items:center;gap:6px"><span style="color:#666">Theme</span><div style="display:flex;gap:2px"><sc-for list="{{ themeBtns }}" as="b" hint-placeholder-count="3"><button type="button" onClick="{{ b.go }}" style="padding:4px 8px;border:1px solid #c8c8c4;border-radius:4px;background:{{ b.bg }};color:{{ b.color }};font:inherit;cursor:pointer">{{ b.label }}</button></sc-for></div></div>
+<label style="display:flex;align-items:center;gap:6px"><span style="color:#666">State</span><select value="{{ ui }}" onChange="{{ onUi }}" style="font:inherit;padding:3px 4px;border:1px solid #c8c8c4;border-radius:4px;background:#fff;color:#222"><sc-for list="{{ stateGroups }}" as="g"><optgroup label="{{ g.label }}"><sc-for list="{{ g.opts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></optgroup></sc-for></select></label>
+<code style="margin-left:auto;font-family:ui-monospace, Consolas, monospace;color:#555">{{ path }}</code>
+</div>
+</sc-if>
+<div style="flex:1;min-height:0;overflow:auto;display:flex;padding:16px;box-sizing:border-box">
+<div ref="{{ frameRef }}" onScroll="{{ onFrameScroll }}" data-theme="{{ theme }}" style="flex-shrink:0;width:{{ frameW }};height:100%;margin:0 auto;overflow:auto;position:relative;background:var(--bg);color:var(--text);font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;font-size:14px;line-height:1.5;border:1px solid #c4c4c0">
+<div style="min-height:100%;display:flex;flex-direction:column">
+<a href="#results" onClick="{{ skip }}" style="position:absolute;left:-9999px;top:8px;z-index:30;padding:8px 12px;background:var(--bg);color:var(--accent);border:2px solid var(--accent);border-radius:6px" style-focus="left:8px">{{ skipLabel }}</a>
+
+<header style="position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border)">
+<div style="max-width:1200px;margin:0 auto;padding:0 {{ gutter }};height:56px;display:flex;align-items:center;gap:24px;box-sizing:border-box">
+<a href="/" onClick="{{ goHome }}" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">devdigest-marketplace</a>
+<sc-if value="{{ isD }}" hint-placeholder-val="{{ true }}">
+<nav aria-label="Main" style="display:flex;align-items:stretch;gap:4px;height:100%">
+<sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4"><a href="{{ n.href }}" onClick="{{ n.go }}" aria-current="{{ n.current }}" style="display:flex;align-items:center;gap:6px;padding:0 10px;color:{{ n.color }};font-weight:{{ n.weight }};border-bottom:2px solid {{ n.bc }};margin-bottom:-1px;font-size:14px;text-decoration:none;white-space:nowrap"><span>{{ n.label }}</span><sc-if value="{{ n.hasBadge }}"><span aria-label="{{ n.badgeAria }}" style="font-size:13px;color:var(--accent);font-weight:600">{{ n.badge }}</span></sc-if></a></sc-for>
+</nav>
+<div style="margin-left:auto;display:flex;align-items:center;gap:16px">
+<a href="https://github.com/DmytrivDev/DevDigest-AI-Marketplace" target="_blank" rel="noopener" style="font-size:14px">GitHub</a>
+<div role="group" aria-label="Theme" style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden"><sc-for list="{{ themeSeg }}" as="t" hint-placeholder-count="3"><button type="button" onClick="{{ t.set }}" aria-pressed="{{ t.on }}" style="height:30px;padding:0 10px;border:0;border-left:1px solid {{ t.bl }};background:{{ t.bg }};color:{{ t.color }};font:inherit;font-size:13px;font-weight:{{ t.weight }};cursor:pointer;transition:background-color 120ms">{{ t.label }}</button></sc-for></div>
+</div>
+</sc-if>
+<sc-if value="{{ isM }}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{ toggleMenu }}" aria-expanded="{{ menuOpen }}" aria-controls="m-menu" style="margin-left:auto;height:44px;padding:0 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:inherit;font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0">{{ menuLabel }}</button>
+</sc-if>
+</div>
+<sc-if value="{{ menuShown }}" hint-placeholder-val="{{ false }}">
+<nav id="m-menu" aria-label="Main" style="border-top:1px solid var(--border);padding:8px 16px 16px;display:flex;flex-direction:column">
+<sc-for list="{{ navItems }}" as="n"><a href="{{ n.href }}" onClick="{{ n.go }}" aria-current="{{ n.current }}" style="display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border-left:2px solid {{ n.bc }};color:{{ n.color }};font-weight:{{ n.weight }};font-size:16px;text-decoration:none"><span>{{ n.label }}</span><sc-if value="{{ n.hasBadge }}"><span aria-label="{{ n.badgeAria }}" style="font-size:13px;color:var(--accent);font-weight:600">{{ n.badge }}</span></sc-if></a></sc-for>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0 0;margin-top:8px;border-top:1px solid var(--border)">
+<a href="https://github.com/DmytrivDev/DevDigest-AI-Marketplace" target="_blank" rel="noopener" style="display:flex;align-items:center;min-height:44px;padding:0 12px">GitHub</a>
+<div role="group" aria-label="Theme" style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden"><sc-for list="{{ themeSeg }}" as="t"><button type="button" onClick="{{ t.set }}" aria-pressed="{{ t.on }}" style="height:44px;padding:0 12px;border:0;border-left:1px solid {{ t.bl }};background:{{ t.bg }};color:{{ t.color }};font:inherit;font-size:13px;font-weight:{{ t.weight }};cursor:pointer">{{ t.label }}</button></sc-for></div>
+</div>
+</nav>
+</sc-if>
+</header>
+
+<sc-if value="{{ showStale }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="background:var(--surface);border-bottom:1px solid var(--border)"><div style="max-width:1200px;margin:0 auto;padding:6px {{ gutter }};box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:13px;color:var(--text-muted)"><span>Catalog updated since this page was loaded.</span><button type="button" onClick="{{ resetUi }}" style="min-height:{{ tapS }};padding:0;border:0;background:transparent;color:var(--accent);font:inherit;font-size:13px;cursor:pointer;text-decoration:underline">Reload page</button></div></div>
+</sc-if>
+
+<main id="main" tabIndex="-1" style="flex:1;outline:none">
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div style="max-width:1200px;margin:0 auto;padding:{{ padTop }} {{ gutter }} 48px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+<section aria-labelledby="h-title" style="display:flex;flex-direction:column;gap:12px;max-width:760px">
+<h1 id="h-title" style="margin:0;font-size:{{ h1 }};line-height:1.25;font-weight:600">DevDigest Marketplace</h1>
+<p style="margin:0;font-size:16px;color:var(--text-muted)">Claude Code plugins from DevDigest, the local-first AI PR reviewer.</p>
+<div style="display:flex;flex-direction:column;gap:6px;max-width:560px">
+<span style="font-size:13px;color:var(--text-muted)">Add this marketplace in Claude Code</span>
+<dc-import name="CopyCommand" c="{{ cps.hero }}" hint-size="100%,36px"></dc-import>
+</div>
+</section>
+
+<sc-if value="{{ showOb }}" hint-placeholder-val="{{ true }}">
+<section aria-labelledby="ob-h" style="border:1px solid var(--border);border-radius:10px;background:var(--surface);padding:16px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:flex-start;gap:12px">
+<h2 id="ob-h" style="margin:0;font-size:16px;line-height:1.25;font-weight:600;flex:1;padding-top:4px">New to Claude Code marketplaces? Three steps.</h2>
+<button type="button" aria-label="Dismiss getting started" onClick="{{ obDismiss }}" style="width:{{ tap }};height:{{ tap }};flex-shrink:0;margin:-4px -4px 0 0;border:0;border-radius:6px;background:transparent;color:var(--text-muted);font:inherit;font-size:18px;line-height:1;cursor:pointer" style-hover="background:var(--surface-hover);color:var(--text)">×</button>
+</div>
+<ol style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:{{ obCols }};gap:16px">
+<sc-for list="{{ obSteps }}" as="st" hint-placeholder-count="3"><li style="display:flex;flex-direction:column;gap:6px;min-width:0"><div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;color:var(--text-muted)">{{ st.n }}</span><strong style="font-size:14px;font-weight:600">{{ st.title }}</strong></div><span style="font-size:13px;color:var(--text-muted)">{{ st.text }}</span><dc-import name="CopyCommand" c="{{ st.c }}" hint-size="100%,36px"></dc-import></li></sc-for>
+</ol>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px">
+<button type="button" onClick="{{ obDismiss }}" style="height:{{ ctlH }};padding:0 16px;border:0;border-radius:6px;background:var(--accent);color:var(--bg);font:inherit;font-size:14px;font-weight:600;cursor:pointer">Got it</button>
+<a href="/guide/" onClick="{{ goGuide }}" style="font-size:14px">Learn more →</a>
+</div>
+</section>
+</sc-if>
+
+<div aria-label="Catalog summary" style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 20px;font-size:13px;color:var(--text-muted);padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+<sc-for list="{{ strip }}" as="x" hint-placeholder-count="4"><span><strong style="color:var(--text);font-weight:600">{{ x.n }}</strong> {{ x.l }}</span></sc-for>
+<a href="/stats/" onClick="{{ goStats }}" style="margin-left:auto">All stats →</a>
+</div>
+
+<sc-if value="{{ showSearch }}" hint-placeholder-val="{{ true }}">
+<section role="search" aria-label="Search artifacts" style="display:flex;flex-direction:column;gap:8px">
+<label for="dd-q" style="font-size:14px;font-weight:600">Search artifacts</label>
+<div style="position:relative;display:flex;align-items:center;max-width:760px">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="position:absolute;left:12px;color:var(--text-muted);fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round"><path d="M7 2.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zM10.5 10.5l3 3"></path></svg>
+<input id="dd-q" type="text" value="{{ queryVal }}" onChange="{{ onQuery }}" onKeyDown="{{ onQueryKey }}" disabled="{{ searchDisabled }}" placeholder="Describe what you need, e.g. a skill for PR review" autoComplete="off" spellCheck="false" style="width:100%;height:44px;box-sizing:border-box;padding:0 44px 0 36px;font:inherit;font-size:16px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:6px;opacity:{{ inputOpacity }}">
+<sc-if value="{{ hasQuery }}"><button type="button" aria-label="Clear search" onClick="{{ clearQuery }}" style="position:absolute;right:4px;width:36px;height:36px;border:0;border-radius:6px;background:transparent;color:var(--text-muted);font:inherit;font-size:18px;line-height:1;cursor:pointer" style-hover="background:var(--surface-hover);color:var(--text)">×</button></sc-if>
+</div>
+<sc-if value="{{ isPreparing }}" hint-placeholder-val="{{ false }}"><div role="status" style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)">{{ spinner }}<span>Preparing search…</span></div></sc-if>
+<sc-if value="{{ showBanner }}" hint-placeholder-val="{{ false }}"><div role="alert" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;max-width:760px;box-sizing:border-box;padding:12px 16px;border:1px solid var(--warning);border-radius:10px;background:var(--warning-bg);font-size:14px"><span style="flex:1;min-width:200px">{{ bannerText }}</span><button type="button" onClick="{{ resetUi }}" style="height:{{ ctlH }};padding:0 14px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font:inherit;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:var(--surface-hover)">Try again</button></div></sc-if>
+<sc-if value="{{ showExamples }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span style="font-size:13px;color:var(--text-muted)">Try</span><sc-for list="{{ examples }}" as="ex" hint-placeholder-count="3"><button type="button" onClick="{{ ex.go }}" style="min-height:{{ chipH }};padding:0 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;cursor:pointer" style-hover="background:var(--surface-hover)">{{ ex.label }}</button></sc-for><span style="font-size:13px;color:var(--text-muted)">Ukrainian works too.</span></div></sc-if>
+</section>
+</sc-if>
+
+<sc-if value="{{ showNew }}" hint-placeholder-val="{{ true }}">
+<section aria-labelledby="h-new" style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px"><h2 id="h-new" style="margin:0;font-size:16px;line-height:1.25;font-weight:600">New and updated</h2><span style="font-size:13px;color:var(--text-muted)">last 30 days</span><a href="/whats-new/" onClick="{{ goWhatsNew }}" style="margin-left:auto;font-size:13px">What's new →</a></div>
+<ul style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:{{ cols3 }};gap:8px">
+<sc-for list="{{ newItems }}" as="n" hint-placeholder-count="3"><li style="min-width:0"><a href="{{ n.href }}" onClick="{{ n.go }}" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;min-height:44px;box-sizing:border-box;padding:8px 12px;border:1px solid var(--border);border-radius:10px;color:var(--text);text-decoration:none;transition:background-color 120ms" style-hover="background:var(--surface-hover);text-decoration:none"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;color:{{ n.badge.color }};background:{{ n.badge.bg }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="{{ n.badge.icon }}"></path></svg><span>{{ n.badge.label }}</span></span><span style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:14px;font-weight:600">{{ n.name }}</span><span style="display:inline-flex;align-items:center;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;color:{{ n.fresh.color }};background:{{ n.fresh.bg }}">{{ n.fresh.label }}</span><span style="margin-left:auto;font-size:13px;color:var(--text-muted)">{{ n.date }}</span></a></li></sc-for>
+</ul>
+</section>
+</sc-if>
+
+<sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+<section style="border:1px solid var(--border);border-radius:10px;padding:32px 24px;display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+<h2 style="margin:0;font-size:20px;line-height:1.25;font-weight:600">No artifacts in this marketplace yet</h2>
+<p style="margin:0;color:var(--text-muted);max-width:60ch">Plugins appear here after they're added to the repository and the site is rebuilt.</p>
+<a href="/guide/#g-authors" onClick="{{ goAuthors }}">How to add a plugin →</a>
+</section>
+</sc-if>
+
+<sc-if value="{{ showCatalog }}" hint-placeholder-val="{{ true }}">
+<div id="results" tabIndex="-1" style="display:grid;grid-template-columns:{{ homeCols }};gap:{{ homeGap }};align-items:start;outline:none">
+<sc-if value="{{ showFilters }}" hint-placeholder-val="{{ true }}">
+<aside aria-label="Filters" style="position:{{ asidePos }};top:72px;display:flex;flex-direction:column;gap:16px;min-width:0">
+<sc-if value="{{ isM }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ toggleFilters }}" aria-expanded="{{ filtersOpen }}" aria-controls="f-panel" style="height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font:inherit;font-size:14px;font-weight:600;cursor:pointer"><span>{{ filtersBtnLabel }}</span><span aria-hidden="true" style="color:var(--text-muted)">{{ filtersChev }}</span></button></sc-if>
+<sc-if value="{{ filtersVisible }}" hint-placeholder-val="{{ true }}">
+<div id="f-panel" style="display:flex;flex-direction:column;gap:20px">
+<fieldset style="border:0;margin:0;padding:0;min-width:0;display:flex;flex-direction:column">
+<legend style="padding:0;margin-bottom:4px;font-size:13px;font-weight:600;color:var(--text-muted)">Type</legend>
+<sc-for list="{{ typeFacets }}" as="f" hint-placeholder-count="5"><label style="display:flex;align-items:center;gap:8px;min-height:{{ rowH }};cursor:pointer;font-size:14px"><input type="checkbox" checked="{{ f.checked }}" onChange="{{ f.toggle }}" style="width:16px;height:16px;margin:0;accent-color:var(--accent)"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;color:{{ f.color }};fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="{{ f.icon }}"></path></svg><span style="flex:1">{{ f.label }}</span><span style="font-size:13px;color:var(--text-muted);font-variant-numeric:tabular-nums">{{ f.count }}</span></label></sc-for>
+</fieldset>
+<fieldset style="border:0;margin:0;padding:0;min-width:0;display:flex;flex-direction:column">
+<legend style="padding:0;margin-bottom:4px;font-size:13px;font-weight:600;color:var(--text-muted)">Freshness</legend>
+<sc-for list="{{ freshFacets }}" as="f" hint-placeholder-count="2"><label style="display:flex;align-items:center;gap:8px;min-height:{{ rowH }};cursor:pointer;font-size:14px"><input type="checkbox" checked="{{ f.checked }}" onChange="{{ f.toggle }}" style="width:16px;height:16px;margin:0;accent-color:var(--accent)"><span style="flex:1">{{ f.label }}</span><span style="font-size:13px;color:var(--text-muted);font-variant-numeric:tabular-nums">{{ f.count }}</span></label></sc-for>
+</fieldset>
+<fieldset style="border:0;margin:0;padding:0;min-width:0;display:flex;flex-direction:column">
+<legend style="padding:0;margin-bottom:4px;font-size:13px;font-weight:600;color:var(--text-muted)">Tags</legend>
+<sc-for list="{{ tagFacets }}" as="f" hint-placeholder-count="6"><label style="display:flex;align-items:center;gap:8px;min-height:{{ rowH }};cursor:pointer;font-size:14px"><input type="checkbox" checked="{{ f.checked }}" onChange="{{ f.toggle }}" style="width:16px;height:16px;margin:0;accent-color:var(--accent)"><span style="flex:1">{{ f.label }}</span><span style="font-size:13px;color:var(--text-muted);font-variant-numeric:tabular-nums">{{ f.count }}</span></label></sc-for>
+</fieldset>
+</div>
+</sc-if>
+</aside>
+</sc-if>
+<section aria-labelledby="h-results" style="display:flex;flex-direction:column;gap:12px;min-width:0">
+<h2 id="h-results" aria-live="polite" style="margin:0;font-size:16px;line-height:1.25;font-weight:600;overflow-wrap:anywhere">{{ resultLabel }}</h2>
+<sc-if value="{{ hasChips }}" hint-placeholder-val="{{ false }}"><div aria-label="Active filters" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+<sc-for list="{{ chips }}" as="ch"><span style="display:inline-flex;align-items:center;gap:2px;padding:0 2px 0 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-size:13px"><span>{{ ch.label }}</span><button type="button" aria-label="{{ ch.aria }}" onClick="{{ ch.remove }}" style="width:{{ tapS }};height:{{ tapS }};border:0;border-radius:4px;background:transparent;color:var(--text-muted);font:inherit;font-size:15px;line-height:1;cursor:pointer" style-hover="background:var(--surface-hover);color:var(--text)">×</button></span></sc-for>
+<button type="button" onClick="{{ clearFilters }}" style="min-height:{{ tapS }};padding:0 4px;border:0;background:transparent;color:var(--accent);font:inherit;font-size:13px;cursor:pointer">Clear filters</button>
+</div></sc-if>
+<sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:12px;align-items:flex-start">
+<h3 style="margin:0;font-size:16px;line-height:1.25;font-weight:600;overflow-wrap:anywhere">{{ noResTitle }}</h3>
+<p style="margin:0;color:var(--text-muted)">Try fewer words, or start from a popular tag:</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ popularTags }}" as="t" hint-placeholder-count="4"><button type="button" onClick="{{ t.go }}" style="min-height:{{ chipH }};padding:0 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:var(--surface-hover)"><span>{{ t.name }}</span><span style="color:var(--text-muted)">{{ t.n }}</span></button></sc-for></div>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px"><a href="https://github.com/DmytrivDev/DevDigest-AI-Marketplace/issues/new" target="_blank" rel="noopener">Suggest an artifact</a><button type="button" onClick="{{ clearFilters }}" style="min-height:{{ tapS }};padding:0;border:0;background:transparent;color:var(--accent);font:inherit;font-size:14px;cursor:pointer">Clear filters</button></div>
+</div>
+</sc-if>
+<ul style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:{{ gridCols }};gap:16px">
+<sc-for list="{{ cards }}" as="c" hint-placeholder-count="6"><li style="min-width:0;display:flex"><article style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--bg);transition:border-color 120ms" style-hover="border-color:var(--text-muted)">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;color:{{ c.badge.color }};background:{{ c.badge.bg }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="{{ c.badge.icon }}"></path></svg><span>{{ c.badge.label }}</span></span><sc-if value="{{ c.hasFresh }}"><span style="display:inline-flex;align-items:center;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;color:{{ c.fresh.color }};background:{{ c.fresh.bg }}">{{ c.fresh.label }}</span></sc-if></div>
+<h3 style="margin:0;font-size:16px;line-height:1.25;font-weight:600;font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;overflow-wrap:anywhere"><a href="{{ c.href }}" onClick="{{ c.go }}" style="color:var(--text)"><sc-for list="{{ c.nameSegs }}" as="s"><span style="background:{{ s.bg }}">{{ s.t }}</span></sc-for></a></h3>
+<p style="margin:0;font-size:14px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden"><sc-for list="{{ c.descSegs }}" as="s"><span style="background:{{ s.bg }};font-family:{{ s.ff }};font-size:{{ s.fs }}">{{ s.t }}</span></sc-for></p>
+<p style="margin:0;font-size:13px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:0 6px"><a href="/plugins/devdigest/" onClick="{{ goPlugin }}">devdigest</a><span aria-hidden="true">·</span><span>{{ c.tags }}</span><span aria-hidden="true">·</span><span>{{ c.date }}</span></p>
+<div style="margin-top:auto;padding-top:4px"><dc-import name="CopyCommand" c="{{ c.cp }}" hint-size="100%,36px"></dc-import></div>
+</article></li></sc-for>
+</ul>
+</section>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPlugin }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:1200px;margin:0 auto;padding:{{ padTop }} {{ gutter }} 48px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+<nav aria-label="Breadcrumb" style="font-size:13px"><ol style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;color:var(--text-muted)"><li><a href="/" onClick="{{ goHome }}">Catalog</a></li><li aria-hidden="true">/</li><li aria-current="page" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;color:var(--text)">devdigest</li></ol></nav>
+<header style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+<span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;color:{{ pluginBadge.color }};background:{{ pluginBadge.bg }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="{{ pluginBadge.icon }}"></path></svg><span>{{ pluginBadge.label }}</span></span>
+<span style="display:inline-flex;align-items:center;height:22px;padding:0 6px;border:1px solid var(--border);border-radius:6px;font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;line-height:1">v0.3.0</span>
+<span style="position:relative;display:inline-flex">
+<span tabIndex="{{ val.tab }}" aria-describedby="{{ val.desc }}" onMouseEnter="{{ tipOn }}" onMouseLeave="{{ tipOff }}" onFocus="{{ tipOn }}" onBlur="{{ tipOff }}" style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;cursor:{{ val.cursor }};color:{{ val.color }};background:{{ val.bg }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="{{ val.icon }}"></path></svg><span>{{ val.label }}</span></span>
+<sc-if value="{{ tipShown }}"><span id="val-tip" role="tooltip" style="position:absolute;top:calc(100% + 6px);left:0;z-index:5;width:260px;padding:8px 10px;font-size:13px;line-height:1.5;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px">{{ val.tip }}</span></sc-if>
+</span>
+<sc-if value="{{ isExternal }}"><span style="display:inline-flex;align-items:center;height:22px;padding:0 6px;border:1px solid var(--text-muted);border-radius:6px;font-size:13px;font-weight:500;line-height:1;color:var(--text)">External</span></sc-if>
+</div>
+<h1 style="margin:0;font-size:{{ h1 }};line-height:1.25;font-weight:600;font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace">devdigest</h1>
+<p style="margin:0;font-size:16px;max-width:760px">DevDigest review workflow for Claude Code: skills, agents, hooks and MCP server</p>
+</header>
+<sc-if value="{{ isValFail }}" hint-placeholder-val="{{ false }}">
+<section role="alert" aria-labelledby="p-fail" style="border:1px solid var(--danger);border-radius:10px;padding:16px;background:var(--danger-bg);display:flex;flex-direction:column;gap:8px">
+<h2 id="p-fail" style="margin:0;font-size:16px;line-height:1.25;font-weight:600;color:var(--danger)">Validation failed: 2 errors</h2>
+<ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:13px"><sc-for list="{{ valErrors }}" as="e"><li style="overflow-wrap:anywhere"><code style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-weight:600">{{ e.file }}</code> {{ e.msg }}</li></sc-for></ul>
+<p style="margin:0;font-size:13px;color:var(--text-muted)">Checked Oct 16, 2026 at commit 45adf15. The plugin can still be installed, but the files listed may not load.</p>
+</section>
+</sc-if>
+<div style="display:grid;grid-template-columns:{{ pluginCols }};gap:32px;align-items:start">
+<div style="min-width:0;display:flex;flex-direction:column;gap:32px">
+<section aria-labelledby="p-install" style="display:flex;flex-direction:column;gap:12px">
+<h2 id="p-install" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">Install</h2>
+<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px;max-width:640px">
+<li style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:var(--text-muted)">1. Add the marketplace (once)</span><dc-import name="CopyCommand" c="{{ cps.plgAdd }}" hint-size="100%,36px"></dc-import></li>
+<li style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:var(--text-muted)">2. Install the plugin</span><dc-import name="CopyCommand" c="{{ cps.plgInstall }}" hint-size="100%,36px"></dc-import></li>
+</ol>
+</section>
+<sc-if value="{{ isExternal }}" hint-placeholder-val="{{ false }}">
+<section style="border:1px solid var(--border);border-radius:10px;padding:16px;background:var(--surface);display:flex;flex-direction:column;gap:8px">
+<p style="margin:0;font-size:14px"><strong>Contents unavailable:</strong> this plugin is hosted outside this repository, so its skills, agents and README aren't indexed here.</p>
+<a href="https://github.com/DmytrivDev/DevDigest-AI-Marketplace" target="_blank" rel="noopener">View the plugin's source →</a>
+</section>
+</sc-if>
+<sc-if value="{{ notExternal }}" hint-placeholder-val="{{ true }}">
+<section aria-labelledby="p-contents" style="display:flex;flex-direction:column;gap:12px">
+<h2 id="p-contents" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">Contents</h2>
+<ul style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ contents }}" as="x" hint-placeholder-count="5"><li style="display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:1px solid var(--border);border-radius:6px"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;color:{{ x.badge.color }};background:{{ x.badge.bg }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="{{ x.badge.icon }}"></path></svg><span>{{ x.badge.label }}</span></span><span style="font-weight:600;font-variant-numeric:tabular-nums">{{ x.count }}</span></li></sc-for></ul>
+</section>
+<section aria-labelledby="p-arts" style="display:flex;flex-direction:column;gap:20px">
+<h2 id="p-arts" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">Artifacts</h2>
+<sc-for list="{{ pluginGroups }}" as="g" hint-placeholder-count="3"><div style="display:flex;flex-direction:column"><h3 style="margin:0 0 6px;font-size:14px;line-height:1.25;font-weight:600;display:flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;color:{{ g.badge.color }};background:{{ g.badge.bg }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="{{ g.badge.icon }}"></path></svg><span>{{ g.badge.label }}</span></span><span style="color:var(--text-muted);font-weight:400">{{ g.count }}</span></h3><ul style="margin:0;padding:0;list-style:none"><sc-for list="{{ g.items }}" as="it"><li style="display:grid;grid-template-columns:{{ listCols }};gap:2px 16px;padding:10px 0;border-top:1px solid var(--border)"><a href="{{ it.href }}" onClick="{{ it.go }}" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:14px;font-weight:600;overflow-wrap:anywhere">{{ it.name }}</a><span style="font-size:14px;color:var(--text-muted)">{{ it.desc }}</span></li></sc-for></ul></div></sc-for>
+</section>
+<section aria-labelledby="p-readme" style="display:flex;flex-direction:column;gap:12px">
+<h2 id="p-readme" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">README</h2>
+<div style="border:1px solid var(--border);border-radius:10px;padding:{{ boxPad }};display:flex;flex-direction:column;gap:12px;min-width:0">
+<sc-for list="{{ readme }}" as="b" hint-placeholder-count="4"><sc-if value="{{ b.isH }}"><h3 style="margin:8px 0 0;font-size:16px;line-height:1.25;font-weight:600">{{ b.t }}</h3></sc-if><sc-if value="{{ b.isP }}"><p style="margin:0;font-size:14px;line-height:1.5;max-width:72ch"><sc-for list="{{ b.segs }}" as="s"><span style="background:{{ s.bg }};font-family:{{ s.ff }};font-size:{{ s.fs }}">{{ s.t }}</span></sc-for></p></sc-if><sc-if value="{{ b.isUl }}"><ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px"><sc-for list="{{ b.items }}" as="li"><li><sc-for list="{{ li.segs }}" as="s"><span style="background:{{ s.bg }};font-family:{{ s.ff }};font-size:{{ s.fs }}">{{ s.t }}</span></sc-for></li></sc-for></ul></sc-if><sc-if value="{{ b.isCode }}"><pre style="margin:0;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow-x:auto;font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;line-height:1.5"><code>{{ b.t }}</code></pre></sc-if></sc-for>
+</div>
+</section>
+</sc-if>
+<section aria-labelledby="p-versions" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px"><h2 id="p-versions" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">Version history</h2><a href="/whats-new/" onClick="{{ goWhatsNew }}" style="margin-left:auto;font-size:13px">All releases in What's new →</a></div>
+<ul style="margin:0;padding:0;list-style:none"><sc-for list="{{ versions }}" as="v" hint-placeholder-count="3"><li style="display:grid;grid-template-columns:{{ verCols }};gap:2px 16px;align-items:baseline;padding:10px 0;border-top:1px solid var(--border);font-size:14px"><span style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-weight:600">{{ v.version }}</span><span>{{ v.summary }}</span><span style="font-size:13px;color:var(--text-muted)">{{ v.date }} · <span style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace">{{ v.commit }}</span></span></li></sc-for></ul>
+</section>
+</div>
+<aside aria-label="Plugin details" style="border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:16px;font-size:14px;min-width:0">
+<dl style="margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 16px"><sc-for list="{{ pluginMeta }}" as="m" hint-placeholder-count="6"><dt style="color:var(--text-muted);font-size:13px">{{ m.k }}</dt><dd style="margin:0;font-family:{{ m.ff }};overflow-wrap:anywhere">{{ m.v }}</dd></sc-for></dl>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:var(--text-muted)">Tags</span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ pluginTags }}" as="t"><span style="display:inline-flex;align-items:center;height:24px;padding:0 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-size:13px">{{ t }}</span></sc-for></div></div>
+<a href="https://github.com/DmytrivDev/DevDigest-AI-Marketplace/tree/main/plugins/devdigest" target="_blank" rel="noopener">Source on GitHub →</a>
+</aside>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isArtifact }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:1200px;margin:0 auto;padding:{{ padTop }} {{ gutter }} 48px;box-sizing:border-box;display:flex;flex-direction:column;gap:24px">
+<nav aria-label="Breadcrumb" style="font-size:13px"><ol style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;color:var(--text-muted)"><li><a href="/" onClick="{{ goHome }}">Catalog</a></li><li aria-hidden="true">/</li><li><a href="/plugins/devdigest/" onClick="{{ goPlugin }}" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace">devdigest</a></li><li aria-hidden="true">/</li><li><a href="/" onClick="{{ art.goType }}">{{ art.typePlural }}</a></li><li aria-hidden="true">/</li><li aria-current="page" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;color:var(--text)">{{ art.name }}</li></ol></nav>
+<header style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;color:{{ art.badge.color }};background:{{ art.badge.bg }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="{{ art.badge.icon }}"></path></svg><span>{{ art.badge.label }}</span></span><sc-if value="{{ art.hasFresh }}"><span style="display:inline-flex;align-items:center;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;color:{{ art.fresh.color }};background:{{ art.fresh.bg }}">{{ art.fresh.label }}</span></sc-if><span style="font-size:13px;color:var(--text-muted)">in <a href="/plugins/devdigest/" onClick="{{ goPlugin }}" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace">devdigest</a> 0.3.0 · updated {{ art.date }}</span></div>
+<h1 style="margin:0;font-size:{{ h1 }};line-height:1.25;font-weight:600;font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;overflow-wrap:anywhere">{{ art.name }}</h1>
+<p style="margin:0;font-size:16px;max-width:760px"><sc-for list="{{ art.descSegs }}" as="s"><span style="background:{{ s.bg }};font-family:{{ s.ff }};font-size:{{ s.fs }}">{{ s.t }}</span></sc-for></p>
+<div style="display:flex;flex-direction:column;gap:6px;max-width:560px"><span style="font-size:13px;color:var(--text-muted)">{{ art.cmdLabel }}</span><dc-import name="CopyCommand" c="{{ art.cp }}" hint-size="100%,36px"></dc-import></div>
+</header>
+<div style="display:grid;grid-template-columns:{{ artCols }};gap:32px;align-items:start">
+<article aria-label="Documentation" style="min-width:0;display:flex;flex-direction:column;gap:12px">
+<div style="padding-bottom:8px;border-bottom:1px solid var(--border);font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;color:var(--text-muted);overflow-wrap:anywhere">{{ art.source }}</div>
+<sc-for list="{{ art.blocks }}" as="b" hint-placeholder-count="5"><sc-if value="{{ b.isH }}"><h2 style="margin:12px 0 0;font-size:20px;line-height:1.25;font-weight:600">{{ b.t }}</h2></sc-if><sc-if value="{{ b.isP }}"><p style="margin:0;font-size:14px;line-height:1.5;max-width:72ch"><sc-for list="{{ b.segs }}" as="s"><span style="background:{{ s.bg }};font-family:{{ s.ff }};font-size:{{ s.fs }}">{{ s.t }}</span></sc-for></p></sc-if><sc-if value="{{ b.isUl }}"><ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px"><sc-for list="{{ b.items }}" as="li"><li><sc-for list="{{ li.segs }}" as="s"><span style="background:{{ s.bg }};font-family:{{ s.ff }};font-size:{{ s.fs }}">{{ s.t }}</span></sc-for></li></sc-for></ul></sc-if><sc-if value="{{ b.isCode }}"><pre style="margin:0;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow-x:auto;font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;line-height:1.5"><code>{{ b.t }}</code></pre></sc-if></sc-for>
+</article>
+<aside style="min-width:0;display:flex;flex-direction:column;gap:24px">
+<section aria-labelledby="a-fm" style="display:flex;flex-direction:column;gap:8px"><h2 id="a-fm" style="margin:0;font-size:16px;line-height:1.25;font-weight:600">{{ art.fmTitle }}</h2><dl style="margin:0;border:1px solid var(--border);border-radius:10px;overflow:hidden"><sc-for list="{{ art.fm }}" as="f" hint-placeholder-count="3"><div style="padding:8px 12px;border-top:1px solid {{ f.bt }};display:flex;flex-direction:column;gap:2px"><dt style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;color:var(--text-muted)">{{ f.k }}</dt><dd style="margin:0;font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;overflow-wrap:anywhere">{{ f.v }}</dd></div></sc-for></dl></section>
+<section aria-labelledby="a-files" style="display:flex;flex-direction:column;gap:8px"><h2 id="a-files" style="margin:0;font-size:16px;line-height:1.25;font-weight:600">{{ art.filesTitle }}</h2><ul style="margin:0;padding:0;list-style:none;border:1px solid var(--border);border-radius:10px;overflow:hidden"><sc-for list="{{ art.files }}" as="f" hint-placeholder-count="2"><li style="padding:8px 12px;border-top:1px solid {{ f.bt }};display:flex;flex-direction:column;gap:2px"><span style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;overflow-wrap:anywhere">{{ f.name }}</span><span style="font-size:13px;color:var(--text-muted)">{{ f.desc }} · {{ f.size }}</span></li></sc-for></ul></section>
+</aside>
+</div>
+<section aria-labelledby="a-more" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px"><h2 id="a-more" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">More from this plugin</h2><a href="/plugins/devdigest/" onClick="{{ goPlugin }}" style="margin-left:auto;font-size:13px">All 9 artifacts in devdigest →</a></div>
+<ul style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:{{ cols3 }};gap:16px"><sc-for list="{{ art.more }}" as="m" hint-placeholder-count="3"><li style="min-width:0;display:flex"><a href="{{ m.href }}" onClick="{{ m.go }}" style="flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:16px;border:1px solid var(--border);border-radius:10px;color:var(--text);text-decoration:none;transition:border-color 120ms" style-hover="border-color:var(--text-muted);text-decoration:none"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;color:{{ m.badge.color }};background:{{ m.badge.bg }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="{{ m.badge.icon }}"></path></svg><span>{{ m.badge.label }}</span></span><span style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:16px;font-weight:600;overflow-wrap:anywhere">{{ m.name }}</span><span style="font-size:13px;color:var(--text-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ m.desc }}</span></a></li></sc-for></ul>
+</section>
+</div>
+</sc-if>
+
+<sc-if value="{{ isWhatsNew }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:1200px;margin:0 auto;padding:{{ padTop }} {{ gutter }} 48px;box-sizing:border-box">
+<div style="max-width:840px;display:flex;flex-direction:column;gap:24px">
+<header style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 24px">
+<div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:4px"><h1 style="margin:0;font-size:{{ h1 }};line-height:1.25;font-weight:600">What's new</h1><p style="margin:0;color:var(--text-muted)">Plugin releases in this marketplace, newest first.</p></div>
+<div style="display:flex;align-items:center;gap:12px"><label for="rel-plugin" style="font-size:13px;color:var(--text-muted)">Plugin</label><select id="rel-plugin" value="{{ relPlugin }}" onChange="{{ onRelPlugin }}" style="height:{{ ctlH }};padding:0 8px;font:inherit;font-size:14px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:6px"><option value="all">All plugins</option><option value="devdigest">devdigest</option></select><a href="https://dmytrivdev.github.io/DevDigest-AI-Marketplace/feed.xml" style="display:flex;align-items:center;min-height:{{ ctlH }}">RSS</a></div>
+</header>
+<sc-if value="{{ noReleases }}" hint-placeholder-val="{{ false }}">
+<section style="border:1px solid var(--border);border-radius:10px;padding:32px 24px;display:flex;flex-direction:column;gap:8px"><h2 style="margin:0;font-size:20px;line-height:1.25;font-weight:600">No releases yet</h2><p style="margin:0;color:var(--text-muted)">When a plugin publishes its first version, it appears here and in the RSS feed.</p></section>
+</sc-if>
+<sc-if value="{{ hasReleases }}" hint-placeholder-val="{{ true }}">
+<section aria-labelledby="w-unrel" style="border:1px solid var(--border);border-radius:10px;padding:16px;background:var(--surface);display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px"><h2 id="w-unrel" style="margin:0;font-size:16px;line-height:1.25;font-weight:600">Unreleased</h2><span style="font-size:13px;color:var(--text-muted)">devdigest, since 0.3.0</span></div>
+<p style="margin:0">Changes in the repository not yet released in a new version:</p>
+<div style="display:grid;grid-template-columns:{{ relCols }};gap:6px 12px;align-items:center"><span style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;font-weight:600;color:var(--warning)">~ Updated</span><div style="display:flex;align-items:center;gap:6px"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;color:{{ skillBadge.color }};background:{{ skillBadge.bg }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="{{ skillBadge.icon }}"></path></svg><span>{{ skillBadge.label }}</span></span><a href="/plugins/devdigest/skill/review/" onClick="{{ goReview }}" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:14px">review</a></div></div>
+</section>
+<sc-for list="{{ months }}" as="mo" hint-placeholder-count="2"><section style="display:flex;flex-direction:column;gap:12px"><h2 style="margin:0;font-size:13px;line-height:1.25;font-weight:600;color:var(--text-muted);padding-bottom:6px;border-bottom:1px solid var(--border)">{{ mo.month }}</h2>
+<sc-for list="{{ mo.items }}" as="r"><article aria-labelledby="{{ r.hid }}" style="border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px">
+<header style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px"><h3 id="{{ r.hid }}" style="margin:0;flex:1;min-width:180px;font-size:16px;line-height:1.25;font-weight:600"><a href="/plugins/devdigest/" onClick="{{ goPlugin }}" style="color:var(--text)">{{ r.title }}</a></h3><span style="font-size:13px;color:var(--text-muted)"><time>{{ r.date }}</time> · <a href="{{ r.commitUrl }}" target="_blank" rel="noopener" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace">{{ r.commit }}</a></span></header>
+<div style="display:flex;flex-direction:column;gap:10px"><sc-for list="{{ r.rows }}" as="row"><div style="display:grid;grid-template-columns:{{ relCols }};gap:6px 12px;align-items:start"><span style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;font-weight:600;color:{{ row.color }};padding-top:2px;white-space:nowrap">{{ row.label }}</span><ul style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px 16px"><sc-for list="{{ row.items }}" as="it"><li style="display:flex;align-items:center;gap:6px"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;color:{{ it.badge.color }};background:{{ it.badge.bg }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="{{ it.badge.icon }}"></path></svg><span>{{ it.badge.label }}</span></span><sc-if value="{{ it.linked }}"><a href="{{ it.href }}" onClick="{{ it.go }}" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:14px">{{ it.name }}</a></sc-if><sc-if value="{{ it.removed }}"><span style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:14px;color:var(--text-muted);text-decoration:line-through">{{ it.name }}</span></sc-if></li></sc-for></ul></div></sc-for></div>
+<div><button type="button" onClick="{{ r.toggle }}" aria-expanded="{{ r.open }}" aria-controls="{{ r.nid }}" style="display:inline-flex;align-items:center;gap:6px;min-height:{{ tapS }};padding:0;border:0;background:transparent;color:var(--accent);font:inherit;font-size:14px;cursor:pointer"><span aria-hidden="true" style="display:inline-block;width:10px;font-size:11px">{{ r.chev }}</span><span>Release notes</span></button>
+<sc-if value="{{ r.open }}"><ul id="{{ r.nid }}" style="margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px"><sc-for list="{{ r.notes }}" as="n"><li><sc-for list="{{ n.segs }}" as="s"><span style="background:{{ s.bg }};font-family:{{ s.ff }};font-size:{{ s.fs }}">{{ s.t }}</span></sc-for></li></sc-for></ul></sc-if></div>
+</article></sc-for>
+</section></sc-for>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isStats }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:1200px;margin:0 auto;padding:{{ padTop }} {{ gutter }} 48px;box-sizing:border-box;display:flex;flex-direction:column;gap:32px">
+<header style="display:flex;flex-direction:column;gap:4px"><h1 style="margin:0;font-size:{{ h1 }};line-height:1.25;font-weight:600">Stats</h1><p style="margin:0;color:var(--text-muted)">From the build on Oct 16, 2026, commit 45adf15.</p></header>
+<ul aria-label="Summary" style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:{{ tileCols }};gap:12px"><sc-for list="{{ summaryTiles }}" as="t" hint-placeholder-count="4"><li style="border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:2px"><span style="font-size:32px;line-height:1.25;font-weight:600;font-variant-numeric:tabular-nums">{{ t.n }}</span><span style="font-size:13px;color:var(--text-muted)">{{ t.l }}</span></li></sc-for></ul>
+<section aria-labelledby="s-types" style="display:flex;flex-direction:column;gap:12px"><h2 id="s-types" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">Contents by type</h2><ul style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:{{ typeTileCols }};gap:12px"><sc-for list="{{ typeTiles }}" as="t" hint-placeholder-count="5"><li style="border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:2px"><span style="font-size:32px;line-height:1.25;font-weight:600;font-variant-numeric:tabular-nums;color:{{ t.color }}">{{ t.n }}</span><span style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:{{ t.color }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="{{ t.icon }}"></path></svg>{{ t.l }}</span></li></sc-for></ul></section>
+<section aria-labelledby="s-growth" style="display:flex;flex-direction:column;gap:12px">
+<h2 id="s-growth" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">Growth</h2>
+<figure style="margin:0;display:flex;flex-direction:column;gap:8px;max-width:760px">
+<svg viewBox="0 0 {{ chart.w }} {{ chart.h }}" width="100%" role="img" aria-label="{{ chart.aria }}" style="display:block;overflow:visible">
+<sc-for list="{{ chart.grid }}" as="g"><line x1="{{ chart.l }}" x2="{{ chart.r }}" y1="{{ g.y }}" y2="{{ g.y }}" style="stroke:var(--border);stroke-width:1"></line><text x="{{ g.tx }}" y="{{ g.ty }}" style="fill:var(--text-muted);font-size:12px;text-anchor:end">{{ g.label }}</text></sc-for>
+<sc-for list="{{ chart.xt }}" as="x"><text x="{{ x.x }}" y="{{ x.y }}" style="fill:var(--text-muted);font-size:12px;text-anchor:middle">{{ x.label }}</text></sc-for>
+<sc-for list="{{ chart.lines }}" as="l"><polyline points="{{ l.points }}" style="fill:none;stroke:{{ l.color }};stroke-width:2;stroke-linejoin:round"></polyline><text x="{{ l.lx }}" y="{{ l.ly }}" style="fill:{{ l.color }};font-size:12px;font-weight:600">{{ l.label }}</text></sc-for>
+</svg>
+<figcaption style="font-size:13px;color:var(--text-muted)">Artifacts of each type after every release. Total: 4 on Sep 16, 8 on Oct 2, 9 on Oct 14.</figcaption>
+</figure>
+<div><button type="button" onClick="{{ toggleChartTable }}" aria-expanded="{{ chartTable }}" style="min-height:{{ tapS }};padding:0;border:0;background:transparent;color:var(--accent);font:inherit;font-size:14px;cursor:pointer">{{ chartTableLabel }}</button></div>
+<sc-if value="{{ chartTable }}" hint-placeholder-val="{{ false }}"><div style="overflow-x:auto;max-width:760px"><table style="border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums"><thead><tr><sc-for list="{{ growthHead }}" as="h"><th scope="col" style="text-align:{{ h.al }};padding:6px 8px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text-muted);white-space:nowrap">{{ h.l }}</th></sc-for></tr></thead><tbody><sc-for list="{{ growthRows }}" as="r"><tr><sc-for list="{{ r.cells }}" as="c"><td style="text-align:{{ c.al }};padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap">{{ c.v }}</td></sc-for></tr></sc-for></tbody></table></div></sc-if>
+</section>
+<div style="display:grid;grid-template-columns:{{ halfCols }};gap:32px">
+<section aria-labelledby="s-fresh" style="display:flex;flex-direction:column;gap:8px;min-width:0"><h2 id="s-fresh" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">Freshness</h2><dl style="margin:0"><sc-for list="{{ freshRows }}" as="f" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-top:1px solid var(--border)"><dt style="color:var(--text-muted)">{{ f.k }}</dt><dd style="margin:0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;color:{{ f.color }}">{{ f.v }}</dd></div></sc-for></dl></section>
+<section aria-labelledby="s-quality" style="display:flex;flex-direction:column;gap:8px;min-width:0"><h2 id="s-quality" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">Quality</h2><dl style="margin:0"><sc-for list="{{ qualityRows }}" as="f" hint-placeholder-count="3"><div style="display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-top:1px solid var(--border)"><dt style="color:var(--text-muted)">{{ f.k }}</dt><dd style="margin:0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;color:{{ f.color }}">{{ f.v }}</dd></div></sc-for></dl></section>
+</div>
+<section aria-labelledby="s-plugins" style="display:flex;flex-direction:column;gap:8px">
+<h2 id="s-plugins" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">Plugins</h2>
+<div role="table" aria-label="Plugins" style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+<sc-if value="{{ isD }}" hint-placeholder-val="{{ true }}"><div role="row" style="display:grid;grid-template-columns:minmax(0,1.4fr) 90px 90px 140px 170px;gap:16px;padding:8px 16px;background:var(--surface);font-size:13px;font-weight:600;color:var(--text-muted)"><span role="columnheader">Plugin</span><span role="columnheader">Version</span><span role="columnheader">Artifacts</span><span role="columnheader">Last release</span><span role="columnheader">Validation</span></div></sc-if>
+<div role="row" style="display:grid;grid-template-columns:{{ plugRowCols }};gap:6px 16px;align-items:center;padding:10px 16px;border-top:1px solid {{ plugRowBt }}">
+<span role="cell" style="display:flex;flex-direction:column;min-width:0"><a href="/plugins/devdigest/" onClick="{{ goPlugin }}" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-weight:600">devdigest</a><span style="font-size:13px;color:var(--text-muted)">code-review</span></span>
+<span role="cell" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace">{{ plugCell.version }}</span>
+<span role="cell">{{ plugCell.arts }}</span>
+<span role="cell">{{ plugCell.date }}</span>
+<span role="cell"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;color:{{ val.color }};background:{{ val.bg }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round"><path d="{{ val.icon }}"></path></svg><span>{{ val.label }}</span></span></span>
+</div>
+</div>
+</section>
+<div style="display:grid;grid-template-columns:{{ halfCols }};gap:32px">
+<section aria-labelledby="s-tags" style="display:flex;flex-direction:column;gap:12px;min-width:0"><h2 id="s-tags" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">Tags <span style="font-size:14px;font-weight:400;color:var(--text-muted)">14</span></h2><ul style="margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ tagStats }}" as="t" hint-placeholder-count="14"><li><button type="button" onClick="{{ t.go }}" style="display:flex;align-items:center;gap:6px;min-height:{{ chipH }};padding:0 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;cursor:pointer" style-hover="background:var(--surface-hover)"><span>{{ t.name }}</span><span style="color:var(--text-muted);font-variant-numeric:tabular-nums">{{ t.n }}</span></button></li></sc-for></ul></section>
+<sc-if value="{{ showGithub }}" hint-placeholder-val="{{ true }}">
+<section aria-labelledby="s-gh" style="display:flex;flex-direction:column;gap:12px;min-width:0"><div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px"><h2 id="s-gh" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">GitHub</h2><a href="https://github.com/DmytrivDev/DevDigest-AI-Marketplace" target="_blank" rel="noopener" style="font-size:13px;font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;overflow-wrap:anywhere">DmytrivDev/DevDigest-AI-Marketplace</a></div><ul style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px"><sc-for list="{{ ghTiles }}" as="t" hint-placeholder-count="4"><li style="border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:2px"><span style="font-size:32px;line-height:1.25;font-weight:600;font-variant-numeric:tabular-nums">{{ t.n }}</span><span style="font-size:13px;color:var(--text-muted)">{{ t.l }}</span></li></sc-for></ul><p style="margin:0;font-size:13px;color:var(--text-muted)">From the GitHub API at build time.</p></section>
+</sc-if>
+</div>
+<section aria-labelledby="s-not" style="display:flex;flex-direction:column;gap:12px;max-width:760px"><h2 id="s-not" style="margin:0;font-size:20px;line-height:1.25;font-weight:600">What's not here and why</h2><dl style="margin:0;display:flex;flex-direction:column;gap:12px"><sc-for list="{{ notHere }}" as="n" hint-placeholder-count="3"><div><dt style="font-weight:600">{{ n.k }}</dt><dd style="margin:0;color:var(--text-muted)">{{ n.v }}</dd></div></sc-for></dl></section>
+</div>
+</sc-if>
+
+<sc-if value="{{ isGuide }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:1200px;margin:0 auto;padding:{{ padTop }} {{ gutter }} 48px;box-sizing:border-box">
+<div style="display:grid;grid-template-columns:{{ guideCols }};gap:{{ guideGap }};align-items:start">
+<nav aria-label="On this page" style="position:{{ asidePos }};top:72px;display:flex;flex-direction:column;gap:8px;min-width:0">
+<span style="font-size:13px;font-weight:600;color:var(--text-muted)">On this page</span>
+<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;border-left:1px solid var(--border)"><sc-for list="{{ toc }}" as="t" hint-placeholder-count="7"><li><a href="{{ t.href }}" onClick="{{ t.go }}" aria-current="{{ t.current }}" style="display:flex;align-items:center;min-height:{{ rowH }};padding:2px 12px;margin-left:-1px;border-left:2px solid {{ t.bc }};color:{{ t.color }};font-size:14px;font-weight:{{ t.weight }}">{{ t.label }}</a></li></sc-for></ol>
+</nav>
+<article style="min-width:0;max-width:760px;display:flex;flex-direction:column;gap:40px">
+<header style="display:flex;flex-direction:column;gap:8px"><h1 style="margin:0;font-size:{{ h1 }};line-height:1.25;font-weight:600">Guide</h1><p style="margin:0;font-size:16px;color:var(--text-muted)">How to add this marketplace to Claude Code, install plugins and use what's inside.</p></header>
+<section id="g-add" aria-labelledby="g-add-h" style="display:flex;flex-direction:column;gap:12px"><h2 id="g-add-h" style="margin:0;font-size:24px;line-height:1.25;font-weight:600">Add the marketplace</h2><p style="margin:0">Run this once in Claude Code. It registers the repository as a marketplace named <code style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;background:var(--surface);padding:0 4px;border-radius:4px">devdigest-marketplace</code>.</p><dc-import name="CopyCommand" c="{{ cps.gAdd }}" hint-size="100%,36px"></dc-import></section>
+<section id="g-install" aria-labelledby="g-install-h" style="display:flex;flex-direction:column;gap:12px"><h2 id="g-install-h" style="margin:0;font-size:24px;line-height:1.25;font-weight:600">Install a plugin</h2><p style="margin:0">Install by plugin name and marketplace. Everything inside the plugin is installed together: skills, agents, commands, hooks and the MCP server.</p><dc-import name="CopyCommand" c="{{ cps.gInstall }}" hint-size="100%,36px"></dc-import><p style="margin:0;color:var(--text-muted)">If the new commands don't show up, restart Claude Code.</p></section>
+<section id="g-invoke" aria-labelledby="g-invoke-h" style="display:flex;flex-direction:column;gap:12px"><h2 id="g-invoke-h" style="margin:0;font-size:24px;line-height:1.25;font-weight:600">Find and invoke</h2><p style="margin:0">Search the <a href="/" onClick="{{ goHome }}">catalog</a> in plain words, then copy the command from the card. Skills and commands are invoked by name:</p><dc-import name="CopyCommand" c="{{ cps.gInvoke }}" hint-size="100%,36px"></dc-import><p style="margin:0">Agents, hooks and MCP servers have no command of their own. Claude delegates to agents when a task matches, hooks run on their event, and MCP servers start with the plugin.</p></section>
+<section id="g-types" aria-labelledby="g-types-h" style="display:flex;flex-direction:column;gap:12px"><h2 id="g-types-h" style="margin:0;font-size:24px;line-height:1.25;font-weight:600">Artifact types</h2>
+<div role="table" aria-label="Artifact types" style="border:1px solid var(--border);border-radius:10px;overflow:hidden;font-size:14px">
+<sc-if value="{{ isD }}" hint-placeholder-val="{{ true }}"><div role="row" style="display:grid;grid-template-columns:120px minmax(0,1fr) minmax(0,1fr);gap:16px;padding:8px 16px;background:var(--surface);font-size:13px;font-weight:600;color:var(--text-muted)"><span role="columnheader">Type</span><span role="columnheader">What it is</span><span role="columnheader">How you use it</span></div></sc-if>
+<sc-for list="{{ typesTable }}" as="r" hint-placeholder-count="6"><div role="row" style="display:grid;grid-template-columns:{{ typesCols }};gap:6px 16px;padding:10px 16px;border-top:1px solid {{ r.bt }}"><span role="cell"><span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 6px;border-radius:6px;font-size:13px;font-weight:500;line-height:1;white-space:nowrap;color:{{ r.badge.color }};background:{{ r.badge.bg }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="{{ r.badge.icon }}"></path></svg><span>{{ r.badge.label }}</span></span></span><span role="cell">{{ r.what }}</span><span role="cell" style="overflow-wrap:anywhere"><sc-for list="{{ r.how }}" as="s"><span style="background:{{ s.bg }};font-family:{{ s.ff }};font-size:{{ s.fs }}">{{ s.t }}</span></sc-for></span></div></sc-for>
+</div></section>
+<section id="g-update" aria-labelledby="g-update-h" style="display:flex;flex-direction:column;gap:12px"><h2 id="g-update-h" style="margin:0;font-size:24px;line-height:1.25;font-weight:600">Update and remove</h2><p style="margin:0">Pull the latest versions of every plugin in the marketplace:</p><dc-import name="CopyCommand" c="{{ cps.gUpdate }}" hint-size="100%,36px"></dc-import><p style="margin:0">Remove a plugin:</p><dc-import name="CopyCommand" c="{{ cps.gRemove }}" hint-size="100%,36px"></dc-import><p style="margin:0;color:var(--text-muted)">See <a href="/whats-new/" onClick="{{ goWhatsNew }}">What's new</a> for what changed in each release.</p></section>
+<section id="g-problems" aria-labelledby="g-problems-h" style="display:flex;flex-direction:column;gap:12px"><h2 id="g-problems-h" style="margin:0;font-size:24px;line-height:1.25;font-weight:600">Common problems</h2>
+<div role="table" aria-label="Common problems" style="border:1px solid var(--border);border-radius:10px;overflow:hidden;font-size:14px">
+<sc-if value="{{ isD }}" hint-placeholder-val="{{ true }}"><div role="row" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:8px 16px;background:var(--surface);font-size:13px;font-weight:600;color:var(--text-muted)"><span role="columnheader">Problem</span><span role="columnheader">Cause</span><span role="columnheader">Fix</span></div></sc-if>
+<sc-for list="{{ problems }}" as="r" hint-placeholder-count="4"><div role="row" style="display:grid;grid-template-columns:{{ probCols }};gap:4px 16px;padding:10px 16px;border-top:1px solid {{ r.bt }}"><span role="cell" style="font-weight:600;overflow-wrap:anywhere"><sc-for list="{{ r.p }}" as="s"><span style="background:{{ s.bg }};font-family:{{ s.ff }};font-size:{{ s.fs }}">{{ s.t }}</span></sc-for></span><span role="cell" style="color:var(--text-muted);overflow-wrap:anywhere"><sc-for list="{{ r.c }}" as="s"><span style="background:{{ s.bg }};font-family:{{ s.ff }};font-size:{{ s.fs }}">{{ s.t }}</span></sc-for></span><span role="cell" style="overflow-wrap:anywhere"><sc-for list="{{ r.f }}" as="s"><span style="background:{{ s.bg }};font-family:{{ s.ff }};font-size:{{ s.fs }}">{{ s.t }}</span></sc-for></span></div></sc-for>
+</div></section>
+<section id="g-authors" aria-labelledby="g-authors-h" style="display:flex;flex-direction:column;gap:12px"><h2 id="g-authors-h" style="margin:0;font-size:24px;line-height:1.25;font-weight:600">For authors</h2><p style="margin:0">Plugins live in the <code style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;background:var(--surface);padding:0 4px;border-radius:4px">plugins/</code> folder of the repository and are listed in <code style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;background:var(--surface);padding:0 4px;border-radius:4px">.claude-plugin/marketplace.json</code>. Open a pull request with your plugin. Validation runs on every build and its result appears as a badge on the plugin page.</p><a href="https://github.com/DmytrivDev/DevDigest-AI-Marketplace" target="_blank" rel="noopener">Open the repository →</a></section>
+</article>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ is404 }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:1200px;margin:0 auto;padding:48px {{ gutter }};box-sizing:border-box">
+<div style="max-width:560px;display:flex;flex-direction:column;gap:16px">
+<span style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;font-size:13px;color:var(--text-muted)">404</span>
+<h1 style="margin:0;font-size:{{ h1 }};line-height:1.25;font-weight:600">Page not found</h1>
+<p style="margin:0;font-size:16px;color:var(--text-muted)">Nothing lives at this address. If it was an artifact, it may have been renamed or removed in a recent release.</p>
+<form role="search" onSubmit="{{ nfSubmit }}" style="display:flex;gap:8px"><label for="nf-q" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">Search artifacts</label><input id="nf-q" type="text" value="{{ nf }}" onChange="{{ onNf }}" placeholder="Search the catalog" autoComplete="off" style="flex:1;min-width:0;height:44px;box-sizing:border-box;padding:0 12px;font:inherit;font-size:16px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:6px"><button type="submit" style="height:44px;padding:0 16px;border:0;border-radius:6px;background:var(--accent);color:var(--bg);font:inherit;font-size:14px;font-weight:600;cursor:pointer">Search</button></form>
+<div style="display:flex;flex-wrap:wrap;gap:8px 20px"><a href="/guide/" onClick="{{ goGuide }}">Read the guide →</a><a href="/" onClick="{{ goHome }}">Back to the catalog</a></div>
+</div>
+</div>
+</sc-if>
+
+</main>
+
+<footer style="border-top:1px solid var(--border)">
+<div style="max-width:1200px;margin:0 auto;padding:20px {{ gutter }};box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px;font-size:13px;color:var(--text-muted)">
+<span>Built Oct 16, 2026 from commit <a href="https://github.com/DmytrivDev/DevDigest-AI-Marketplace/commit/45adf15" target="_blank" rel="noopener" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace">45adf15</a></span>
+<nav aria-label="Footer" style="display:flex;flex-wrap:wrap;gap:8px 16px"><a href="https://github.com/DmytrivDev/DevDigest-AI-Marketplace" target="_blank" rel="noopener">Repository</a><a href="https://dmytrivdev.github.io/DevDigest-AI-Marketplace/feed.xml">RSS</a><a href="https://dmytrivdev.github.io/DevDigest-AI-Marketplace/catalog.json" style="font-family:ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace">catalog.json</a></nav>
+<span style="margin-left:{{ footNoteMl }}">This site collects no visitor data.</span>
+</div>
+</footer>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showPanel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const MONO = 'ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, monospace';
+const MP = 'devdigest-marketplace', REPO = 'DmytrivDev/DevDigest-AI-Marketplace', GH = 'https://github.com/' + REPO;
+const CMD_ADD = '/plugin marketplace add ' + REPO, CMD_INSTALL = '/plugin install devdigest@' + MP;
+const TL = { plugin: 'Plugin', skill: 'Skill', agent: 'Agent', command: 'Command', hook: 'Hook', mcp: 'MCP' };
+const TP = { plugin: 'Plugins', skill: 'Skills', agent: 'Agents', command: 'Commands', hook: 'Hooks', mcp: 'MCP servers' };
+const ICON = {
+  plugin: 'M2.5 4.75 8 2l5.5 2.75v6.5L8 14l-5.5-2.75zM2.5 4.75 8 7.5l5.5-2.75M8 7.5V14',
+  skill: 'M9 1.5 3.5 9H8l-1 5.5L12.5 7H8z',
+  agent: 'M8 2a2.6 2.6 0 1 1 0 5.2A2.6 2.6 0 0 1 8 2zM2.75 14c.4-2.9 2.5-4.6 5.25-4.6s4.85 1.7 5.25 4.6',
+  command: 'M2.5 2.5h11v11h-11zM9.75 5 6.25 11',
+  hook: 'M10.5 1.75v8a3.25 3.25 0 0 1-6.5 0V7.5l2 2',
+  mcp: 'M5.5 1.5v3M10.5 1.5v3M3.5 4.5h9v2.75a4.5 4.5 0 0 1-9 0zM8 11.75v2.75'
+};
+const IC_CHECK = 'M3 8.5 6.5 12 13 4.5', IC_X = 'M4.5 4.5l7 7M11.5 4.5l-7 7', IC_Q = 'M8 1.75a6.25 6.25 0 1 0 0 12.5 6.25 6.25 0 0 0 0-12.5zM6.25 6.25a1.8 1.8 0 1 1 2.4 1.7c-.45.17-.65.5-.65.95v.35M8 11.25v.25';
+const badge = t => ({ label: TL[t], icon: ICON[t], color: 'var(--t-' + t + ')', bg: 'var(--t-' + t + '-bg)' });
+const FRESH = {
+  New: { label: 'New', color: 'var(--success)', bg: 'var(--success-bg)' },
+  Updated: { label: 'Updated', color: 'var(--warning)', bg: 'var(--warning-bg)' },
+  '': { label: '', color: 'transparent', bg: 'transparent' }
+};
+const ARTS = [
+  { type: 'skill', name: 'review', desc: 'Reviews a pull request diff and reports findings grouped by severity, with file and line references.', tags: ['review', 'pr'], updated: 'Oct 14, 2026', fresh: 'New', cmd: '/devdigest:review' },
+  { type: 'skill', name: 'pr-brief', desc: 'Summarizes a pull request into a short brief: intent, risky areas and the files to read first.', tags: ['pr', 'summary'], updated: 'Oct 14, 2026', fresh: 'New', cmd: '/devdigest:pr-brief' },
+  { type: 'skill', name: 'dependency-checker', desc: 'Checks new or updated dependencies for license issues, known vulnerabilities and bundle size impact.', tags: ['dependencies', 'security'], updated: 'Oct 2, 2026', fresh: '', cmd: '/devdigest:dependency-checker' },
+  { type: 'agent', name: 'security-reviewer', desc: 'Audits a diff for injection, broken auth, unsafe deserialization and leaked secrets.', tags: ['security', 'review'], updated: 'Oct 14, 2026', fresh: 'Updated', cmd: CMD_INSTALL },
+  { type: 'agent', name: 'test-quality-reviewer', desc: 'Flags weak assertions, missing edge cases and flaky test patterns in changed tests.', tags: ['tests', 'review'], updated: 'Oct 2, 2026', fresh: '', cmd: CMD_INSTALL },
+  { type: 'agent', name: 'performance-reviewer', desc: 'Finds N+1 queries, unbounded loops and needless re-renders introduced by a change.', tags: ['performance', 'review'], updated: 'Oct 2, 2026', fresh: '', cmd: CMD_INSTALL },
+  { type: 'command', name: 'export-ci', desc: 'Exports a review agent as a ready-to-commit GitHub Actions workflow. Argument: `<agent-name>`', tags: ['ci', 'github-actions'], updated: 'Oct 2, 2026', fresh: '', cmd: '/devdigest:export-ci <agent-name>' },
+  { type: 'hook', name: 'pre-tool-use-bash', desc: 'Blocks `git commit` when staged files contain secrets or private keys.', tags: ['git', 'security'], updated: 'Sep 16, 2026', fresh: '', cmd: CMD_INSTALL },
+  { type: 'mcp', name: 'devdigest', desc: 'Exposes reviews, findings and agents to Claude through an MCP server. Env vars: `DEVDIGEST_URL`', tags: ['mcp'], updated: 'Sep 16, 2026', fresh: '', cmd: CMD_INSTALL }
+];
+const TYPE_ORDER = ['skill', 'agent', 'command', 'hook', 'mcp'];
+const PLUGIN_TAGS = ['code-review', 'pull-requests', 'devdigest'];
+const RELEASES = [
+  { id: '0.3.0', title: 'devdigest 0.3.0', date: 'Oct 14, 2026', commit: 'a1b2c3d', month: 'October 2026', added: [['skill', 'review'], ['skill', 'pr-brief']], updated: [['agent', 'security-reviewer']], removed: [['command', 'summarize']], notes: ['New `review` skill reports findings grouped by severity, with file and line references.', '`pr-brief` gives late reviewers a short brief of the change.', '`security-reviewer` now also checks config files for leaked secrets.', '`summarize` is removed. Use `pr-brief` instead.'] },
+  { id: '0.2.0', title: 'devdigest 0.2.0', date: 'Oct 2, 2026', commit: '9f8e7d6', month: 'October 2026', added: [['skill', 'dependency-checker'], ['agent', 'test-quality-reviewer'], ['agent', 'performance-reviewer'], ['command', 'export-ci']], updated: [], removed: [], notes: ['Two new review agents for tests and performance.', '`export-ci` writes a GitHub Actions workflow for any review agent.', '`dependency-checker` flags license and vulnerability issues in new dependencies.'] },
+  { id: '0.1.0', title: 'devdigest added (0.1.0)', date: 'Sep 16, 2026', commit: '3c4d5e6', month: 'September 2026', added: [['agent', 'security-reviewer'], ['hook', 'pre-tool-use-bash'], ['mcp', 'devdigest'], ['command', 'summarize']], updated: [], removed: [], notes: ['First release: the security review agent, a hook that blocks commits with secrets, and the MCP server.'] }
+];
+const STOP = new Set('i need a an the for to of me my some that which with want looking find something help please мені мене треба потрібен потрібна потрібно потрібні для хочу знайти який яка яке я щось'.split(' '));
+const TYPEWORDS = { skill: 'skill', skills: 'skill', 'скіл': 'skill', 'скіли': 'skill', 'скілл': 'skill', 'скілу': 'skill', agent: 'agent', agents: 'agent', 'агент': 'agent', 'агента': 'agent', 'агенти': 'agent', command: 'command', commands: 'command', 'команда': 'command', 'команду': 'command', 'команди': 'command', hook: 'hook', hooks: 'hook', 'хук': 'hook', 'хуки': 'hook', 'хука': 'hook', mcp: 'mcp', plugin: 'plugin', plugins: 'plugin', 'плагін': 'plugin' };
+const SYN = { 'ревю': 'review', 'рев': 'review', reviews: 'review', reviewer: 'review', 'безпека': 'security', 'безпеки': 'security', 'тести': 'tests', 'тестів': 'tests', test: 'tests', 'коміт': 'commit', 'комітів': 'commit', 'залежності': 'dependencies', 'продуктивність': 'performance', secrets: 'secret', 'пр': 'pr' };
+const EXPAND = { pr: ['pull request'], dependencies: ['dependenc'], tests: ['test'] };
+const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function parseQuery(q) {
+  const words = q.toLowerCase().replace(/[’ʼ'`]/g, '').split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  let qType = null; const tokens = [];
+  for (const w of words) {
+    if (TYPEWORDS[w]) { qType = qType || TYPEWORDS[w]; continue; }
+    if (STOP.has(w)) continue;
+    const t = SYN[w] || w;
+    if (!tokens.includes(t)) tokens.push(t);
+  }
+  return { tokens, qType };
+}
+function termsFor(t) { const a = [t, ...(EXPAND[t] || [])]; if (t.length > 3 && t.endsWith('s')) a.push(t.slice(0, -1)); return a; }
+function mkRe(terms) { return new RegExp('(?<![\\p{L}\\p{N}])(' + terms.sort((a, b) => b.length - a.length).map(esc).join('|') + ')', 'giu'); }
+function hits(text, re) { re.lastIndex = 0; return re.test(text); }
+function score(a, tokens) {
+  let sc = 0;
+  for (const t of tokens) {
+    const re = mkRe(termsFor(t)); let s = 0;
+    if (hits(a.name, re)) s += 10;
+    if (a.tags.some(tg => hits(tg, re))) s += 5;
+    if (hits(a.desc, re)) s += 3;
+    sc += s;
+  }
+  return sc;
+}
+function splitHl(s, re) {
+  if (!re) return [{ t: s, hl: false }];
+  re.lastIndex = 0; const out = []; let last = 0, m;
+  while ((m = re.exec(s))) {
+    if (!m[0]) { re.lastIndex++; continue; }
+    if (m.index > last) out.push({ t: s.slice(last, m.index), hl: false });
+    out.push({ t: m[0], hl: true }); last = m.index + m[0].length;
+  }
+  if (last < s.length) out.push({ t: s.slice(last), hl: false });
+  return out;
+}
+function segs(text, re) {
+  const out = [];
+  text.split('`').forEach((p, i) => {
+    if (!p) return; const code = i % 2 === 1;
+    splitHl(p, re).forEach(x => out.push({ t: x.t, bg: x.hl ? 'var(--highlight)' : (code ? 'var(--surface)' : 'transparent'), ff: code ? MONO : 'inherit', fs: code ? '0.92em' : 'inherit' }));
+  });
+  return out;
+}
+const B = {
+  h: t => ({ isH: true, isP: false, isUl: false, isCode: false, t, segs: [], items: [] }),
+  p: t => ({ isH: false, isP: true, isUl: false, isCode: false, t: '', segs: segs(t), items: [] }),
+  ul: a => ({ isH: false, isP: false, isUl: true, isCode: false, t: '', segs: [], items: a.map(x => ({ segs: segs(x) })) }),
+  code: t => ({ isH: false, isP: false, isUl: false, isCode: true, t, segs: [], items: [] })
+};
+const README = [
+  B.p('DevDigest review workflow for Claude Code. It connects Claude to a local DevDigest instance and adds skills, agents and hooks for reviewing pull requests.'),
+  B.h("What's inside"),
+  B.ul(['3 skills: `review`, `pr-brief`, `dependency-checker`', '3 review agents: security, test quality and performance', '`export-ci` command that turns an agent into a GitHub Actions workflow', '`pre-tool-use-bash` hook that blocks commits containing secrets', 'MCP server that exposes reviews and findings to Claude']),
+  B.h('Requirements'),
+  B.ul(['Claude Code with plugin support', 'DevDigest running locally, with `DEVDIGEST_URL` pointing to it']),
+  B.h('Quick start'),
+  B.code(CMD_INSTALL + '\n/devdigest:review')
+];
+const REVIEW = {
+  source: 'plugins/devdigest/skills/review/SKILL.md', fmTitle: 'Frontmatter', filesTitle: 'Skill files',
+  fm: [['name', 'review'], ['description', 'Reviews a pull request diff and reports findings grouped by severity, with file and line references.'], ['allowed-tools', 'Read, Grep, Glob, Bash(git diff:*)'], ['argument-hint', '[--base <branch>] [--focus <area>]']],
+  files: [['SKILL.md', '3.2 KB', 'Instructions and frontmatter'], ['references/severity.md', '1.4 KB', 'Severity rules'], ['scripts/collect-diff.sh', '0.6 KB', 'Collects the diff and file list']],
+  blocks: [
+    B.h('What it does'),
+    B.p('Reads the diff of the current branch against its base and reports findings grouped by severity: blocker, major, minor and nit. Every finding points to a file and line, so you can jump straight to it.'),
+    B.h('When to use'),
+    B.ul(['Before you request a review on a pull request.', 'After a large refactor, to catch regressions the tests miss.', 'When you inherit a pull request and need to know where the risk is.']),
+    B.h('Usage'),
+    B.code('/devdigest:review\n/devdigest:review --base main --focus security'),
+    B.p('Without arguments the skill compares `HEAD` with the merge base of the default branch.'),
+    B.h('Output'),
+    B.code('Blockers (1)\n  src/auth/session.ts:42   Token compared with == instead of a constant-time check\n\nMajor (2)\n  src/api/orders.ts:118    Query runs inside a loop over order items\n  src/api/orders.ts:131    Error from the payment client is swallowed'),
+    B.p('Severity rules live in `references/severity.md`. Edit that file to tune what counts as a blocker for your team.')
+  ]
+};
+function detail(a) {
+  if (a.name === 'review' && a.type === 'skill') return REVIEW;
+  const d = a.desc.replace(/`/g, '');
+  let fm = [['name', a.name], ['description', d]], files, source, fmTitle = 'Frontmatter', filesTitle = 'Files', note;
+  if (a.type === 'skill') { fm.push(['allowed-tools', 'Read, Grep, Glob']); source = 'plugins/devdigest/skills/' + a.name + '/SKILL.md'; files = [['SKILL.md', '2.4 KB', 'Instructions and frontmatter']]; filesTitle = 'Skill files'; note = 'Claude can also load this skill on its own when your request matches its description.'; }
+  if (a.type === 'agent') { fm.push(['tools', 'Read, Grep, Glob'], ['model', 'inherit']); source = 'plugins/devdigest/agents/' + a.name + '.md'; files = [['agents/' + a.name + '.md', '1.9 KB', 'Agent prompt and frontmatter']]; note = 'Claude delegates to this agent when a task matches its description. You can also ask for it by name: “Use the ' + a.name + ' agent on this diff.”'; }
+  if (a.type === 'command') { fm.push(['argument-hint', '<agent-name>'], ['allowed-tools', 'Read, Write']); source = 'plugins/devdigest/commands/' + a.name + '.md'; files = [['commands/' + a.name + '.md', '1.2 KB', 'Command prompt']]; note = 'Replace `<agent-name>` with one of the plugin\'s agents, for example `security-reviewer`.'; }
+  if (a.type === 'hook') { fmTitle = 'Configuration'; fm = [['event', 'PreToolUse'], ['matcher', 'Bash'], ['command', 'scripts/pre-tool-use-bash.sh']]; source = 'plugins/devdigest/hooks/hooks.json'; files = [['hooks/hooks.json', '0.3 KB', 'Hook registration'], ['scripts/pre-tool-use-bash.sh', '1.1 KB', 'Secret scanner']]; note = 'Runs before every Bash tool call and stops a `git commit` that would include a secret. It runs automatically once the plugin is installed.'; }
+  if (a.type === 'mcp') { fmTitle = 'Configuration'; fm = [['server', 'devdigest'], ['command', 'npx devdigest-mcp'], ['env', 'DEVDIGEST_URL']]; source = 'plugins/devdigest/.mcp.json'; files = [['.mcp.json', '0.2 KB', 'Server definition']]; note = 'Set `DEVDIGEST_URL` to the address of your local DevDigest instance before starting Claude Code.'; }
+  const inv = a.type === 'skill' || a.type === 'command';
+  return { source, fmTitle, filesTitle, fm, files, blocks: [B.h('What it does'), B.p(a.desc), B.h(inv ? 'Usage' : 'Install'), B.code(a.cmd), B.p(note)] };
+}
+const PAGES = [['home', 'Home'], ['plugin', 'Plugin'], ['artifact', 'Artifact'], ['whatsnew', "What's new"], ['stats', 'Stats'], ['guide', 'Guide'], ['404', '404']];
+const STATE_GROUPS = [
+  { label: 'Default', opts: [['none', 'Default']] },
+  { label: 'Home', opts: [['preparing', 'Preparing search'], ['noResults', 'No results'], ['catalogError', 'Catalog error'], ['offline', 'Offline'], ['stale', 'Page is stale'], ['empty', 'Empty catalog'], ['noJs', 'No JS']] },
+  { label: 'Plugin', opts: [['external', 'External plugin'], ['valFail', 'Validation fail'], ['valUnknown', 'Validation unknown']] },
+  { label: 'Any page', opts: [['copied', 'Copied'], ['copyFailed', 'Copy failed']] },
+  { label: "What's new", opts: [['noReleases', 'No releases']] },
+  { label: 'Stats', opts: [['noGithub', 'No GitHub data']] }
+];
+const STATE_ROUTE = { preparing: 'home', noResults: 'home', catalogError: 'home', offline: 'home', stale: 'home', empty: 'home', noJs: 'home', external: 'plugin', valFail: 'plugin', valUnknown: 'plugin', noReleases: 'whatsnew', noGithub: 'stats' };
+const PAGE_COPY_KEY = { home: 'hero', plugin: 'plgAdd', artifact: 'art', guide: 'gAdd' };
+const TOC = [['g-add', 'Add the marketplace'], ['g-install', 'Install a plugin'], ['g-invoke', 'Find and invoke'], ['g-types', 'Artifact types'], ['g-update', 'Update and remove'], ['g-problems', 'Common problems'], ['g-authors', 'For authors']];
+const TYPES_TABLE = [
+  ['plugin', 'A versioned bundle of the artifacts below.', 'Install it: `/plugin install devdigest@devdigest-marketplace`'],
+  ['skill', 'Instructions and files Claude loads for a specific task.', 'Invoke by name, `/devdigest:review`, or let Claude pick it from its description.'],
+  ['agent', 'A subagent with its own prompt and tools.', 'Claude delegates matching tasks. You can also ask for it by name.'],
+  ['command', 'A slash command, optionally with arguments.', 'Type it: `/devdigest:export-ci <agent-name>`'],
+  ['hook', 'A script that runs on a Claude Code event.', 'Runs automatically once the plugin is installed.'],
+  ['mcp', 'A server that gives Claude extra tools and data.', 'Starts with the plugin. Set the env vars it needs, e.g. `DEVDIGEST_URL`.']
+];
+const PROBLEMS = [
+  ['“Marketplace not found”', 'A typo in the repository path, or no access to it.', 'Check the path `DmytrivDev/DevDigest-AI-Marketplace` and that you can open it on GitHub.'],
+  ['`/devdigest:review` isn\'t recognized', 'The plugin isn\'t installed, or the session started before the install.', 'Install the plugin, then restart Claude Code.'],
+  ['MCP server `devdigest` fails to start', '`DEVDIGEST_URL` isn\'t set.', 'Set it to your local DevDigest address before starting Claude Code.'],
+  ['`git commit` is blocked', 'The `pre-tool-use-bash` hook found a secret in the staged files.', 'Remove the secret from the staged files and commit again.']
+];
+
+class Component extends DCLogic {
+  state = { route: 'home', art: 'review', width: 1280, theme: 'system', ui: 'none', query: '', typeF: [], tagF: [], freshF: [], qTypeOff: '', ob: true, menu: false, filters: false, notes: {}, copy: null, unseen: 2, chartTable: false, relPlugin: 'all', sysDark: false, nf: '', tip: false, guideActive: 'g-add' };
+  frameRef = React.createRef();
+  componentDidMount() {
+    try { this.mq = window.matchMedia('(prefers-color-scheme: dark)'); this.mqh = e => this.setState({ sysDark: e.matches }); this.mq.addEventListener('change', this.mqh); this.setState({ sysDark: this.mq.matches }); } catch (e) {}
+    try { const s = JSON.parse(localStorage.getItem('dd-proto-v1') || 'null'); if (s) this.setState(s); } catch (e) {}
+  }
+  componentWillUnmount() { try { this.mq.removeEventListener('change', this.mqh); } catch (e) {} clearTimeout(this.ct); }
+  componentDidUpdate() {
+    const { route, art, width, theme, ui, ob, unseen } = this.state;
+    try { localStorage.setItem('dd-proto-v1', JSON.stringify({ route, art, width, theme, ui, ob, unseen })); } catch (e) {}
+  }
+  go(route, extra, after) {
+    this.setState({ route, menu: false, tip: false, ...(extra || {}), ...(route === 'whatsnew' ? { unseen: 0 } : {}) }, () => {
+      const f = this.frameRef.current; if (f) f.scrollTop = 0; if (after) setTimeout(after, 30);
+    });
+  }
+  setUi(v) {
+    const s = this.state; const patch = { ui: v, copy: null };
+    if (v === 'noResults') { patch.query = 'terraform drift detector'; patch.typeF = []; patch.tagF = []; patch.freshF = []; }
+    else if (s.ui === 'noResults') patch.query = '';
+    if (v === 'copied' || v === 'copyFailed') {
+      const route = PAGE_COPY_KEY[s.route] ? s.route : 'home';
+      patch.copy = { key: PAGE_COPY_KEY[route], status: v === 'copied' ? 'ok' : 'fail' };
+      if (route !== s.route) return this.go(route, patch);
+      return this.setState(patch);
+    }
+    if (STATE_ROUTE[v]) return this.go(STATE_ROUTE[v], patch);
+    this.setState(patch);
+  }
+  doCopy(key, cmd) {
+    if (this.state.ui === 'copyFailed') { this.setState({ copy: { key, status: 'fail' } }); return; }
+    try { navigator.clipboard.writeText(cmd).catch(() => {}); } catch (e) {}
+    this.setState({ copy: { key, status: 'ok' } });
+    clearTimeout(this.ct);
+    this.ct = setTimeout(() => this.setState(s => (s.copy && s.copy.key === key && s.ui !== 'copied' ? { copy: null } : null)), 1600);
+  }
+  toggleArr(k, v) { this.setState(s => ({ [k]: s[k].includes(v) ? s[k].filter(x => x !== v) : [...s[k], v] })); }
+  scrollToId(id) {
+    const f = this.frameRef.current; if (!f) return; const el = f.querySelector('#' + id); if (!el) return;
+    f.scrollTo({ top: el.getBoundingClientRect().top - f.getBoundingClientRect().top + f.scrollTop - 72 });
+    this.setState({ guideActive: id });
+  }
+  onFrameScroll = () => {
+    if (this.state.route !== 'guide' || this._raf) return;
+    this._raf = requestAnimationFrame(() => {
+      this._raf = null; const f = this.frameRef.current; if (!f) return;
+      const top = f.getBoundingClientRect().top; let act = TOC[0][0];
+      for (const [id] of TOC) { const el = f.querySelector('#' + id); if (el && el.getBoundingClientRect().top - top < 140) act = id; }
+      if (f.scrollTop + f.clientHeight >= f.scrollHeight - 4) act = TOC[TOC.length - 1][0];
+      if (act !== this.state.guideActive) this.setState({ guideActive: act });
+    });
+  };
+
+  renderVals() {
+    const s = this.state, ui = s.ui, isM = s.width === 360, isD = !isM;
+    const theme = s.theme === 'system' ? (s.sysDark ? 'dark' : 'light') : s.theme;
+    const nav = (r, x, after) => e => { if (e && e.preventDefault) e.preventDefault(); this.go(r, x, after); };
+    const cp = (key, cmd) => ({ cmd, status: s.copy && s.copy.key === key ? s.copy.status : 'idle', onCopy: () => this.doCopy(key, cmd), h: isM ? '44px' : '36px' });
+    const artHref = a => '/plugins/devdigest/' + a.type + '/' + a.name + '/';
+    const goArt = a => nav('artifact', { art: a.name });
+    const noJs = ui === 'noJs', empty = ui === 'empty';
+    const searchOn = !noJs && !['preparing', 'catalogError', 'offline'].includes(ui);
+
+    // search + filters
+    const q = searchOn ? s.query.trim() : '';
+    const pq = q ? parseQuery(q) : { tokens: [], qType: null };
+    const qType = pq.qType && pq.qType !== 'plugin' && s.qTypeOff !== pq.qType ? pq.qType : null;
+    const allTerms = pq.tokens.flatMap(termsFor);
+    const hlRe = allTerms.length ? mkRe(allTerms) : null;
+    let pool = empty ? [] : ARTS.map(a => ({ a, score: 0 }));
+    if (q && pq.tokens.length) { pool = pool.map(({ a }) => ({ a, score: score(a, pq.tokens) })).filter(x => x.score > 0); pool.sort((x, y) => y.score - x.score); }
+    const types = [...s.typeF, ...(qType && !s.typeF.includes(qType) ? [qType] : [])];
+    const fT = x => !types.length || types.includes(x.a.type);
+    const fG = x => !s.tagF.length || s.tagF.some(t => x.a.tags.includes(t));
+    const fF = x => !s.freshF.length || s.freshF.includes(x.a.fresh);
+    const results = pool.filter(x => fT(x) && fG(x) && fF(x));
+    const typeFacets = TYPE_ORDER.map(t => ({ label: TP[t], icon: ICON[t], color: 'var(--t-' + t + ')', count: pool.filter(x => x.a.type === t && fG(x) && fF(x)).length, checked: types.includes(t), toggle: () => (t === qType && !s.typeF.includes(t) ? this.setState({ qTypeOff: t }) : this.toggleArr('typeF', t)) }));
+    const tagCount = {}; ARTS.forEach(a => a.tags.forEach(t => (tagCount[t] = (tagCount[t] || 0) + 1)));
+    const allTags = Object.keys(tagCount).sort((a, b) => tagCount[b] - tagCount[a] || a.localeCompare(b));
+    const tagFacets = allTags.map(t => ({ label: t, count: pool.filter(x => x.a.tags.includes(t) && fT(x) && fF(x)).length, checked: s.tagF.includes(t), toggle: () => this.toggleArr('tagF', t) }));
+    const freshFacets = ['New', 'Updated'].map(f => ({ label: f, count: pool.filter(x => x.a.fresh === f && fT(x) && fG(x)).length, checked: s.freshF.includes(f), toggle: () => this.toggleArr('freshF', f) }));
+    const chips = [];
+    if (qType) chips.push({ label: 'Type: ' + TL[qType] + ' (from query)', aria: 'Remove filter Type: ' + TL[qType], remove: () => this.setState({ qTypeOff: qType }) });
+    s.typeF.forEach(t => chips.push({ label: 'Type: ' + TL[t], aria: 'Remove filter Type: ' + TL[t], remove: () => this.toggleArr('typeF', t) }));
+    s.freshF.forEach(f => chips.push({ label: 'Freshness: ' + f, aria: 'Remove filter Freshness: ' + f, remove: () => this.toggleArr('freshF', f) }));
+    s.tagF.forEach(t => chips.push({ label: 'Tag: ' + t, aria: 'Remove filter Tag: ' + t, remove: () => this.toggleArr('tagF', t) }));
+    const nActive = chips.length;
+    const clearFilters = () => this.setState({ typeF: [], tagF: [], freshF: [], query: '', qTypeOff: '', ui: ui === 'noResults' ? 'none' : ui });
+    const n = results.length;
+    const resultLabel = noJs ? 'All ' + n + ' artifacts' : q ? n + (n === 1 ? ' result' : ' results') + ' for “' + q + '”' : nActive ? n + ' of 9 artifacts' : n + ' artifacts';
+    const cards = results.map(({ a }) => ({
+      name: a.name, href: artHref(a), go: goArt(a), badge: badge(a.type), hasFresh: !!a.fresh, fresh: FRESH[a.fresh],
+      nameSegs: splitHl(a.name, hlRe).map(x => ({ t: x.t, bg: x.hl ? 'var(--highlight)' : 'transparent' })),
+      descSegs: segs(a.desc, hlRe), tags: a.tags.slice(0, 4).join(', '), date: a.updated, cp: cp('card-' + a.name, a.cmd)
+    }));
+    const cps = {
+      hero: cp('hero', CMD_ADD), ob1: cp('ob1', CMD_ADD), ob2: cp('ob2', CMD_INSTALL), ob3: cp('ob3', '/devdigest:review'),
+      plgAdd: cp('plgAdd', CMD_ADD), plgInstall: cp('plgInstall', CMD_INSTALL),
+      gAdd: cp('gAdd', CMD_ADD), gInstall: cp('gInstall', CMD_INSTALL), gInvoke: cp('gInvoke', '/devdigest:review'),
+      gUpdate: cp('gUpdate', '/plugin marketplace update ' + MP), gRemove: cp('gRemove', '/plugin uninstall devdigest@' + MP)
+    };
+
+    // plugin
+    const ext = ui === 'external', vf = ui === 'valFail', vu = ui === 'valUnknown' || ext;
+    const val = vf ? { label: 'Validation failed', color: 'var(--danger)', bg: 'var(--danger-bg)', icon: IC_X, cursor: 'default', tab: undefined, desc: undefined, tip: '' }
+      : vu ? { label: 'Not verified', color: 'var(--text-muted)', bg: 'var(--muted-bg)', icon: IC_Q, cursor: 'help', tab: 0, desc: 'val-tip', tip: ext ? "External plugins aren't checked by this marketplace's validator." : "The validator didn't run on the last build, so this plugin's manifest hasn't been checked." }
+      : { label: 'Validation passed', color: 'var(--success)', bg: 'var(--success-bg)', icon: IC_CHECK, cursor: 'default', tab: undefined, desc: undefined, tip: '' };
+    const listCols = isM ? 'minmax(0,1fr)' : '220px minmax(0,1fr)';
+    const pluginGroups = TYPE_ORDER.map(t => {
+      const items = ARTS.filter(a => a.type === t);
+      return { badge: { ...badge(t), label: TP[t] }, count: String(items.length), items: items.map(a => ({ name: a.name, desc: a.desc.replace(/`/g, ''), href: artHref(a), go: goArt(a) })) };
+    });
+
+    // artifact
+    const A = ARTS.find(a => a.name === s.art) || ARTS[0]; const d = detail(A);
+    const more = [...ARTS.filter(a => a !== A && a.type === A.type), ...ARTS.filter(a => a.type !== A.type)].slice(0, 3);
+    const art = {
+      name: A.name, badge: badge(A.type), hasFresh: !!A.fresh, fresh: FRESH[A.fresh], date: A.updated, typePlural: TP[A.type],
+      goType: nav('home', { typeF: [A.type], query: '', tagF: [], freshF: [] }), descSegs: segs(A.desc),
+      cmdLabel: A.type === 'skill' || A.type === 'command' ? 'Invoke in Claude Code' : 'Comes with the plugin. Install it',
+      cp: cp('art', A.cmd), source: d.source, blocks: d.blocks, fmTitle: d.fmTitle, filesTitle: d.filesTitle,
+      fm: d.fm.map(([k, v], i) => ({ k, v, bt: i ? 'var(--border)' : 'transparent' })),
+      files: d.files.map(([name, size, desc], i) => ({ name, size, desc, bt: i ? 'var(--border)' : 'transparent' })),
+      more: more.map(a => ({ name: a.name, desc: a.desc.replace(/`/g, ''), badge: badge(a.type), href: artHref(a), go: goArt(a) }))
+    };
+
+    // what's new
+    const noReleases = ui === 'noReleases';
+    const itemOf = removed => ([t, nm]) => { const a = ARTS.find(x => x.name === nm && x.type === t); return { badge: badge(t), name: nm, removed: removed || !a, linked: !removed && !!a, href: a ? artHref(a) : '', go: a ? goArt(a) : null }; };
+    const months = [];
+    if (!noReleases) RELEASES.forEach(r => {
+      let m = months.find(x => x.month === r.month); if (!m) months.push((m = { month: r.month, items: [] }));
+      const rows = [];
+      if (r.added.length) rows.push({ label: '+ Added', color: 'var(--success)', items: r.added.map(itemOf(false)) });
+      if (r.updated.length) rows.push({ label: '~ Updated', color: 'var(--warning)', items: r.updated.map(itemOf(false)) });
+      if (r.removed.length) rows.push({ label: '− Removed', color: 'var(--danger)', items: r.removed.map(itemOf(true)) });
+      const open = !!s.notes[r.id], key = r.id.replace(/\./g, '-');
+      m.items.push({ title: r.title, date: r.date, commit: r.commit, commitUrl: GH + '/commit/' + r.commit, hid: 'rel-' + key, nid: 'notes-' + key, rows, open, chev: open ? '▾' : '▸', notes: r.notes.map(x => ({ segs: segs(x) })), toggle: () => this.setState(st => ({ notes: { ...st.notes, [r.id]: !st.notes[r.id] } })) });
+    });
+
+    // stats chart
+    const series = [['skill', [0, 1, 3]], ['agent', [1, 3, 3]], ['command', [1, 2, 1]], ['hook', [1, 1, 1]], ['mcp', [1, 1, 1]]];
+    const days = [0, 16, 28], end = 30, dl = ['Sep 16', 'Oct 2', 'Oct 14'];
+    const W = isM ? 328 : 720, H = 220, L = 28, R = isM ? 92 : 120, T = 12, Bt = 28, pw = W - L - R, ph = H - T - Bt;
+    const X = dd => L + (dd / end) * pw, Y = v => T + ph - (v / 3) * ph;
+    const lines = series.map(([t, vals], i) => {
+      const off = (i - 2) * 2.5, pts = [];
+      vals.forEach((v, j) => { if (j) pts.push([X(days[j]), Y(vals[j - 1]) + off]); pts.push([X(days[j]), Y(v) + off]); });
+      pts.push([X(end), Y(vals[2]) + off]);
+      return { t, points: pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '), color: 'var(--t-' + t + ')', ly0: Y(vals[2]) + off, label: (t === 'mcp' ? 'MCP' : TP[t]) + ' ' + vals[2], lx: X(end) + 8 };
+    });
+    const sorted = [...lines].sort((a, b) => a.ly0 - b.ly0); let prev = -99;
+    sorted.forEach(l => { l.ly = Math.max(l.ly0 + 4, prev + 15); prev = l.ly; });
+    const overflow = prev - (H - Bt + 4); if (overflow > 0) sorted.forEach(l => (l.ly -= overflow));
+    const chart = {
+      w: W, h: H, l: L, r: W - R + 4, aria: 'Stepped line chart of artifacts per type: skills 0, 1, 3; agents 1, 3, 3; commands 1, 2, 1; hooks 1; MCP servers 1 on Sep 16, Oct 2 and Oct 14.',
+      grid: [0, 1, 2, 3].map(v => ({ y: Y(v), ty: Y(v) + 4, tx: L - 8, label: String(v) })),
+      xt: days.map((dd, i) => ({ x: X(dd), y: H - 8, label: dl[i] })), lines
+    };
+    const growthHead = ['Date', 'Skills', 'Agents', 'Commands', 'Hooks', 'MCP', 'Total'].map((l, i) => ({ l, al: i ? 'right' : 'left' }));
+    const growthRows = dl.map((dt, j) => { const vals = series.map(x => x[1][j]); return { cells: [{ v: dt, al: 'left' }, ...vals.map(v => ({ v: String(v), al: 'right' })), { v: String(vals.reduce((a, b) => a + b, 0)), al: 'right' }] }; });
+    const tagStats = [...allTags.map(t => ({ name: t, n: tagCount[t] })), ...PLUGIN_TAGS.map(t => ({ name: t, n: 1 }))].map(t => ({ ...t, go: tagCount[t.name] ? nav('home', { tagF: [t.name], typeF: [], freshF: [], query: '' }) : nav('home', { query: t.name, tagF: [], typeF: [], freshF: [] }) }));
+
+    const routeIs = r => s.route === r;
+    const pathMap = { home: '/', plugin: '/plugins/devdigest/', artifact: artHref(A), whatsnew: '/whats-new/', stats: '/stats/', guide: '/guide/', '404': '/plugins/devdigest/skill/summarize/' };
+    const NAV = [['Catalog', 'home', '/'], ["What's new", 'whatsnew', '/whats-new/'], ['Stats', 'stats', '/stats/'], ['Guide', 'guide', '/guide/']];
+    const navItems = NAV.map(([label, r, href]) => {
+      const on = r === 'home' ? ['home', 'plugin', 'artifact'].includes(s.route) : s.route === r;
+      const hasBadge = r === 'whatsnew' && s.unseen > 0;
+      return { label, href, go: nav(r), current: on ? 'page' : undefined, color: on ? 'var(--text)' : 'var(--text-muted)', weight: on ? 600 : 400, bc: on ? 'var(--accent)' : 'transparent', hasBadge, badge: '●' + s.unseen, badgeAria: s.unseen + ' unseen releases' };
+    });
+    const themeSeg = [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(([v, l], i) => ({ label: l, on: s.theme === v, set: () => this.setState({ theme: v }), bg: s.theme === v ? 'var(--surface-hover)' : 'transparent', color: s.theme === v ? 'var(--text)' : 'var(--text-muted)', weight: s.theme === v ? 600 : 400, bl: i ? 'var(--border)' : 'transparent' }));
+    const pBtn = (on, label, go) => ({ label, go, bg: on ? '#222' : '#fff', color: on ? '#fff' : '#222' });
+    const spinner = React.createElement('span', { 'aria-hidden': true, style: { width: 12, height: 12, border: '2px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', display: 'inline-block', animation: 'dd-spin 0.8s linear infinite', flexShrink: 0 } });
+    const c3 = isM ? 'minmax(0,1fr)' : 'repeat(3,minmax(0,1fr))';
+
+    return {
+      showPanel: this.props.showPanel ?? true,
+      pageBtns: PAGES.map(([r, l]) => pBtn(s.route === r, l, () => this.go(r))),
+      widthBtns: [1280, 360].map(w => pBtn(s.width === w, w + ' px', () => this.setState({ width: w, menu: false, filters: false }))),
+      themeBtns: [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(([v, l]) => pBtn(s.theme === v, l, () => this.setState({ theme: v }))),
+      stateGroups: STATE_GROUPS.map(g => ({ label: g.label, opts: g.opts.map(([v, l]) => ({ v, l })) })),
+      ui, onUi: e => this.setUi(e.target.value), path: pathMap[s.route],
+      frameRef: this.frameRef, onFrameScroll: this.onFrameScroll, theme, frameW: s.width + 'px',
+      isM, isD, gutter: isM ? '16px' : '24px', padTop: isM ? '24px' : '32px', h1: isM ? '24px' : '32px',
+      tap: isM ? '44px' : '32px', tapS: isM ? '44px' : '28px', ctlH: isM ? '44px' : '36px', rowH: isM ? '44px' : '30px', chipH: isM ? '44px' : '28px', boxPad: isM ? '16px' : '24px',
+      skipLabel: routeIs('home') && !empty ? 'Skip to results' : 'Skip to content',
+      skip: e => { e.preventDefault(); const f = this.frameRef.current; const id = routeIs('home') && !empty ? 'results' : 'main'; const el = f && f.querySelector('#' + id); if (el) { f.scrollTo({ top: el.getBoundingClientRect().top - f.getBoundingClientRect().top + f.scrollTop - 72 }); el.focus({ preventScroll: true }); } },
+      goHome: nav('home'), goPlugin: nav('plugin'), goGuide: nav('guide'), goStats: nav('stats'), goWhatsNew: nav('whatsnew'),
+      goReview: goArt(ARTS[0]), goAuthors: nav('guide', {}, () => this.scrollToId('g-authors')),
+      navItems, themeSeg, menuOpen: s.menu, menuShown: isM && s.menu, menuLabel: s.menu ? 'Close' : 'Menu', toggleMenu: () => this.setState(st => ({ menu: !st.menu })),
+      showStale: ui === 'stale' && routeIs('home'), resetUi: () => this.setState({ ui: 'none' }),
+      isHome: routeIs('home'), isPlugin: routeIs('plugin'), isArtifact: routeIs('artifact'), isWhatsNew: routeIs('whatsnew'), isStats: routeIs('stats'), isGuide: routeIs('guide'), is404: routeIs('404'),
+      cps,
+      showOb: s.ob && !noJs && !empty, obDismiss: () => this.setState({ ob: false }), obCols: isM ? 'minmax(0,1fr)' : 'repeat(3,minmax(0,1fr))',
+      obSteps: [{ n: '1', title: 'Add the marketplace', text: 'Run once in Claude Code.', c: cps.ob1 }, { n: '2', title: 'Install a plugin', text: 'Installs all of its skills, agents and hooks.', c: cps.ob2 }, { n: '3', title: 'Find and invoke', text: 'Search below and copy the command.', c: cps.ob3 }],
+      strip: empty ? [{ n: '0', l: 'plugins' }, { n: '0', l: 'artifacts' }] : [{ n: '1', l: 'plugin' }, { n: '9', l: 'artifacts' }, { n: '14', l: 'tags' }, { n: 'Oct 14, 2026', l: 'last release' }],
+      showSearch: !noJs && !empty, queryVal: searchOn ? s.query : '', searchDisabled: !searchOn, inputOpacity: searchOn ? 1 : 0.6,
+      onQuery: e => this.setState({ query: e.target.value, ...(e.target.value === '' ? { qTypeOff: '' } : {}) }),
+      onQueryKey: e => { if (e.key === 'Escape') this.setState({ query: '', qTypeOff: '' }); },
+      clearQuery: () => this.setState({ query: '', qTypeOff: '' }), hasQuery: searchOn && s.query.length > 0,
+      isPreparing: ui === 'preparing', spinner,
+      showBanner: ui === 'catalogError' || ui === 'offline',
+      bannerText: ui === 'offline' ? "You're offline. The list below is current as of the last build." : "Couldn't load search. The list below is current as of the last build.",
+      showExamples: searchOn && !s.query,
+      examples: ['skill for PR review', 'security agent', 'pre-commit hooks'].map(l => ({ label: l, go: () => this.setState({ query: l, qTypeOff: '' }) })),
+      showNew: !q && !nActive && !empty, newItems: ARTS.filter(a => a.fresh).map(a => ({ name: a.name, badge: badge(a.type), fresh: FRESH[a.fresh], date: a.updated, href: artHref(a), go: goArt(a) })), cols3: c3,
+      isEmpty: empty, showCatalog: !empty,
+      homeCols: isM || noJs ? 'minmax(0,1fr)' : '240px minmax(0,1fr)', homeGap: isM ? '16px' : '32px', asidePos: isM ? 'static' : 'sticky',
+      showFilters: !noJs, filtersVisible: isD || s.filters, filtersOpen: s.filters, toggleFilters: () => this.setState(st => ({ filters: !st.filters })),
+      filtersBtnLabel: 'Filters (' + nActive + ')', filtersChev: s.filters ? '▴' : '▾',
+      typeFacets, tagFacets, freshFacets, chips, hasChips: nActive > 0, clearFilters, resultLabel,
+      noResults: n === 0, noResTitle: q ? 'No artifacts match “' + q + '”' : 'No artifacts match these filters',
+      popularTags: ['review', 'security', 'pr', 'tests'].map(t => ({ name: t, n: tagCount[t], go: () => this.setState({ query: '', qTypeOff: '', tagF: [t], typeF: [], freshF: [], ui: ui === 'noResults' ? 'none' : ui }) })),
+      cards, gridCols: isM ? 'minmax(0,1fr)' : (noJs ? 'repeat(3,minmax(0,1fr))' : 'repeat(3,minmax(0,1fr))'),
+      pluginBadge: badge('plugin'), val, isExternal: ext, notExternal: !ext, isValFail: vf,
+      tipShown: vu && s.tip, tipOn: () => vu && this.setState({ tip: true }), tipOff: () => this.setState({ tip: false }),
+      valErrors: [{ file: 'plugin.json', msg: '"version" must be a valid semver string, got "0.3".' }, { file: 'agents/security-reviewer.md', msg: 'required frontmatter field "description" is missing.' }],
+      pluginCols: isM ? 'minmax(0,1fr)' : 'minmax(0,1fr) 300px', listCols,
+      contents: TYPE_ORDER.map(t => ({ badge: { ...badge(t), label: TP[t] }, count: String(ARTS.filter(a => a.type === t).length) })),
+      pluginGroups, readme: README,
+      versions: [{ version: '0.3.0', summary: '2 added, 1 updated, 1 removed', date: 'Oct 14, 2026', commit: 'a1b2c3d' }, { version: '0.2.0', summary: '4 added', date: 'Oct 2, 2026', commit: '9f8e7d6' }, { version: '0.1.0', summary: 'Plugin added with 4 artifacts', date: 'Sep 16, 2026', commit: '3c4d5e6' }],
+      verCols: isM ? 'minmax(0,1fr)' : '72px minmax(0,1fr) auto',
+      pluginMeta: [{ k: 'Version', v: '0.3.0', ff: MONO }, { k: 'Category', v: 'code-review', ff: MONO }, { k: 'Author', v: 'DevDigest', ff: 'inherit' }, { k: 'Artifacts', v: ext ? 'Unavailable' : '9', ff: 'inherit' }, { k: 'Last release', v: 'Oct 14, 2026', ff: 'inherit' }, { k: 'Source', v: ext ? 'github.com/devdigest/claude-plugin' : 'plugins/devdigest', ff: MONO }],
+      pluginTags: PLUGIN_TAGS,
+      art, artCols: isM ? 'minmax(0,1fr)' : 'minmax(0,1fr) 300px',
+      relPlugin: s.relPlugin, onRelPlugin: e => this.setState({ relPlugin: e.target.value }), noReleases, hasReleases: !noReleases, months, skillBadge: badge('skill'), relCols: isM ? 'minmax(0,1fr)' : '104px minmax(0,1fr)',
+      tileCols: isM ? 'repeat(2,minmax(0,1fr))' : 'repeat(4,minmax(0,1fr))', typeTileCols: isM ? 'repeat(2,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))', halfCols: isM ? 'minmax(0,1fr)' : 'repeat(2,minmax(0,1fr))',
+      summaryTiles: [{ n: '1', l: 'Plugin' }, { n: '9', l: 'Artifacts' }, { n: '14', l: 'Tags' }, { n: '1', l: 'Author' }],
+      typeTiles: TYPE_ORDER.map(t => ({ n: String(ARTS.filter(a => a.type === t).length), l: TP[t], icon: ICON[t], color: 'var(--t-' + t + ')' })),
+      chart, chartTable: s.chartTable, chartTableLabel: s.chartTable ? 'Hide table' : 'Show as table', toggleChartTable: () => this.setState(st => ({ chartTable: !st.chartTable })), growthHead, growthRows,
+      freshRows: [{ k: 'Last release', v: 'Oct 14, 2026', color: 'var(--text)' }, { k: 'Releases in 30 days', v: '2', color: 'var(--text)' }, { k: 'Releases in 90 days', v: '3', color: 'var(--text)' }, { k: 'Unreleased changes', v: '1', color: 'var(--warning)' }],
+      qualityRows: [{ k: 'Validation', v: vf ? '1 fail' : vu ? '1 not verified' : '1 pass', color: vf ? 'var(--danger)' : vu ? 'var(--text-muted)' : 'var(--success)' }, { k: 'Description present', v: '9 of 9', color: 'var(--text)' }, { k: 'README present', v: '1 of 1', color: 'var(--text)' }],
+      plugRowCols: isM ? 'minmax(0,1fr) auto' : 'minmax(0,1.4fr) 90px 90px 140px 170px', plugRowBt: isM ? 'transparent' : 'var(--border)',
+      plugCell: { version: '0.3.0', arts: isM ? '9 artifacts' : '9', date: 'Oct 14, 2026' },
+      tagStats, showGithub: ui !== 'noGithub',
+      ghTiles: [{ n: '12', l: 'Stars' }, { n: '2', l: 'Forks' }, { n: '3', l: 'Open issues' }, { n: '2', l: 'Contributors' }],
+      notHere: [
+        { k: 'Install and download counts', v: "Claude Code doesn't report installs to marketplaces, and this site collects no visitor data." },
+        { k: 'Page views and popular searches', v: 'Search runs in your browser. Queries are never sent anywhere.' },
+        { k: 'Ratings and reviews', v: 'The catalog is a static site with no accounts or backend. Use GitHub issues for feedback.' }
+      ],
+      guideCols: isM ? 'minmax(0,1fr)' : '220px minmax(0,1fr)', guideGap: isM ? '24px' : '48px',
+      toc: TOC.map(([id, label]) => { const on = s.guideActive === id; return { label, href: '#' + id, go: e => { e.preventDefault(); this.scrollToId(id); }, current: on ? 'location' : undefined, bc: on ? 'var(--accent)' : 'transparent', color: on ? 'var(--text)' : 'var(--text-muted)', weight: on ? 600 : 400 }; }),
+      typesCols: isM ? 'minmax(0,1fr)' : '120px minmax(0,1fr) minmax(0,1fr)', probCols: isM ? 'minmax(0,1fr)' : 'repeat(3,minmax(0,1fr))',
+      typesTable: TYPES_TABLE.map(([t, what, how], i) => ({ badge: badge(t), what, how: segs(how), bt: isM && !i ? 'transparent' : 'var(--border)' })),
+      problems: PROBLEMS.map(([p, c, f], i) => ({ p: segs(p), c: segs(c), f: segs(f), bt: isM && !i ? 'transparent' : 'var(--border)' })),
+      nf: s.nf, onNf: e => this.setState({ nf: e.target.value }), nfSubmit: e => { e.preventDefault(); this.go('home', { query: s.nf, nf: '', ui: 'none', typeF: [], tagF: [], freshF: [] }); },
+      footNoteMl: isM ? '0' : 'auto'
+    };
+  }
+}
+</script>
+</body>
+</html>

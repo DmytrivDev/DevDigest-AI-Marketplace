@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import { url } from '../lib/url';
+---
+<Base title="Page not found" description="Nothing lives at this address." path="404.html" noindex>
+  <div class="page-body" style="padding-top:48px;padding-bottom:48px">
+    <div class="narrow-560 stack" style="gap:16px">
+      <span class="mono muted" style="font-size:13px">404</span>
+      <h1 class="h1">Page not found</h1>
+      <p class="muted" style="font-size:16px">Nothing lives at this address. If it was an artifact, it may have been renamed or removed in a recent release.</p>
+      <form role="search" action={url()} method="get" class="nf-form">
+        <label for="nf-q" class="sr-only">Search artifacts</label>
+        <input id="nf-q" name="q" type="text" placeholder="Search the catalog" autocomplete="off" />
+        <button type="submit" class="btn-primary" style="height:44px">Search</button>
+      </form>
+      <div class="link-row">
+        <a href={url('guide/')}>Read the guide →</a>
+        <a href={url()}>Back to the catalog</a>
+      </div>
+    </div>
+  </div>
+</Base>

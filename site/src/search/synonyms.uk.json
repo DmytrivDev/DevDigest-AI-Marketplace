@@ -1,0 +1,232 @@
+{
+  "ревю": [
+    "review"
+  ],
+  "огляд": [
+    "review"
+  ],
+  "перегляд": [
+    "review"
+  ],
+  "рецензія": [
+    "review"
+  ],
+  "перевірка": [
+    "review",
+    "check"
+  ],
+  "перевірити": [
+    "review",
+    "check"
+  ],
+  "reviews": [
+    "review"
+  ],
+  "reviewer": [
+    "review"
+  ],
+  "пр": [
+    "pr",
+    "pull request"
+  ],
+  "пулреквест": [
+    "pull request",
+    "pr"
+  ],
+  "pr": [
+    "pull request"
+  ],
+  "запит": [
+    "request"
+  ],
+  "зміни": [
+    "diff",
+    "change"
+  ],
+  "різниця": [
+    "diff"
+  ],
+  "дифф": [
+    "diff"
+  ],
+  "діф": [
+    "diff"
+  ],
+  "безпека": [
+    "security"
+  ],
+  "безпечний": [
+    "security"
+  ],
+  "уразливість": [
+    "vulnerability",
+    "security"
+  ],
+  "вразливість": [
+    "vulnerability",
+    "security"
+  ],
+  "секрет": [
+    "secret"
+  ],
+  "ключ": [
+    "key",
+    "secret"
+  ],
+  "пароль": [
+    "secret",
+    "password"
+  ],
+  "тест": [
+    "tests",
+    "test"
+  ],
+  "тестування": [
+    "tests",
+    "test"
+  ],
+  "якість": [
+    "quality"
+  ],
+  "коміт": [
+    "commit"
+  ],
+  "гіт": [
+    "git"
+  ],
+  "гілка": [
+    "branch"
+  ],
+  "злиття": [
+    "merge"
+  ],
+  "залежність": [
+    "dependencies",
+    "dependency"
+  ],
+  "залежності": [
+    "dependencies",
+    "dependency"
+  ],
+  "бібліотека": [
+    "dependencies",
+    "library"
+  ],
+  "ліцензія": [
+    "license"
+  ],
+  "продуктивність": [
+    "performance"
+  ],
+  "швидкість": [
+    "performance"
+  ],
+  "оптимізація": [
+    "performance"
+  ],
+  "документація": [
+    "docs",
+    "documentation"
+  ],
+  "документ": [
+    "docs",
+    "documentation"
+  ],
+  "опис": [
+    "summary",
+    "description"
+  ],
+  "підсумок": [
+    "summary"
+  ],
+  "резюме": [
+    "summary"
+  ],
+  "короткий": [
+    "brief",
+    "summary"
+  ],
+  "стислий": [
+    "brief",
+    "summary"
+  ],
+  "помилка": [
+    "error",
+    "bug"
+  ],
+  "баг": [
+    "bug"
+  ],
+  "налагодження": [
+    "debug"
+  ],
+  "дебаг": [
+    "debug"
+  ],
+  "рефакторинг": [
+    "refactor"
+  ],
+  "код": [
+    "code"
+  ],
+  "ci": [
+    "github-actions",
+    "ci"
+  ],
+  "пайплайн": [
+    "ci",
+    "pipeline"
+  ],
+  "збірка": [
+    "build",
+    "ci"
+  ],
+  "релізи": [
+    "release"
+  ],
+  "версія": [
+    "version"
+  ],
+  "експорт": [
+    "export"
+  ],
+  "блокувати": [
+    "block"
+  ],
+  "заблокувати": [
+    "block"
+  ],
+  "запобігти": [
+    "block",
+    "prevent"
+  ],
+  "сервер": [
+    "server",
+    "mcp"
+  ],
+  "інструмент": [
+    "tool"
+  ],
+  "налаштування": [
+    "config",
+    "settings"
+  ],
+  "конфіг": [
+    "config"
+  ],
+  "подія": [
+    "event"
+  ],
+  "перед": [
+    "pre"
+  ],
+  "secrets": [
+    "secret"
+  ],
+  "tests": [
+    "test"
+  ],
+  "dependencies": [
+    "dependenc"
+  ]
+}

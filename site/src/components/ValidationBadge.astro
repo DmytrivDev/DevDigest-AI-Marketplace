@@ -1,0 +1,16 @@
+---
+import { IC_CHECK, IC_Q, IC_X } from '../lib/icons';
+import type { ValidationStatus } from '../lib/types';
+interface Props { status: ValidationStatus; tip?: string; id?: string }
+const { status, tip, id = 'val-tip' } = Astro.props;
+const label = status === 'pass' ? 'Validation passed' : status === 'fail' ? 'Validation failed' : 'Not verified';
+const icon = status === 'pass' ? IC_CHECK : status === 'fail' ? IC_X : IC_Q;
+---
+{status === 'unknown' && tip ? (
+  <span class="tipwrap">
+    <span class="vbadge vbadge--unknown" tabindex="0" aria-describedby={id}><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d={icon}></path></svg><span>{label}</span></span>
+    <span id={id} role="tooltip" class="tip">{tip}</span>
+  </span>
+) : (
+  <span class={`vbadge vbadge--${status}`}><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d={icon}></path></svg><span>{label}</span></span>
+)}

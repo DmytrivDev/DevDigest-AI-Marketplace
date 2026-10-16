@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-16T12:00:00Z",
+  "commit": "45adf15e3b1c9d27a05f6b84c21d90e7f3a6b5c8",
+  "historyStart": "2026-09-16T08:00:00Z",
+  "truncated": false,
+  "releases": [
+    {
+      "id": "devdigest@0.3.0",
+      "kind": "release",
+      "plugin": "devdigest",
+      "version": "0.3.0",
+      "previousVersion": "0.2.0",
+      "date": "2026-10-14T10:00:00Z",
+      "commit": "a1b2c3d",
+      "changes": {
+        "added": [
+          {
+            "id": "devdigest:skill:review",
+            "type": "skill",
+            "name": "review",
+            "exists": true
+          },
+          {
+            "id": "devdigest:skill:pr-brief",
+            "type": "skill",
+            "name": "pr-brief",
+            "exists": true
+          }
+        ],
+        "updated": [
+          {
+            "id": "devdigest:agent:security-reviewer",
+            "type": "agent",
+            "name": "security-reviewer",
+            "exists": true
+          }
+        ],
+        "removed": [
+          {
+            "id": "devdigest:command:summarize",
+            "type": "command",
+            "name": "summarize",
+            "exists": false
+          }
+        ]
+      },
+      "notes": {
+        "source": "changelog",
+        "html": "<ul><li>New <code>review</code> skill reports findings grouped by severity, with file and line references.</li><li><code>pr-brief</code> gives late reviewers a short brief of the change.</li><li><code>security-reviewer</code> now also checks config files for leaked secrets.</li><li><code>summarize</code> is removed. Use <code>pr-brief</code> instead.</li></ul>"
+      },
+      "counts": {
+        "plugin": 0,
+        "skill": 3,
+        "agent": 3,
+        "command": 1,
+        "hook": 1,
+        "mcp": 1
+      }
+    },
+    {
+      "id": "devdigest@0.2.0",
+      "kind": "release",
+      "plugin": "devdigest",
+      "version": "0.2.0",
+      "previousVersion": "0.1.0",
+      "date": "2026-10-02T09:00:00Z",
+      "commit": "9f8e7d6",
+      "changes": {
+        "added": [
+          {
+            "id": "devdigest:skill:dependency-checker",
+            "type": "skill",
+            "name": "dependency-checker",
+            "exists": true
+          },
+          {
+            "id": "devdigest:agent:test-quality-reviewer",
+            "type": "agent",
+            "name": "test-quality-reviewer",
+            "exists": true
+          },
+          {
+            "id": "devdigest:agent:performance-reviewer",
+            "type": "agent",
+            "name": "performance-reviewer",
+            "exists": true
+          },
+          {
+            "id": "devdigest:command:export-ci",
+            "type": "command",
+            "name": "export-ci",
+            "exists": true
+          }
+        ],
+        "updated": [],
+        "removed": []
+      },
+      "notes": {
+        "source": "changelog",
+        "html": "<ul><li>Two new review agents for tests and performance.</li><li><code>export-ci</code> writes a GitHub Actions workflow for any review agent.</li><li><code>dependency-checker</code> flags license and vulnerability issues in new dependencies.</li></ul>"
+      },
+      "counts": {
+        "plugin": 0,
+        "skill": 1,
+        "agent": 3,
+        "command": 2,
+        "hook": 1,
+        "mcp": 1
+      }
+    },
+    {
+      "id": "devdigest@added",
+      "kind": "plugin-added",
+      "plugin": "devdigest",
+      "version": "0.1.0",
+      "previousVersion": null,
+      "date": "2026-09-16T08:00:00Z",
+      "commit": "3c4d5e6",
+      "changes": {
+        "added": [
+          {
+            "id": "devdigest:agent:security-reviewer",
+            "type": "agent",
+            "name": "security-reviewer",
+            "exists": true
+          },
+          {
+            "id": "devdigest:hook:pre-tool-use-bash",
+            "type": "hook",
+            "name": "pre-tool-use-bash",
+            "exists": true
+          },
+          {
+            "id": "devdigest:mcp:devdigest",
+            "type": "mcp",
+            "name": "devdigest",
+            "exists": true
+          },
+          {
+            "id": "devdigest:command:summarize",
+            "type": "command",
+            "name": "summarize",
+            "exists": false
+          }
+        ],
+        "updated": [],
+        "removed": []
+      },
+      "notes": {
+        "source": "changelog",
+        "html": "<ul><li>First release: the security review agent, a hook that blocks commits with secrets, and the MCP server.</li></ul>"
+      },
+      "counts": {
+        "plugin": 0,
+        "skill": 0,
+        "agent": 1,
+        "command": 1,
+        "hook": 1,
+        "mcp": 1
+      }
+    }
+  ],
+  "pending": [
+    {
+      "plugin": "devdigest",
+      "since": "0.3.0",
+      "changes": {
+        "added": [],
+        "updated": [
+          {
+            "id": "devdigest:skill:review",
+            "type": "skill",
+            "name": "review",
+            "exists": true
+          }
+        ],
+        "removed": []
+      }
+    }
+  ]
+}

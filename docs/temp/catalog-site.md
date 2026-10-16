@@ -48,7 +48,7 @@ and its git history.
 | Decision | Choice | Rationale | Rejected alternatives |
 |---|---|---|---|
 | Site generator | **Astro** (static mode, `output: 'static'`) | Generates a separate HTML page per artifact without an SPA fallback, which Pages requires. Static pages ship without JS. Reads repository files natively at build time. Built-in code highlighting (Shiki) | **Vite SPA**: needs hash routing, pages are not indexed. **Jekyll**: Ruby, hard to write a custom indexer, no TS. **Next.js static export**: heavier than needed |
-| Interactivity | **Preact** as an Astro island for the search block only | ~4 KB gzip. One card component renders both statically (no hydration) on plugin pages and dynamically in search results | React (10× larger), plain TS (duplicated card markup) |
+| Interactivity | **React** (`@astrojs/react`, 18.3) as an Astro island for the search block only | User preference, and the design prototype is React too. ~45 KB gzip for the runtime, which is why the home page JS budget is 80 KB (section 13). One card component renders on the server for the static list and in the browser for results | Preact (smaller, ~4 KB), plain TS (duplicated card markup) |
 | Search engine | **MiniSearch** | ~7 KB gzip, field boosts, prefix and fuzzy, custom `tokenize`/`processTerm` for Ukrainian stemming and synonyms, returns matched terms for highlighting | **Fuse.js**: linear scan, no index, no tokenizer. **Lunr**: unmaintained, weak fuzzy. **Pagefind**: indexes HTML rather than structured fields; hard to control types and facets |
 | Language | **TypeScript** (strict) | Shared data model types for the indexer and the client | — |
 | Styles | Plain CSS with custom properties | Minimal weight, light/dark themes via tokens | Tailwind (an extra build step for a small site) |
@@ -862,6 +862,10 @@ Initial common problems:
 
 Manual setup: Settings → Pages → Source = **GitHub Actions**.
 
+**Real data only.** The site renders only what exists in the repository: `.claude-plugin/`, `plugins/**` and git history. There is no demo build or sample data in the output. Sample data (the design prototype's artifacts) lives under `site/tests/fixtures/` and is used by unit tests only; `npm run build` fails if any fixture-only name appears in `dist/`.
+
+**Phase 1 build.** The workflow runs `npm ci`, `npm test` and `npm run build` in `site/`, and publishes `site/dist` with `.nojekyll`. Validation (5.4) runs `claude plugin validate` when the CLI is available and falls back to `unknown`. Playwright, the budget script and Lighthouse are phase 2 (see section 15).
+
 ## 12. Security
 
 - Markdown from plugins (artifact bodies, `README.md`, `CHANGELOG.md`) is sanitized
@@ -886,7 +890,7 @@ Manual setup: Settings → Pages → Source = **GitHub Actions**.
 
 | Metric | Budget |
 |---|---|
-| Home page JS | ≤ 40 KB gzip (search, filters, onboarding, counter) |
+| Home page JS | ≤ 80 KB gzip (search, filters, onboarding, counter). Raised from 40 KB because the island uses React |
 | Other pages' JS | ≤ 5 KB gzip (copy, theme, What's new counter) |
 | `catalog.json` | ≤ 200 KB gzip (checked in CI, warning from 150 KB) |
 | `changelog.json` | ≤ 100 KB gzip |
@@ -963,6 +967,15 @@ Manual setup: Settings → Pages → Source = **GitHub Actions**.
 11. Every state in table 7.7 can be reproduced by hand or by a test and matches its description.
 12. All tests from section 14 are green and the budgets from section 13 are met.
 13. Pages pass a keyboard check and meet AA contrast in both themes.
+
+### Deferred to phase 2
+
+Phase 1 (the first implementation, see `implementation-plan.md`) does not cover these criteria or parts of them:
+
+- Criterion 8, RSS part (`/feed.xml`, 8.5): the RSS links are left out of the pages until the feed exists.
+- Criterion 12, Playwright smoke and axe checks (section 14), the size budget script and Lighthouse (section 13), and the CSP `<meta>` with script hashes (section 12).
+- Sitemap, `robots.txt` and the Open Graph image (7.9).
+- Criterion 11 is covered by the UI for every state that applies to the phase 1 pages, but not by automated browser tests.
 
 ## 16. Roadmap
 
