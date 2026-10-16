@@ -1,7 +1,7 @@
 # DevDigest Marketplace site
 
 Static catalog of the marketplace, built with Astro and published on GitHub Pages at
-<https://dmytrivdev.github.io/DevDigest-AI-Marketplace/>. Spec: `docs/temp/catalog-site.md`.
+<https://dmytrivdev.github.io/DevDigest-AI-Marketplace/>. Spec: `docs/SITE-SPEC.md`.
 
 ## Run it locally
 
@@ -47,8 +47,9 @@ Environment variables (all optional): `DD_REPO_ROOT` (repository to read, defaul
 Real data only. Nothing on the site is sample data.
 
 1. **Catalog** (`src/data/build-catalog.ts`): `.claude-plugin/marketplace.json`, each plugin's
-   `plugin.json`, its skills, agents, commands, hooks, MCP servers and `README.md`. Rules:
-   spec section 5. Broken YAML or JSON fails the build with file and line.
+   `plugin.json` (including `dependencies`, with the reverse "used by" edges computed here),
+   its `COMPATIBILITY.md`, skills, agents, commands, hooks, MCP servers and `README.md`.
+   Rules: spec section 5. Broken YAML or JSON fails the build with file and line.
 2. **Changelog** (`src/data/build-changelog.ts`): `git log` and `git ls-tree` snapshots, no checkout.
    A release is a `version` change in `plugin.json`, a plugin added or removed. Notes come from the
    plugin's `CHANGELOG.md` (`## [x.y.z]`) or else from commit subjects.
@@ -60,6 +61,17 @@ Real data only. Nothing on the site is sample data.
 Build output also contains `api/catalog.json`, `api/changelog.json`, `api/releases-head.json`,
 `api/stats.json`, the release RSS `feed.xml` (last 50 releases), `sitemap-index.xml`, `robots.txt`
 and the Open Graph image `og.png`.
+
+**There is no separate `build:index` step.** The index (catalog, changelog and stats JSON) is
+built inside `npm run build`, from the repository as it is on disk. Generated JSON and `dist/`
+are never committed. To rebuild and look at it locally:
+
+```bash
+cd site
+npm ci
+npm run build      # indexes plugins/ and .claude-plugin/, then builds the pages
+npm run preview    # serves dist/ under the GitHub Pages base path
+```
 
 ## Checks on the build
 

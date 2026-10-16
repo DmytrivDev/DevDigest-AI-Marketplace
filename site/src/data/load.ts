@@ -17,6 +17,8 @@ export interface SiteData {
   bodies: Record<string, string>;
   /** Plugin README markdown by plugin name. */
   readmes: Record<string, string>;
+  /** Plugin COMPATIBILITY.md markdown by plugin name. */
+  compatDocs: Record<string, string>;
   warnings: string[];
 }
 
@@ -72,5 +74,5 @@ async function loadReal(): Promise<SiteData> {
   const github = process.env.DD_SKIP_GITHUB === '1' || (dev && process.env.DD_GITHUB !== '1') ? undefined : await fetchGithub(repo, process.env.GITHUB_TOKEN);
   const stats = buildStats(catalog, changelog, github);
   built.warnings.forEach((w) => console.warn(`[catalog] ${w}`));
-  return { catalog, changelog, stats, bodies: built.bodies, readmes: built.readmes, warnings: built.warnings };
+  return { catalog, changelog, stats, bodies: built.bodies, readmes: built.readmes, compatDocs: built.compatDocs, warnings: built.warnings };
 }

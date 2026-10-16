@@ -26,6 +26,8 @@ export interface RenderOptions {
   dropFirstH1?: boolean;
   /** Where relative links point: https://github.com/<repo>/blob/<ref>/<dir>/ */
   linkBase?: string;
+  /** Prefix for heading ids (default `md-`). A second document on the same page needs its own. */
+  idPrefix?: string;
 }
 
 /** Prefix for heading ids, so markdown headings never collide with the page's own ids. */
@@ -35,24 +37,24 @@ const textOf = (node: Element | Root): string =>
   node.children.map((c) => (c.type === 'text' ? c.value : c.type === 'element' ? textOf(c) : '')).join('');
 
 /** GitHub-style heading ids (`## Evals` -> `md-evals`), added after sanitizing. */
-function headingIds() {
+function headingIds(prefix: string) {
   return (tree: Root) => {
     const slugger = new GithubSlugger();
     visit(tree, 'element', (node: Element) => {
       if (!/^h[1-6]$/.test(node.tagName)) return;
-      node.properties = { ...node.properties, id: HEADING_ID_PREFIX + slugger.slug(textOf(node)) };
+      node.properties = { ...node.properties, id: prefix + slugger.slug(textOf(node)) };
     });
   };
 }
 
-function rewriteLinks(linkBase?: string) {
+function rewriteLinks(linkBase: string | undefined, prefix: string) {
   return (tree: Root) => {
     visit(tree, 'element', (node: Element) => {
       if (node.tagName !== 'a') return;
       const href = String(node.properties?.href ?? '');
       // In-document anchors follow the prefixed heading ids; footnote links are already prefixed.
       if (href.startsWith('#') && href.length > 1 && !href.startsWith('#user-content-')) {
-        node.properties = { ...node.properties, href: `#${HEADING_ID_PREFIX}${decodeURIComponent(href.slice(1)).toLowerCase()}` };
+        node.properties = { ...node.properties, href: `#${prefix}${decodeURIComponent(href.slice(1)).toLowerCase()}` };
         return;
       }
       if (/^(https?:|mailto:)/i.test(href)) {
@@ -141,15 +143,16 @@ const schema = {
 };
 
 export async function renderMarkdown(md: string, opts: RenderOptions = {}): Promise<string> {
+  const prefix = opts.idPrefix ?? HEADING_ID_PREFIX;
   const file = await unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkRehype)
     .use(rehypeSanitize, schema)
     .use(() => shiftHeadings(opts.headingOffset ?? 0, opts.dropFirstH1 ?? false))
-    .use(headingIds)
+    .use(() => headingIds(prefix))
     .use(scrollableTables)
-    .use(() => rewriteLinks(opts.linkBase))
+    .use(() => rewriteLinks(opts.linkBase, prefix))
     .use(highlight)
     .use(rehypeStringify)
     .process(md);

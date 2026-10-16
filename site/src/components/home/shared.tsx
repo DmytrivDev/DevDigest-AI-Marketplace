@@ -18,6 +18,8 @@ export interface CardItem {
   ts: number;
   fresh?: Freshness;
   cmd: string;
+  /** Plugin cards: number of plugins it depends on (omitted when none). */
+  deps?: number;
 }
 
 export function TypeBadge({ type, label }: { type: ArtifactType; label?: string }) {

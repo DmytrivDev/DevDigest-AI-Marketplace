@@ -43,6 +43,7 @@ export interface Manifest {
   skills?: unknown;
   hooks?: unknown;
   mcpServers?: unknown;
+  dependencies?: unknown;
 }
 
 export const toSlug = (name: string): string =>
