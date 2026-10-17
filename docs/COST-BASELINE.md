@@ -15,6 +15,7 @@ machine (gitignored). How to repeat it: [§7](#7-how-to-repeat-the-measurement).
 | SDD guard-rail evals (incl. 2 negative) | 6/6 | 6/6 |
 | Critical errors (plan not written) | 1 of 3 runs | 1 of 3 runs |
 | Median cost per scenario run | $0.105 | $0.076 |
+| **Cost per successful workflow** (batch cost ÷ passed runs) | **$0.274** (1 of 3 passed) | **$0.234** (1 of 3 passed) |
 | Cost of the 3-run batch (measured) | $0.274 | $0.234 |
 | Median latency per run | 925 s | 498 s |
 | Median model calls per run | 38 | 30 |
