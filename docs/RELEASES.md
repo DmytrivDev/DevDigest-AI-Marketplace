@@ -119,7 +119,8 @@ claude plugin list --json      # expected versions, all enabled, no dependency-u
 ## 7. Rollback to a verified version
 
 Users cannot install an older version by number. A rollback is done by the publisher, by
-pointing the channel back at the last good release.
+pointing the channel back at the last good release. `claude plugin update` installs whatever
+version the channel now serves, a lower one included (verified in the rehearsal log below).
 
 **Scenario: `1.1.0` is bad, `1.0.0` was verified.**
 
@@ -155,8 +156,31 @@ throwaway config:
 CLAUDE_CONFIG_DIR=$(mktemp -d) claude plugin marketplace add DmytrivDev/DevDigest-AI-Marketplace#stable
 ```
 
-Then install, move `stable` forward, update, move it back, update, smoke — and record the
-result in the release PR.
+Then do the full cycle and record the result in the release PR:
+1. install;
+2. move `stable` forward, then update;
+3. move it back, then update;
+4. run the smoke evals.
+
+On Windows, keep the throwaway config dir short (for example `%TEMP%\sddr`). A deeply nested
+path makes the marketplace clone fail with `Filename too long`.
+
+### Rehearsal log — 2026-10-17 (`sdd-engineering` 1.0.0 → 1.1.0 → 1.0.0)
+
+Throwaway `CLAUDE_CONFIG_DIR`, Claude Code `2.1.301`, Windows 11. The marketplace was added at
+`DmytrivDev/DevDigest-AI-Marketplace#stable`.
+
+| Step | `stable` at | Action | Result |
+|---|---|---|---|
+| 1 | `08bc004` (1.0.0) | `marketplace add …#stable`, `plugin install sdd-engineering@devdigest-marketplace` | 4 plugins `1.0.0`, all enabled. `claude plugin list --json` has no `dependency-unsatisfied`, `range-conflict` or `no-matching-tag` |
+| 2a | `2cb898c` (1.1.0) | `git push origin sdd-engineering--v1.1.0^{commit}:refs/heads/stable`, then **`marketplace update` only** | Catalog clone serves `1.1.0`; installed plugins **still `1.0.0`**. Catalog update and plugin update are separate |
+| 2b | `2cb898c` | `plugin update sdd-engineering@devdigest-marketplace` | `updated from 1.0.0 to 1.1.0`. Cache gains `sdd-engineering/1.1.0` with the new `sdd-status` skill. No dependency errors |
+| 2c | `2cb898c` | eval `sdd-status-reports-state` on the stable copy (Sonnet) | **1/1 passed.** `sdd-status` printed `sdd-engineering 1.1.0 · active copy: …/sdd-engineering/.claude-plugin/plugin.json` |
+| 3 | `08bc004` (1.0.0) | `git push --force-with-lease=stable:2cb898c… origin sdd-engineering--v1.0.0^{commit}:refs/heads/stable`, `marketplace update`, `plugin update` | `updated from 1.1.0 to 1.0.0`: **a lower version installs**. All 4 plugins `1.0.0`, no dependency errors. `1.1.0` cache dir marked `.orphaned_at` |
+| 4 | `08bc004` | smoke evals (`--tag smoke`, Sonnet) on the stable copy | **3/3 passed**: `irrelevant-request-no-sdd`, `spec-creator-pass1-writes-no-file`, `workflow-retro-not-auto-triggered` |
+
+After the rehearsal, `stable` stays at the verified `1.0.0` release. Releases `1.0.1` and
+`1.1.0` are on `latest` (`main`) and tagged.
 
 ## 8. Unsafe release
 

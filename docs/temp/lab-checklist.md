@@ -232,3 +232,14 @@
 | `LICENSE` для `fastify-best-practices` (MIT) | ✅ |
 | Джерела 4 скілів знайдено: 3 з `burnjohn/quick-blog`, `next-best-practices` з `vercel-labs/next-skills` — **ліцензій немає** | ❓ потрібен дозвіл авторів або заміна до тегу `1.0.0` |
 | `--strict` лишається — він задокументований у CLI reference | ✅ |
+
+## Стан на 2026-10-17 (вечір)
+
+| Пункт здачі | Стан |
+|---|---|
+| Теги `<plugin>--v1.0.0` (4 шт.), `sdd-engineering--v1.0.1`, `sdd-engineering--v1.1.0` | ✅ |
+| `1.1.0`: скіл `/sdd-engineering:sdd-status` (показує активну версію) + eval 3/3 (Sonnet) | ✅ |
+| Канал `stable` (гілка) → 1.0.0; репетиція 1.0.0 → 1.1.0 → 1.0.0, smoke eval 3/3 | ✅ `docs/RELEASES.md` §7 rehearsal log |
+| Cost per successful workflow до/після | ✅ `docs/COST-BASELINE.md` |
+| PR у проєкті з плагіном | ✅ DmytrivDev/FFS#2 |
+| Демо-відео | ⏳ записати за сценарієм |
