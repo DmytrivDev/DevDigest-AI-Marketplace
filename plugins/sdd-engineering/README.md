@@ -58,6 +58,7 @@ Details, and the features this plugin relies on: [`COMPATIBILITY.md`](COMPATIBIL
 | `implementer` | agent (Sonnet) | `sdd-engineering:implementer` | Executes a plan, one lane or one phase of it, or a list of findings (fix mode). Loads the routed stack skills, writes code, runs the configured checks, reports per item. | Dispatched by `run-plan`; or by name |
 | `plan-verifier` | agent (Sonnet) | `sdd-engineering:plan-verifier` | Read-only. Settles the working tree against the plan: exactly one verdict row per work item and one per requirement. | Dispatched by `run-plan`; or by name |
 | `run-plan` | skill (command) | `/sdd-engineering:run-plan` | Orchestrates the implementation half: preflight → implement → integrate → verify ⟲ fix → review ⟲ fix → final verify → report. Never commits. | **Manual only** |
+| `sdd-status` | skill (command) | `/sdd-engineering:sdd-status` | Read-only status: the **active plugin version** (from the installed copy's own manifest, with its path), config, specs by status, open markers, plans, verify packages, dependencies, and the next step. | **Manual only** |
 | `workflow-retro` | skill (command) | `/sdd-engineering:workflow-retro` | Retrospective of a finished multi-agent run: agents, order, tokens, what was hard, duplicated or lost, plus proposals. Appends one entry to the retro ledger. | **Manual only** |
 | `engineering-insights` | skill | `/sdd-engineering:engineering-insights` | Captures durable, non-obvious learnings (gotchas, what worked, dead ends, conventions, recurring errors) into the knowledge file of the area the work touched: reads it first, dedups, appends through a script that cannot overwrite, rebuilds a line-numbered index. Main session only, never a subagent. | On request, at the end of substantial work, "wrap up", "save this learning" |
 | `sdd-format` | skill (reference) | `sdd-engineering:sdd-format` | The shared contract: config keys, spec template, EARS rules, `[NEEDS CLARIFICATION]` grammar and checker, plan template, routing table, verification rules. | Preloaded into the four agents and loaded by `run-plan`; not shown in the `/` menu |
@@ -493,6 +494,7 @@ totals are dominated by cheap cache reads.
 | `implementer` | Read, Grep, Glob, Edit, Write, Bash, Skill | the files of its plan, lane, phase or findings list | commit, push, branch or PR; weaken a test; run commands outside config `verify` and the plan; destroy local data |
 | `plan-verifier` | Read, Grep, Glob, Bash (read and check), Skill | nothing | edit anything; run state-changing git |
 | `run-plan` (your session) | your session's tools | its ledger; the `verify` key of the config, with your yes; a new branch, with your yes | commit, push or PR; edit the spec or the plan; write production code |
+| `sdd-status` (your session) | `Read`, `Glob`, `Grep` | nothing | write any file, run a shell, dispatch an agent |
 | `workflow-retro` (your session) | your session's tools | scratch files; one appended entry in the retro ledger, through its script | edit agents, skills, specs, plans or knowledge files |
 | `engineering-insights` (your session) | your session's tools | appended entries in a `knowledgeFiles` file and its `.index.md`, through its scripts; a new knowledge file or the `knowledgeFiles` key, with your yes | run inside a subagent; edit or reorder existing entries |
 | `architecture-review:architecture-reviewer` | Read, Grep, Glob | nothing | — |
@@ -513,7 +515,7 @@ totals are dominated by cheap cache reads.
 
 ## Evals
 
-Seven `claude plugin eval` cases in [`evals/`](evals/): six check the guard rails of the pipeline, and one is the fixed scenario of the cost baseline ([`docs/COST-BASELINE.md`](https://github.com/DmytrivDev/DevDigest-AI-Marketplace/blob/main/docs/COST-BASELINE.md) in the marketplace repo):
+Eight `claude plugin eval` cases in [`evals/`](evals/): six check the guard rails of the pipeline, one checks `sdd-status`, and one is the fixed scenario of the cost baseline ([`docs/COST-BASELINE.md`](https://github.com/DmytrivDev/DevDigest-AI-Marketplace/blob/main/docs/COST-BASELINE.md) in the marketplace repo):
 
 | Case | Pass means |
 |---|---|
@@ -523,6 +525,7 @@ Seven `claude plugin eval` cases in [`evals/`](evals/): six check the guard rail
 | `run-plan-preflight-stops-on-marker` | `run-plan` stops in preflight; no implementer is dispatched |
 | `workflow-retro-not-auto-triggered` | "the run finished" does not start a retro |
 | `irrelevant-request-no-sdd` | an everyday coding question does not start the pipeline (negative) |
+| `sdd-status-reports-state` | `/sdd-engineering:sdd-status` prints the active version and its path, spec counts, markers, plans and the right next step, read-only (new in 1.1.0) |
 | `baseline-spec-and-plan` | the cost-baseline scenario: spec-creator writes a spec and implementation-planner a plan for one small feature, judged for format and scope |
 
 Three cases carry a tiny sample project (a spec, a plan, a few source files) in a

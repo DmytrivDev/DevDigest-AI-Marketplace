@@ -4,6 +4,17 @@ All notable changes to `sdd-engineering` are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin
 uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] — 2026-10-17
+
+### Added
+
+- Skill `/sdd-engineering:sdd-status` (manual only, read-only). It shows the active plugin
+  version, read from the running copy's own `plugin.json`, with that copy's path, so you can
+  see which release is live after an update or a rollback. It also shows the project config,
+  specs by status, open `[NEEDS CLARIFICATION]` markers, plans, verify packages, dependencies,
+  and the one next step.
+- Eval case `sdd-status-reports-state` for the new skill.
+
 ## [1.0.1] — 2026-10-17
 
 ### Fixed
@@ -63,3 +74,4 @@ First release: the Spec Driven Development pipeline, spec → plan → run → v
 
 [1.0.0]: https://github.com/DmytrivDev/DevDigest-AI-Marketplace/releases/tag/sdd-engineering--v1.0.0
 [1.0.1]: https://github.com/DmytrivDev/DevDigest-AI-Marketplace/releases/tag/sdd-engineering--v1.0.1
+[1.1.0]: https://github.com/DmytrivDev/DevDigest-AI-Marketplace/releases/tag/sdd-engineering--v1.1.0

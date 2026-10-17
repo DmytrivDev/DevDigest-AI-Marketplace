@@ -13,7 +13,7 @@
 
 - Dependencies `engineering-paved-path`, `research-tools` and `architecture-review`, each `^1.0.0` (version-constrained `dependencies`, Claude Code `>=2.1.110`).
 - Plugin subagents with `model`, `maxTurns`, `tools` and `skills` frontmatter.
-- Skills with `disable-model-invocation: true` (`run-plan`, `workflow-retro`), which only run when you invoke them.
+- Skills with `disable-model-invocation: true` (`run-plan`, `workflow-retro`, `sdd-status`), which only run when you invoke them.
 - The `${CLAUDE_SKILL_DIR}` and `${CLAUDE_PLUGIN_ROOT}` substitutions for bundled scripts.
 - The same namespaced `skills:` preload and `Skill`-tool fallback as `architecture-review`.
 - `claude plugin eval` for the cases in `evals/`.
