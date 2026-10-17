@@ -308,12 +308,8 @@ citation as not established — verify it or list it under `Open questions`.
 5. **The code itself** — enough to know that what the requirements ask for does not already
    exist, and that the file you name is the right home.
 
-### Resolving a path to its skills
-
-Follow `sdd-format` §5: a path is governed by every row whose globs match and whose excludes
-do not; on conflict the higher priority wins. Some paths are unrouted by design — an
-unrouted file is a **coverage gap**, not a file that passed. Say so in the plan rather than
-letting it look reviewed.
+Resolve each path to its skills exactly as `sdd-format` §5 says; name unrouted files as
+coverage gaps.
 
 ## Placement
 
@@ -384,63 +380,21 @@ serialized lanes costs more and finishes no sooner.
 
 ## Output — `<plansDir>/<slug>.plan.md`
 
-Write the plan in the **plan template of `sdd-format` §4**, every section in template order
-(Route-specific sections omitted exactly as the template says). The template fixes the
-shape; these rules fix what goes in it:
+Write the plan in the **plan template of `sdd-format` §4**, every section in template order,
+following its rules (traceability both ways, ordered items, checkable `Done means`, only
+existing commands, empty Open questions). What the template does not say:
 
-- **Header.** Route, requirements source (spec path with its `Status`, or other paths with
-  line ranges, or the quoted request / brief), execution mode with "chosen by the user", and
-  out of scope (what the source excludes, plus recommendations the user declined;
-  architecture and security review are performed by separate agents). The plan implements
-  the requirements; it does not define or change them.
-- **Requirements traceability.** Route A: one row per spec `AC-N`, spec numbering kept,
-  citing `<specsDir>/SPEC-NN-<slug>.md:<line>`. Route B: `R1…Rn` from Pass 1. Every
-  requirement maps to at least one work item; every work item appears in at least one row.
-  A requirement with no work item is a gap in the plan; a work item with no requirement does
-  not belong in it.
-- **Clarifications (Route B) / Spec follow-ups (Route A).** Each question with the user's
-  answer or "default accepted"; each recommendation accepted or declined — accepted
-  recommendations are the only source of scope beyond the requirements. Spec follow-ups
-  carry their evidence and are not applied.
-- **Affected surface.** One row per file: path, new/modified, package, ring or home, the
-  skills from the routing table (not from memory), and a constraint that cites a real
-  `file:line` ("be careful" is not a constraint). Then **Coverage gaps**: unrouted files,
-  named — or "none".
+- **Affected surface.** Skills come from the routing table, not from memory, and each
+  constraint cites a real `file:line` ("be careful" is not a constraint).
 - **Contract changes.** The five checks above, each answered.
-- **Work items `W-n`.** `Serves` (or "enables AC-1 — <why>"), a concrete `Do`, `Files` from
-  the surface table, a `Done means` that is a checkably true-or-false statement derived from
-  the requirement — never a new requirement — `Verify` (below), `Rules that apply` as
-  `<skill> → <the specific rule>`, and `Risk`. Items are ordered so each one leaves the tree
-  in a state that still typechecks.
-- **Verify lines** follow `sdd-format` §6: the config `verify` entry for the item's package,
-  its `files` command with `{files}` replaced by the files this item touches, run from its
-  `dir`, once per item after its last edit — plus any extra command the item needs (a build
-  check from *Contract changes*), with its directory. **If the config has no `verify`,
-  never invent a command:** write the Verify line as the targeted check for `<package>` on
-  `<files>` per `sdd-format` §6, say in the Verification plan that the commands come from
-  the project config, which `/sdd-engineering:run-plan` asks for in preflight, and flag it in
-  your report.
-- **Execution.** Single-agent with ≤5 items in one package: one implementer, dispatched with
-  this plan's path, executes W1…Wn in order. Single-agent with more: the lane table, one row
-  per sequential phase, `Parallel with` empty. Multi-agent: one row per lane — executor,
-  work items, disjoint files, depends on, parallel with, isolation — then the integration
-  paragraph naming the cross-lane checks. Each executor is dispatched with this plan's path
-  **and its lane or phase id**, and touches only its lane's files.
-- **Verification plan.** Only commands that exist: the config `verify` entries' `full`
-  commands for every touched package, plus any build or integration check an item
-  requires, each with its directory and what "passing" means (a red test is a regression
-  until proven otherwise). Never plan a suite that needs the whole stack up unless the
-  requirements demand it and the project has a command for it.
-- **Assumptions.** Technical assumptions and judgment calls only — each one a line the
-  implementer may rely on, and challenge if reality disagrees. An assumption about product
-  behaviour is not allowed here: on Route A it is in the spec, on Route B it was a Pass 1
-  question.
-- **Open questions.** Empty, or the plan does not start. What lands here is what the
-  researcher reported as `Not established` and could not be resolved in Pass 1.
-- **Research used.** Each dispatch: the question, the conclusion relied on, and its source.
-  Omit the section if you dispatched none.
-- **Rollback / blast radius.** What reverting touches; anything that cannot be reverted by
-  reverting files — a migration, a seeded row.
+- **Verify lines** follow `sdd-format` §6. **If the config has no `verify`, never invent a
+  command:** write the targeted check for `<package>` on `<files>`, say in the Verification
+  plan that the commands come from the project config, which `/sdd-engineering:run-plan`
+  asks for in preflight, and flag it in your report.
+- **Execution.** Each executor is dispatched with this plan's path **and its lane or phase
+  id**, and touches only its lane's files.
+- **Assumptions.** Technical judgement calls only — never product behaviour (on Route A it is
+  in the spec, on Route B it was a Pass 1 question).
 
 ## What you return to the caller
 

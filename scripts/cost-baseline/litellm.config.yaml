@@ -1,0 +1,17 @@
+# LiteLLM proxy for running `claude plugin eval` on a cheap OpenRouter model.
+# Claude Code speaks the Anthropic Messages API; OpenRouter's Anthropic endpoint serves only
+# anthropic/* models, so LiteLLM translates /v1/messages for any OpenRouter model.
+model_list:
+  # Any Claude alias Claude Code sends on its own (background calls) goes to the eval model.
+  - model_name: "claude-*"
+    litellm_params:
+      model: "openrouter/deepseek/deepseek-v4-pro"
+      api_key: os.environ/OPENROUTER_API_KEY
+  # Everything else is forwarded as-is, e.g. "deepseek/deepseek-v4-pro".
+  - model_name: "*"
+    litellm_params:
+      model: "openrouter/*"
+      api_key: os.environ/OPENROUTER_API_KEY
+litellm_settings:
+  drop_params: true
+  callbacks: usage_logger.proxy_handler_instance   # one JSON line per call → usage.jsonl

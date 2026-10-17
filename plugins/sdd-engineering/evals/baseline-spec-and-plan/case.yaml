@@ -1,0 +1,102 @@
+# Cost-baseline scenario (docs/COST-BASELINE.md): the user asks for a spec and a plan for one
+# small feature. All product answers are given up front, so spec-creator can go straight to
+# Pass 2, and the planner gets its execution mode in the brief. No implementation.
+# The fixture (fixture.sh) only runs with `claude plugin eval --scaffold`; the agents write
+# files, so run with `--allow-tools Write Edit`.
+schema_version: "1.1"
+name: baseline-spec-and-plan
+description: Fixed SDD scenario — spec-creator writes a spec, implementation-planner writes a plan; used for the cost baseline.
+tags: [sdd, baseline, spec-creator, implementation-planner]
+plugins: ["../..", "../../../research-tools", "../../../architecture-review", "../../../engineering-paved-path"]
+runs: 1
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 40
+  timeout_seconds: 1800
+  allowed_tools: [Read, Glob, Grep, Write, Edit, Agent, Skill]
+  prompt: |
+    I want a spec and an implementation plan for a small feature in this repo. Don't write any
+    code.
+
+    Feature: free shipping above a threshold. Today every non-empty cart pays a flat shipping
+    fee (`src/shipping.js`). Carts whose subtotal reaches a threshold should ship for free.
+
+    My decisions, already made — treat them as my answers to any question you would ask:
+    - The threshold is 50.00 in the shop currency; a subtotal of exactly 50.00 ships free.
+    - The threshold is a constant in code for now, not a setting.
+    - Below the threshold the existing flat fee 4.99 stays; an empty cart still pays 0.
+    - A negative or non-numeric subtotal is rejected with an error whose code is `invalid_subtotal`.
+    - No UI and no API change in this feature; it is library code only.
+    - I approve the spec as soon as it holds no open markers.
+    - Execution mode for the plan: single-agent (my choice, settled).
+
+    Steps:
+    1. Dispatch `sdd-engineering:spec-creator` with the feature and all my decisions above, so it
+       can write the spec directly (Pass 2).
+    2. Then dispatch `sdd-engineering:implementation-planner` with the spec path it reports and
+       the execution mode.
+    3. Finally print the full contents of the spec file and the plan file.
+graders:
+  - name: dispatched-spec-creator
+    type: tool_used
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"sdd-engineering:spec-creator"'
+    min: 1
+    arm: with-only
+  - name: dispatched-planner
+    type: tool_used
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"sdd-engineering:implementation-planner"'
+    min: 1
+    arm: with-only
+  - name: spec-written
+    type: file_exists
+    path: "specs/SPEC-01-*.md"
+    exists: true
+  - name: plan-written
+    type: file_exists
+    path: "docs/plans/*.plan.md"
+    exists: true
+  - name: no-code-written
+    type: file_exists
+    path: "src/free-shipping*"
+    exists: false
+  - name: spec-sections-in-order
+    type: regex
+    pattern: '## Problem and user[\s\S]*?## Goals / Non-goals[\s\S]*?## User stories[\s\S]*?## Acceptance criteria \(EARS\)[\s\S]*?## Edge cases[\s\S]*?## Non-functional requirements[\s\S]*?## Module interactions[\s\S]*?## Inputs and provenance[\s\S]*?## Untrusted inputs[\s\S]*?## Design review[\s\S]*?## Traceability[\s\S]*?## Open questions'
+    match: contains
+  - name: spec-has-no-marker
+    type: regex
+    pattern: '\[NEEDS CLARIFICATION:'
+    match: not_contains
+  - name: spec-quality
+    type: llm
+    criteria: |
+      Judge the SPEC printed in the response (the spec file contents).
+      PASS only if all hold:
+      1. Acceptance criteria are numbered AC-n; each states one behaviour with "shall" in an
+         EARS shape (WHEN / IF ... THEN / WHILE / WHERE, or ubiquitous) and ends with a
+         `Verify:` line naming a level (unit / integration / e2e / manual) and an observation.
+      2. Together the ACs cover all four decisions: free shipping when the subtotal is
+         50.00 or more (exactly 50.00 included); the 4.99 fee below 50.00; 0 for an empty cart;
+         error code `invalid_subtotal` for negative or non-numeric input.
+      3. It does not prescribe implementation: no new files, modules, functions or classes to
+         create, no algorithm and no order of work. Naming the EXISTING public boundary
+         (`shippingFee`, `FLAT_SHIPPING_FEE`, `cartSubtotal`) and calling it in a `Verify:`
+         line is allowed and is not an implementation detail. Extra criteria that only refine
+         the given decisions (for example, that the error is an Error instance) are allowed.
+      FAIL if any of 1–3 does not hold, or if the spec is not shown in the response.
+  - name: plan-quality
+    type: llm
+    criteria: |
+      Judge the PLAN printed in the response (the plan file contents).
+      PASS only if all hold:
+      1. It states Route A, cites the spec file as the requirements source, and execution mode
+         single-agent.
+      2. Its Requirements traceability table has one row per AC of the spec, each mapped to at
+         least one work item.
+      3. Every work item has Serves, Files, a checkable `Done means` and a `Verify` command that
+         uses the configured `node --test`.
+      4. It invents no requirement beyond the spec (no UI, no API, no configurable threshold).
+      FAIL otherwise, or if the plan is not shown.

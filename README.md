@@ -46,6 +46,7 @@ All dependencies use the range `^1.0.0`.
 plugins/<name>/                   # one self-contained directory per plugin (+ README, CHANGELOG, COMPATIBILITY)
 docs/                             # PLUGIN-GUIDELINES, SECURITY, RELEASES, SITE-SPEC, COST-BASELINE
 scripts/validate.mjs              # repo maintenance tooling — not shipped with any plugin
+scripts/cost-baseline/            # proxy + batch runner to measure eval cost on an OpenRouter model
 site/                             # the catalog site (Astro); builds its index from plugins/ at build time
 ```
 
