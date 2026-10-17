@@ -40,6 +40,11 @@ First release: the Spec Driven Development pipeline, spec → plan → run → v
   marker, the retro is never auto-triggered).
 - `COMPATIBILITY.md`: minimum Claude Code version and the features the plugin relies on.
 - Negative eval case `irrelevant-request-no-sdd`: an everyday coding question must not start the pipeline.
+- Eval case `baseline-spec-and-plan`: the fixed spec-and-plan scenario used for the cost baseline.
+
+### Changed
+
+- `spec-creator` and `implementation-planner` no longer restate rules that live in `sdd-format`; `spec-creator` loads `mermaid-diagram` on demand instead of preloading it (the optimization measured in the cost baseline).
 
 ### Dependencies
 

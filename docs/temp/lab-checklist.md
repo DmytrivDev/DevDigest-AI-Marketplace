@@ -17,7 +17,7 @@
 | Чотири плагіни | ✅ | Встановлюються, залежності резолвляться |
 | Статичний каталог на GitHub Pages | ✅ | Живий: https://dmytrivdev.github.io/DevDigest-AI-Marketplace/ (HTTP 200) |
 | Release `sdd-engineering@1.0.0` в іншому проєкті | ⏳ | Тегів і релізів немає, в інший проєкт не встановлювали |
-| Cost baseline і одна оптимізація | ❌ | Не починали |
+| Cost baseline і одна оптимізація | ✅ | `docs/COST-BASELINE.md`: DeepSeek v4-pro, 3+3 прогони, $1.20 загалом; оптимізація без втрати якості, економія в межах шуму |
 | Оновлення до `1.1.0` | ⏳ | — |
 | Описаний і прорепетируваний rollback до `1.0.0` | ❌ / ⏳ | Описати в `RELEASES.md` — зараз; репетиція — пізніше |
 
@@ -176,7 +176,7 @@
 | Validation, behavior evals і negative evals зелені | 🟡 | Validation ✅; evals написані, але не запускались; немає negative-кейсу «нерелевантний запит не вмикає SDD» і немає `validate.yml` у CI |
 | `1.0.0` встановлюється в інший наявний проєкт | ⏳ | Після тегів |
 | Supporting files і scripts не губляться в plugin cache | ✅ | Перевірено: кількість файлів у кеші = в repo для всіх 4 плагінів; `check-specs.mjs` запускається з кешу |
-| Cost experiment: baseline, quality gate, чесний результат | ❌ | Крок 8 — платні прогони |
+| Cost experiment: baseline, quality gate, чесний результат | ✅ | `docs/COST-BASELINE.md` — quality gate червоний через модель (DeepSeek часто не викликає агентів), записано чесно |
 | Update каталогу та update плагіна перевірені окремо | ⏳ | Описати в `RELEASES.md` зараз, перевірити разом з `1.1.0` |
 | Нова поведінка `1.1.0` підтверджена eval | ⏳ | |
 | Stable channel повертає `1.0.0`, smoke eval проходить | ❌ / ⏳ | Спосіб каналів (stable = pinned tag / окремий ref) описати в `RELEASES.md` зараз; репетиція — пізніше |

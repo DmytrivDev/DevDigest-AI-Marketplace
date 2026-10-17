@@ -62,7 +62,7 @@ Details, and the features this plugin relies on: [`COMPATIBILITY.md`](COMPATIBIL
 | `engineering-insights` | skill | `/sdd-engineering:engineering-insights` | Captures durable, non-obvious learnings (gotchas, what worked, dead ends, conventions, recurring errors) into the knowledge file of the area the work touched: reads it first, dedups, appends through a script that cannot overwrite, rebuilds a line-numbered index. Main session only, never a subagent. | On request, at the end of substantial work, "wrap up", "save this learning" |
 | `sdd-format` | skill (reference) | `sdd-engineering:sdd-format` | The shared contract: config keys, spec template, EARS rules, `[NEEDS CLARIFICATION]` grammar and checker, plan template, routing table, verification rules. | Preloaded into the four agents and loaded by `run-plan`; not shown in the `/` menu |
 | `mermaid-diagram` | skill | `sdd-engineering:mermaid-diagram` | Mermaid diagram guide and templates (flows, states, sequences, ER). | Preloaded into `spec-creator`; auto when Claude needs a diagram |
-| evals | `claude plugin eval` cases | — | Six behaviour checks of the pipeline's guard rails, including a negative activation case. See [Evals](#evals). | Run by you |
+| evals | `claude plugin eval` cases | — | Six guard-rail checks (two negative) and the fixed cost-baseline scenario. See [Evals](#evals). | Run by you |
 
 The pipeline also dispatches two agents from its dependencies:
 `research-tools:researcher` (facts from the code or the web, for the spec and the plan) and
@@ -513,7 +513,7 @@ totals are dominated by cheap cache reads.
 
 ## Evals
 
-Six `claude plugin eval` cases in [`evals/`](evals/) check the guard rails of the pipeline:
+Seven `claude plugin eval` cases in [`evals/`](evals/): six check the guard rails of the pipeline, and one is the fixed scenario of the cost baseline ([`docs/COST-BASELINE.md`](https://github.com/DmytrivDev/DevDigest-AI-Marketplace/blob/main/docs/COST-BASELINE.md) in the marketplace repo):
 
 | Case | Pass means |
 |---|---|
@@ -523,6 +523,7 @@ Six `claude plugin eval` cases in [`evals/`](evals/) check the guard rails of th
 | `run-plan-preflight-stops-on-marker` | `run-plan` stops in preflight; no implementer is dispatched |
 | `workflow-retro-not-auto-triggered` | "the run finished" does not start a retro |
 | `irrelevant-request-no-sdd` | an everyday coding question does not start the pipeline (negative) |
+| `baseline-spec-and-plan` | the cost-baseline scenario: spec-creator writes a spec and implementation-planner a plan for one small feature, judged for format and scope |
 
 Three cases carry a tiny sample project (a spec, a plan, a few source files) in a
 `fixture.sh` next to their `case.yaml`. It writes the files into the empty eval workspace and
