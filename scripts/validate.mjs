@@ -88,7 +88,19 @@ const TEXT_EXT = /\.(md|json|mjs|js|cjs|ts|ya?ml|sh|txt|toml)$/i;
 const ABSOLUTE_PATH = /(?:^|[\s"'`(=])(?:[A-Za-z]:[\\/]|\/Users\/[^\s/]+|\/home\/[^\s/]+)/;
 const SECRET = /sk-ant-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{36}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----/;
 
+// Files that belong to the repository: tracked, plus new files git would pick up. Ignored
+// output (eval results, caches) is skipped, so a local `claude plugin eval` run cannot fail
+// the check. Without git (e.g. an unpacked archive) every file in the directory is checked.
 function listFiles(dir) {
+  const res = spawnSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', '.'], {
+    cwd: dir,
+    encoding: 'utf8',
+  });
+  if (res.status === 0) {
+    return [...new Set(res.stdout.split('\0').filter(Boolean))]
+      .map((f) => join(dir, f))
+      .filter((f) => existsSync(f));
+  }
   return readdirSync(dir, { recursive: true, withFileTypes: true })
     .filter((e) => e.isFile())
     .map((e) => join(e.parentPath ?? e.path, e.name));
