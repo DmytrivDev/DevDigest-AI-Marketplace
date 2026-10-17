@@ -347,17 +347,19 @@ by.
 - A file no row matches is a **coverage gap**, not a file that passed. Say so.
 
 If config `routing` names a file, that file's table replaces this one. It uses the same
-columns. Otherwise this default applies, written for a typical TypeScript web project:
+columns. Otherwise this default applies, written for a typical TypeScript or JavaScript web
+project. In the globs, `{ts,js}` stands for `.ts`, `.mts`, `.cts`, `.js`, `.mjs` and `.cjs`,
+and `{tsx,jsx}` for `.tsx` and `.jsx`:
 
 | Priority | Skill | Globs | Excludes |
 |---|---|---|---|
-| 10 | `engineering-paved-path:onion-architecture` | `**/src/modules/**/*.ts`, `**/src/domain/**/*.ts`, `**/src/application/**/*.ts`, `**/src/adapters/**/*.ts`, `**/src/infrastructure/**/*.ts`, `**/server/**/*.ts` | `**/*.test.ts`, `**/migrations/**` |
-| 10 | `engineering-paved-path:frontend-ui-architecture` | `**/app/**/*.{ts,tsx}`, `**/components/**/*.tsx`, `**/ui/**/*.tsx`, `**/hooks/**/*.ts` | `**/*.test.{ts,tsx}` |
-| 9 | `engineering-paved-path:security` | `**/routes.ts`, `**/*route*.ts`, `**/auth/**`, `**/middleware*.ts`, `**/config.ts`, `**/.env*`, `**/package.json`, `.github/workflows/**`, `**/prompts/**` | `**/*.test.ts` |
-| 8 | `engineering-paved-path:fastify-best-practices` | files importing `fastify`: `**/routes.ts`, `**/app.ts`, `**/server.ts`, `**/plugins/**/*.ts` | — |
-| 8 | `engineering-paved-path:next-best-practices` | `**/app/**/{page,layout,loading,error,not-found,template,default}.tsx`, `**/app/**/route.ts`, `**/next.config.*`, `**/middleware.ts` | — |
-| 7 | `engineering-paved-path:react-best-practices` | `**/*.tsx`, `**/hooks/**/*.ts` | `**/*.test.tsx` |
-| 6 | `engineering-paved-path:react-testing-library` | `**/*.test.tsx`, `**/test/**/*.{ts,tsx}`, `**/vitest.config.*` | — |
+| 10 | `engineering-paved-path:onion-architecture` | `**/src/modules/**/*.{ts,js}`, `**/src/domain/**/*.{ts,js}`, `**/src/application/**/*.{ts,js}`, `**/src/adapters/**/*.{ts,js}`, `**/src/infrastructure/**/*.{ts,js}`, `**/server/**/*.{ts,js}` | `**/*.test.{ts,js}`, `**/migrations/**` |
+| 10 | `engineering-paved-path:frontend-ui-architecture` | `**/app/**/*.{ts,js,tsx,jsx}`, `**/components/**/*.{tsx,jsx}`, `**/ui/**/*.{tsx,jsx}`, `**/hooks/**/*.{ts,js}` | `**/*.test.{ts,js,tsx,jsx}` |
+| 9 | `engineering-paved-path:security` | `**/routes.{ts,js}`, `**/*route*.{ts,js}`, `**/auth/**`, `**/middleware*.{ts,js}`, `**/config.{ts,js}`, `**/.env*`, `**/package.json`, `.github/workflows/**`, `**/prompts/**` | `**/*.test.{ts,js}` |
+| 8 | `engineering-paved-path:fastify-best-practices` | files importing `fastify`: `**/routes.{ts,js}`, `**/app.{ts,js}`, `**/server.{ts,js}`, `**/plugins/**/*.{ts,js}` | — |
+| 8 | `engineering-paved-path:next-best-practices` | `**/app/**/{page,layout,loading,error,not-found,template,default}.{tsx,jsx}`, `**/app/**/route.{ts,js}`, `**/next.config.*`, `**/middleware.{ts,js}` | — |
+| 7 | `engineering-paved-path:react-best-practices` | `**/*.{tsx,jsx}`, `**/hooks/**/*.{ts,js}` | `**/*.test.{tsx,jsx}` |
+| 6 | `engineering-paved-path:react-testing-library` | `**/*.test.{tsx,jsx}`, `**/test/**/*.{ts,js,tsx,jsx}`, `**/vitest.config.*` | — |
 
 Rows that do not apply to the project match nothing and cost nothing. A Fastify row in a
 project without Fastify is skipped.
