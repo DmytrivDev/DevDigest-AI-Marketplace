@@ -1,0 +1,51 @@
+# sdd-engineering 1.1.0 behaviour: /sdd-engineering:sdd-status reports the ACTIVE plugin
+# version (read from the installed copy's own plugin.json) and the project's SDD state.
+# The fixture (fixture.sh) only runs with `claude plugin eval --scaffold`.
+schema_version: "1.1"
+name: sdd-status-reports-state
+description: sdd-status prints the active version and path, spec counts by status, markers, plans, verify and the next step — read-only.
+tags: [sdd, sdd-status, smoke-1.1]
+plugins: ["../..", "../../../research-tools", "../../../architecture-review", "../../../engineering-paved-path"]
+runs: 1
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 15
+  timeout_seconds: 300
+  allowed_tools: [Read, Glob, Grep, Skill]
+  prompt: |
+    /sdd-engineering:sdd-status
+graders:
+  - name: read-own-manifest
+    type: tool_used
+    tool: Read
+    input_match: 'sdd-engineering(\\\\|/)+\.claude-plugin(\\\\|/)+plugin\.json'
+    min: 1
+  - name: active-version-and-path
+    type: regex
+    pattern: 'sdd-engineering v?\d+\.\d+\.\d+\s*·\s*active copy:[^\n]*sdd-engineering'
+    match: contains
+  - name: spec-counts
+    type: regex
+    pattern: 'Specs \(specs\):\s*2\b[^\n]*draft 1[^\n]*approved 1[^\n]*implemented 0'
+    match: contains
+  - name: open-markers
+    type: regex
+    pattern: 'Open markers:\s*1 in 1 spec'
+    match: contains
+  - name: plan-count
+    type: regex
+    pattern: 'Plans \(docs/plans\):\s*1\b'
+    match: contains
+  - name: verify-package
+    type: regex
+    pattern: 'Verify:\s*app\b'
+    match: contains
+  - name: next-step-is-the-marker
+    type: llm
+    criteria: |
+      The project has one draft spec, `specs/SPEC-02-coupons.md`, with one open marker OQ-1
+      (rounding: two decimals or whole units?), and one approved spec that already has a plan.
+      PASS only if the response's `Next:` line tells the user to answer OQ-1 in
+      SPEC-02 (and re-run spec-creator), and the response does not claim to have written or
+      changed any file. FAIL if the next step is anything else, or if it answers OQ-1 itself.
