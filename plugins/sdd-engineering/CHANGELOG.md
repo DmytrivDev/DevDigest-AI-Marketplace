@@ -4,6 +4,14 @@ All notable changes to `sdd-engineering` are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this plugin
 uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] — 2026-10-17
+
+### Fixed
+
+- `sdd-format` §5: the default routing table now matches JavaScript files too — `.js`, `.mjs`,
+  `.cjs` next to `.ts`, and `.jsx` next to `.tsx`. Before, every file of a JavaScript project
+  was reported as a coverage gap, so no stack skill was routed to it.
+
 ## [1.0.0] — 2026-10-16
 
 First release: the Spec Driven Development pipeline, spec → plan → run → verify → retro.
@@ -54,3 +62,4 @@ First release: the Spec Driven Development pipeline, spec → plan → run → v
   step of `run-plan`.
 
 [1.0.0]: https://github.com/DmytrivDev/DevDigest-AI-Marketplace/releases/tag/sdd-engineering--v1.0.0
+[1.0.1]: https://github.com/DmytrivDev/DevDigest-AI-Marketplace/releases/tag/sdd-engineering--v1.0.1

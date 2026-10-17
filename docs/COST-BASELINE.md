@@ -204,7 +204,7 @@ node scripts/cost-baseline/summarize.mjs scripts/cost-baseline/runs/baseline.jso
 
 1. **Routing gap.** The default routing table in `sdd-format` §5 matches only `.ts` / `.tsx`.
    In the JavaScript fixture the planner correctly reported every file as a coverage gap. Add
-   `.js`, `.jsx` and `.mjs` globs.
+   `.js`, `.jsx` and `.mjs` globs. **Fixed in `sdd-engineering` 1.0.1.**
 2. **Grade files, not the transcript.** The quality graders should read the written spec and
    plan, not the main session's final message.
 3. **Agent-centred eval cases.** The `architecture-review` and `research-tools` cases depend on
